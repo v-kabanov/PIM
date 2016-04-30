@@ -18,5 +18,10 @@ namespace PimTest
 
         public Document Document { get; private set; }
         public float Score { get; private set; }
+
+        public string NoteId
+        {
+            get { return Document.Get(LuceneNoteAdapter.FieldNameId); }
+        }
     }
 }

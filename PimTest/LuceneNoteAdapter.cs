@@ -6,20 +6,20 @@
 
 using System;
 using System.Linq;
-using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Version = Lucene.Net.Util.Version;
 using System.Collections.Generic;
+using Lucene.Net.Linq;
 using NFluent;
 
 namespace PimTest
 {
     public class LuceneNoteAdapter
     {
-        private const string FieldNameId = "Id";
+        public const string FieldNameId = "Id";
         private const string FieldNameCreateTime = "CreateTime";
         private const string FieldNameName = "Name";
         private const string FieldNameText = "Text";
@@ -64,6 +64,47 @@ namespace PimTest
             };
         }
 
+        /// <summary>
+        ///     Main query generation method; at least one filter is required.
+        /// </summary>
+        /// <param name="index">
+        ///     Index for which the query is generated
+        /// </param>
+        /// <param name="queryText">
+        ///     optional
+        /// </param>
+        /// <param name="from">
+        ///     Filter on <see cref="Note.CreateTime"/>, optional
+        /// </param>
+        /// <param name="to">
+        ///     Filter on <see cref="Note.CreateTime"/>, optional
+        /// </param>
+        /// <param name="fuzzy">
+        ///     Whether to perform fuzzy search (performance hit)
+        /// </param>
+        /// <returns>
+        ///     Single query instance encapsulating all filter conditions
+        /// </returns>
+        public Query CreateQuery(ILuceneIndex index, string queryText, DateTime? from, DateTime? to, bool fuzzy)
+        {
+            Check.That(index).IsNotNull();
+            Check.That(!string.IsNullOrEmpty(queryText) || from.HasValue || to.HasValue).IsTrue();
+
+            Query query = null;
+
+            if (!string.IsNullOrEmpty(queryText))
+            {
+                query = CreateQuery(index, queryText, fuzzy);
+            }
+
+            if (from.HasValue || to.HasValue)
+            {
+                query = AddFilter(query, CreateTimeRangeFilter(from, to));
+            }
+
+            return query;
+        }
+
         public List<SearchHit> Search(ILuceneIndex index, string text, bool fuzzy = false, int maxResults = 100)
         {
             return index.Search(CreateQuery(index, text, fuzzy), maxResults);
@@ -80,13 +121,15 @@ namespace PimTest
         /// <summary>
         ///     Adds filter to query; combined with logical AND
         /// </summary>
-        /// <param name="query"></param>
+        /// <param name="query">nullable</param>
         /// <param name="filter"></param>
         /// <returns></returns>
         public Query AddFilter(Query query, Filter filter)
         {
-            Check.That(query).IsNotNull();
             Check.That(filter).IsNotNull();
+
+            if (query == null)
+                query = new MatchAllDocsQuery();
 
             return new FilteredQuery(query, filter);
         }
@@ -100,7 +143,7 @@ namespace PimTest
         {
             Check.That(filter).IsNotNull();
 
-            return AddFilter(new MatchAllDocsQuery(), filter);
+            return AddFilter(null, filter);
         }
 
         public Query CreateQuery(ILuceneIndex index, string text, bool fuzzy = false)
