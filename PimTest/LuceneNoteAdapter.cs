@@ -13,6 +13,7 @@ using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Version = Lucene.Net.Util.Version;
 using System.Collections.Generic;
+using NFluent;
 
 namespace PimTest
 {
@@ -26,15 +27,9 @@ namespace PimTest
         /// <summary>
         ///     
         /// </summary>
-        /// <param name="index">
-        ///     Index for which queries will be generated. The same analyzer must be used for writing index and parsing queries for it.
-        /// </param>
-        public LuceneNoteAdapter(ILuceneIndex index)
+        public LuceneNoteAdapter()
         {
-            Index = index;
         }
-
-        public ILuceneIndex Index { get; private set; }
 
         public Term GetKeyTerm(Note note)
         {
@@ -69,7 +64,46 @@ namespace PimTest
             };
         }
 
-        public Query CreateQuery(string text, int maxResults = 100)
+        public List<SearchHit> Search(ILuceneIndex index, string text, bool fuzzy = false, int maxResults = 100)
+        {
+            return index.Search(CreateQuery(index, text, fuzzy), maxResults);
+        }
+
+        public List<SearchHit> Search(ILuceneIndex index, Query query, int maxResults = 100)
+        {
+            Check.That(query).IsNotNull();
+            Check.That(index).IsNotNull();
+
+            return index.Search(query, maxResults);
+        }
+
+        /// <summary>
+        ///     Adds filter to query; combined with logical AND
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public Query AddFilter(Query query, Filter filter)
+        {
+            Check.That(query).IsNotNull();
+            Check.That(filter).IsNotNull();
+
+            return new FilteredQuery(query, filter);
+        }
+
+        /// <summary>
+        ///     Create query which only applies filter to all documents
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public Query CreateQueryFromFilter(Filter filter)
+        {
+            Check.That(filter).IsNotNull();
+
+            return AddFilter(new MatchAllDocsQuery(), filter);
+        }
+
+        public Query CreateQuery(ILuceneIndex index, string text, bool fuzzy = false)
         {
             var terms = text.Trim()
                 .Replace("-", " ")
@@ -79,34 +113,53 @@ namespace PimTest
 
             var termsString = string.Join(" ", terms);
 
-            var parser = new QueryParser(Version.LUCENE_30, FieldNameText, Index.Analyzer);
+            var parser = new QueryParser(Version.LUCENE_30, FieldNameText, index.Analyzer);
             parser.PhraseSlop = 2;
             parser.FuzzyMinSim = 0.1f;
             parser.DefaultOperator = QueryParser.Operator.OR;
 
             var parsedQuery = Parse(text, parser);
 
-            var parsedTermsQuery = Parse(termsString, parser);
-            parsedTermsQuery.Boost = 0.3f;
+            var booleanQuery = new BooleanQuery();
+            booleanQuery.Add(parsedQuery, Occur.SHOULD);
+
+            //var parsedTermsQuery = Parse(termsString, parser);
+            //parsedTermsQuery.Boost = 0.3f;
+            //booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
 
             var term = new Term(FieldNameText, text);
-            var fuzzyQuery = new FuzzyQuery(term);
+
+            if (fuzzy)
+            {
+                booleanQuery.Add(new FuzzyQuery(term), Occur.SHOULD);
+            }
 
             var phraseQuery = new PhraseQuery();
             phraseQuery.Slop = 2;
             phraseQuery.Boost = 1.5f;
             phraseQuery.Add(term);
 
-            var wildcardQuery = new WildcardQuery(term);
-
-            var booleanQuery = new BooleanQuery();
-            booleanQuery.Add(parsedQuery, Occur.SHOULD);
-            //booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
-            booleanQuery.Add(fuzzyQuery, Occur.SHOULD);
             booleanQuery.Add(phraseQuery, Occur.SHOULD);
-            //booleanQuery.Add(wildcardQuery, Occur.SHOULD);
+
+            //booleanQuery.Add(new WildcardQuery(term), Occur.SHOULD);
 
             return booleanQuery;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from">inclusive, seconds precision</param>
+        /// <param name="to">exclusive, seconds precision</param>
+        /// <returns></returns>
+        public Filter CreateTimeRangeFilter(DateTime? from, DateTime? to)
+        {
+            Check.That(from.HasValue || to.HasValue).IsTrue();
+            Check.That(!from.HasValue || !to.HasValue || from.Value < to.Value).IsTrue();
+
+            string fromString = from.HasValue ? DateTools.DateToString(from.Value, DateTools.Resolution.SECOND) : null;
+            string toString = to.HasValue ? DateTools.DateToString(to.Value, DateTools.Resolution.SECOND) : null;
+            return new TermRangeFilter(FieldNameCreateTime, fromString, toString, true, false);
         }
 
         private Query Parse(string text, QueryParser parser)

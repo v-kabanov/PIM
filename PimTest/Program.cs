@@ -27,9 +27,19 @@ namespace PimTest
                 Note.Create("Egg \r\n tolerated well, but high in cholesterol if you beleive it"),
             };
 
-            var adapter = new LuceneNoteAdapter(index);
+            var adapter = new LuceneNoteAdapter();
 
             index.Add(adapter.GetIndexedDocuments(notes));
+
+            var result1 = adapter.Search(
+                index
+                , adapter.CreateQueryFromFilter(
+                    adapter.CreateTimeRangeFilter(null, DateTime.Now.AddSeconds(-1))));
+
+            var result2 = adapter.Search(
+                index
+                , adapter.CreateQueryFromFilter(
+                    adapter.CreateTimeRangeFilter(DateTime.Now.AddSeconds(-10), null)));
 
             // problem: does not find 'erasing' by 'erase'; but 'erasure' works
 
@@ -42,7 +52,7 @@ namespace PimTest
                 finish = string.IsNullOrEmpty(queryText);
                 if (!finish)
                 {
-                    var query = adapter.CreateQuery(queryText);
+                    var query = adapter.CreateQuery(index, queryText);
                     var result = index.Search(query, 100);
                     Console.WriteLine("Found {0} items", result.Count);
                     foreach (var hit in result.Select(h => new { Note = adapter.GetNote(h.Document), Score = h.Score }))

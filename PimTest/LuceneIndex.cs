@@ -109,6 +109,12 @@ namespace PimTest
             return result;
         }
 
+        /// <summary>
+        ///     Wrap in FilteredQuery
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="maxResults"></param>
+        /// <returns></returns>
         public List<SearchHit> Search(Query query, int maxResults)
         {
             using (var search = CreateSearcher(true, true))
