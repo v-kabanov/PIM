@@ -12,7 +12,7 @@ namespace PimTest
 {
     public class Note
     {
-        private static Regex _nameRegex = new Regex(@"[\S]+.*[\S]+\s*$", RegexOptions.Multiline);
+        private static Regex _nameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
         private static int _id;
 
         public int Id { get; set; }
@@ -33,7 +33,7 @@ namespace PimTest
             return new Note()
             {
                 Id = Interlocked.Increment(ref _id),
-                Name = nameMatch.Value,
+                Name = nameMatch.Groups[1].Value,
                 Text = text,
                 CreateTime = DateTime.Now
             };

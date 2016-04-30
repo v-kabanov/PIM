@@ -133,10 +133,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ILuceneIndex.cs" />
     <Compile Include="LuceneIndex.cs" />
+    <Compile Include="LuceneNoteAdapter.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SearchHit.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

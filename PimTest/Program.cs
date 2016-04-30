@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 
 using System;
+using System.Linq;
 
 namespace PimTest
 {
@@ -12,7 +13,7 @@ namespace PimTest
     {
         static void Main(string[] args)
         {
-            var index = new LuceneIndex();
+            var index = new LuceneIndex(LuceneIndex.CreateDefaultAnalyzer("English"), LuceneIndex.CreateTransientDirectory());
 
             var notes = new Note[]
             {
@@ -26,7 +27,9 @@ namespace PimTest
                 Note.Create("Egg \r\n tolerated well, but high in cholesterol if you beleive it"),
             };
 
-            index.Add(notes);
+            var adapter = new LuceneNoteAdapter(index);
+
+            index.Add(adapter.GetIndexedDocuments(notes));
 
             // problem: does not find 'erasing' by 'erase'; but 'erasure' works
 
@@ -35,15 +38,16 @@ namespace PimTest
             {
                 Console.WriteLine();
                 Console.Write("Your query: ");
-                var query = Console.ReadLine();
-                finish = string.IsNullOrEmpty(query);
+                var queryText = Console.ReadLine();
+                finish = string.IsNullOrEmpty(queryText);
                 if (!finish)
                 {
-                    var result = index.Search(query);
+                    var query = adapter.CreateQuery(queryText);
+                    var result = index.Search(query, 100);
                     Console.WriteLine("Found {0} items", result.Count);
-                    foreach (var note in result)
+                    foreach (var hit in result.Select(h => new { Note = adapter.GetNote(h.Document), Score = h.Score }))
                     {
-                        Console.WriteLine("\t {0} - {1}", note.Id, note.Name);
+                        Console.WriteLine("\t {0} - {1}; Score = {2}", hit.Note.Id, hit.Note.Name, hit.Score);
                     }
                 }
             }

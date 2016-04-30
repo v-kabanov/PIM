@@ -14,168 +14,171 @@ using Lucene.Net.Analysis.Ru;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
+using Lucene.Net.Store;
 using Version = Lucene.Net.Util.Version;
 
 namespace PimTest
 {
-    public class LuceneIndex : IDisposable
+    public class LuceneIndex : ILuceneIndex, IDisposable
     {
-        private const string FieldNameId = "Id";
-        private const string FieldNameCreateTime = "CreateTime";
-        private const string FieldNameName = "Name";
-        private const string FieldNameText = "Text";
-        private string _directoryPath;
+        private const string WriteLockFileName = "write.lock";
 
         public Lucene.Net.Store.Directory Directory { get; private set; }
 
         public Analyzer Analyzer { get; private set; }
 
-        public LuceneIndex()
+        public LuceneIndex(Analyzer analyzer, Lucene.Net.Store.Directory fullTextDirectory, string documentKeyName = "Id")
         {
-            ConfigureRam();
-            //new RussianAnalyzer();
-            Analyzer = new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, "English");
+            KeyFieldName = documentKeyName;
+            Analyzer = analyzer;
+            Directory = fullTextDirectory;
+
+            using (var writer = CreateWriter())
+            {
+                CommitAndRefreshStats(writer, false);
+            }
         }
 
-        public LuceneIndex(string directoryPath)
+        /// <summary>
+        ///     Name to pass to <see cref="Document.Get(string)"/> to get document's 'primary key'
+        /// </summary>
+        public string KeyFieldName { get; private set; }
+
+        public int DocCount { get; private set; }
+        public int DeletedDocCount { get; private set; }
+
+        public void Add(params Document[] docs)
         {
-            ConfigurePersistent(directoryPath);
-            Analyzer = new StandardAnalyzer(Version.LUCENE_30);
+            Add(docs.AsEnumerable());
         }
 
-        private void ConfigurePersistent(string directoryPath)
+        public void Add(IEnumerable<Document> items)
         {
-            _directoryPath = directoryPath;
+            using (var writer = CreateWriter())
+            {
+                foreach (var item in items)
+                {
+                    writer.UpdateDocument(new Term(KeyFieldName, item.Get(KeyFieldName)), item);
+                }
 
+                CommitAndRefreshStats(writer);
+            }
+        }
+
+        public void Delete(string key)
+        {
+            Delete(new Term(KeyFieldName, key));
+        }
+
+        public void Delete(params Term[] terms)
+        {
+            using (var writer = CreateWriter())
+            {
+                writer.DeleteDocuments(terms);
+
+                CommitAndRefreshStats(writer);
+            }
+        }
+
+        public void Delete(params Query[] queries)
+        {
+            using (var writer = CreateWriter())
+            {
+                writer.DeleteDocuments(queries);
+
+                CommitAndRefreshStats(writer);
+            }
+        }
+
+        public void DeleteAll()
+        {
+            using (var writer = CreateWriter())
+            {
+                writer.DeleteAll();
+
+                CommitAndRefreshStats(writer);
+            }
+        }
+
+        public IndexSearcher CreateSearcher(bool readOnly, bool calcScore)
+        {
+            var result = new IndexSearcher(Directory, readOnly);
+            if (calcScore)
+                result.SetDefaultFieldSortScoring(true, true);
+            return result;
+        }
+
+        public List<SearchHit> Search(Query query, int maxResults)
+        {
+            using (var search = CreateSearcher(true, true))
+            {
+                var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
+
+                return hits.Select(h => new SearchHit(search.Doc(h.Doc), h.Score)).ToList();
+            }
+        }
+
+        public void CleanupDeletes()
+        {
+            using (var writer = CreateWriter())
+            {
+                writer.ExpungeDeletes();
+                writer.Commit();
+            }
+        }
+
+        public void Optimize()
+        {
+            using (var writer = CreateWriter())
+            {
+                writer.Optimize();
+            }
+        }
+
+        private IndexWriter CreateWriter()
+        {
+            return new IndexWriter(Directory, Analyzer, IndexWriter.MaxFieldLength.UNLIMITED);
+        }
+
+        /// <summary>
+        ///     To be called after each update so that stats are reported correctly.
+        /// </summary>
+        private void CommitAndRefreshStats(IndexWriter writer, bool commit = true)
+        {
+            if (commit)
+                writer.Commit();
+            DocCount = writer.NumDocs();
+        }
+
+        public static FSDirectory PreparePersistentDirectory(string directoryPath)
+        {
             var directoryInfo = new DirectoryInfo(directoryPath);
 
             if (!directoryInfo.Exists)
                 directoryInfo.Create();
 
-            var dir = Lucene.Net.Store.FSDirectory.Open(directoryInfo);
+            var dir = FSDirectory.Open(directoryInfo);
 
             if (IndexWriter.IsLocked(dir))
                 IndexWriter.Unlock(dir);
 
-            var lockFilePath = Path.Combine(directoryPath, "write.lock");
+            var lockFilePath = Path.Combine(directoryPath, WriteLockFileName);
 
             if (File.Exists(lockFilePath))
                 File.Delete(lockFilePath);
 
-            Directory = dir;
+            return dir;
         }
 
-        private void ConfigureRam()
+        public static RAMDirectory CreateTransientDirectory()
         {
-            Directory = new Lucene.Net.Store.RAMDirectory();
+            return new RAMDirectory();
         }
 
-        private TermQuery GetIdQuery(Note note)
+        public static Analyzer CreateDefaultAnalyzer(string name)
         {
-            return new TermQuery(new Term(FieldNameId, Convert.ToString(note.Id)));
-        }
-
-        private Document GetIndexedDocument(Note note)
-        {
-            var doc = new Document();
-            doc.Add(new Field(FieldNameId, note.Id.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
-            doc.Add(new Field(FieldNameCreateTime, note.CreateTime.ToString(CultureInfo.InvariantCulture), Field.Store.YES, Field.Index.NOT_ANALYZED));
-            doc.Add(new Field(FieldNameName, note.Name, Field.Store.YES, Field.Index.ANALYZED));
-            doc.Add(new Field(FieldNameText, note.Text, Field.Store.NO, Field.Index.ANALYZED));
-            return doc;
-        }
-
-        private Note GetNote(Document indexeDocument)
-        {
-            return new Note()
-            {
-                Id = Convert.ToInt32(indexeDocument.Get(FieldNameId)),
-                CreateTime = DateTime.Parse(indexeDocument.Get(FieldNameCreateTime), CultureInfo.InvariantCulture),
-                Name = indexeDocument.Get(FieldNameName)
-            };
-        }
-
-        public void Add(IEnumerable<Document> items)
-        {
-            using (var writer = new IndexWriter(Directory, Analyzer, IndexWriter.MaxFieldLength.UNLIMITED))
-            {
-                foreach (var item in items)
-                {
-                    writer.AddDocument(item);
-                }
-            }
-        }
-
-        public void Add(params Note[]  notes)
-        {
-            Add(notes.Select(n => GetIndexedDocument(n)));
-        }
-
-        private List<Note> Search(Query query, int maxResults)
-        {
-            using (var search = new IndexSearcher(Directory, true))
-            {
-                var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
-
-                return hits.Select(h => GetNote(search.Doc(h.Doc))).ToList();
-            }
-        }
-
-        public List<Note> Search(string text, int maxResults = 100)
-        {
-            var terms = text.Trim()
-                .Replace("-", " ")
-                .Split(' ')
-                .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => x.Trim() + "*");
-
-            var termsString = string.Join(" ", terms);
-
-            var parser = new QueryParser(Version.LUCENE_30, FieldNameText, Analyzer);
-            parser.PhraseSlop = 2;
-            parser.FuzzyMinSim = 0.1f;
-            parser.DefaultOperator = QueryParser.Operator.OR;
-
-            var parsedQuery = Parse(text, parser);
-
-            var parsedTermsQuery = Parse(termsString, parser);
-            parsedTermsQuery.Boost = 0.3f;
-
-            var term = new Term(FieldNameText, text);
-            var fuzzyQuery = new FuzzyQuery(term);
-
-            var phraseQuery = new PhraseQuery();
-            phraseQuery.Slop = 2;
-            phraseQuery.Boost = 1.5f;
-            phraseQuery.Add(term);
-
-            var wildcardQuery = new WildcardQuery(term);
-
-            var booleanQuery = new BooleanQuery();
-            booleanQuery.Add(parsedQuery, Occur.SHOULD);
-            //booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
-            booleanQuery.Add(fuzzyQuery, Occur.SHOULD);
-            booleanQuery.Add(phraseQuery, Occur.SHOULD);
-            //booleanQuery.Add(wildcardQuery, Occur.SHOULD);
-
-            return Search(booleanQuery, maxResults);
-        }
-
-        private Query Parse(string text, QueryParser parser)
-        {
-            Query result;
-            try
-            {
-                result = parser.Parse(text);
-            }
-            catch (ParseException)
-            {
-                result = parser.Parse(QueryParser.Escape(text.Trim()));
-            }
-
-            return result;
+            return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, name);
         }
 
         #region IDisposable Support
@@ -219,6 +222,7 @@ namespace PimTest
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
         }
-        #endregion
+        #endregion IDisposable Support
+
     }
 }
