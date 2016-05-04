@@ -6,6 +6,7 @@
 
 using System;
 using System.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace PimTest
 {
@@ -26,6 +27,13 @@ namespace PimTest
                 Note.Create("Apple \r\n not tolerated well"),
                 Note.Create("Egg \r\n tolerated well, but high in cholesterol if you beleive it"),
             };
+
+            var storage = new NoteStorage(@"c:\temp\MyNotes");
+
+            foreach (var note in notes)
+            {
+                storage.SaveOrUpdate(note);
+            }
 
             var adapter = new LuceneNoteAdapter();
 
@@ -54,10 +62,16 @@ namespace PimTest
                 {
                     var query = adapter.CreateQuery(index, queryText);
                     var result = index.Search(query, 100);
-                    Console.WriteLine("Found {0} items", result.Count);
-                    foreach (var hit in result.Select(h => new { Note = adapter.GetNote(h.Document), Score = h.Score }))
+                    Console.WriteLine($"Found {result.Count} items");
+                    foreach (var hit in result.Select(h => new { NoteHeader = adapter.GetNoteHeader(h.Document), Score = h.Score }))
                     {
-                        Console.WriteLine("\t {0} - {1}; Score = {2}", hit.Note.Id, hit.Note.Name, hit.Score);
+                        Console.WriteLine($"\t {hit.NoteHeader.Id} - {hit.NoteHeader.Name}; Score = {hit.Score}");
+                        var loaded = storage.GetExistingNote(hit.NoteHeader.Id);
+
+                        if (loaded == null)
+                        {
+                            Console.WriteLine($"Note {hit.NoteHeader.Id} not found in database");
+                        }
                     }
                 }
             }

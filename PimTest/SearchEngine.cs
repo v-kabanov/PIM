@@ -15,6 +15,9 @@ using NFluent;
 
 namespace PimTest
 {
+    /// <summary>
+    ///     Wraps multiple lucene indexes (e.g. 1 per language) and exposes them as one.
+    /// </summary>
     public class SearchEngine
     {
         private static readonly ILog _log = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
@@ -51,7 +54,7 @@ namespace PimTest
             Indexes.Add(name, index);
         }
 
-        public List<Note> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20)
+        public List<NoteHeader> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20)
         {
             _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, from, to, fuzzy, maxResults);
 
@@ -69,12 +72,12 @@ namespace PimTest
 
             var allHits = results.SelectMany(p => p.Value);
 
-            var combinedResult = allHits.GroupBy(h => h.NoteId, (key, g) => new { Document = g.Select(g => g.Document).First(), Score = g.Sum(h => h.Score) })
+            var combinedResult = allHits.GroupBy(h => h.NoteId, (key, g) => new { Document = g.Select(h => h.Document).First(), Score = g.Sum(h => h.Score) })
                 .OrderByDescending(i => i.Score)
                 .Take(maxResults)
                 .ToList();
 
-            return combinedResult.Select(r => Adapter.GetNote(r.Document)).ToList();
+            return combinedResult.Select(r => Adapter.GetNoteHeader(r.Document)).ToList();
         }
 
         private Query CreateQuery(ILuceneIndex index, string queryText, DateTime? from, DateTime? to, bool fuzzy)

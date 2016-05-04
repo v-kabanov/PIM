@@ -20,9 +20,10 @@ namespace PimTest
     public class LuceneNoteAdapter
     {
         public const string FieldNameId = "Id";
-        private const string FieldNameCreateTime = "CreateTime";
-        private const string FieldNameName = "Name";
-        private const string FieldNameText = "Text";
+        public const string FieldNameCreateTime = "CreateTime";
+        public const string FieldNameLastUpdateTime = "LastUpdateTime";
+        public const string FieldNameName = "Name";
+        public const string FieldNameText = "Text";
 
         /// <summary>
         ///     
@@ -31,34 +32,34 @@ namespace PimTest
         {
         }
 
-        public Term GetKeyTerm(Note note)
+        public Term GetKeyTerm(INoteHeader note)
         {
             return new Term(FieldNameId, Convert.ToString(note.Id));
         }
 
-        public Document GetIndexedDocument(Note note)
+        public Document GetIndexedDocument(INote note)
         {
             var doc = new Document();
             var timeString = DateTools.DateToString(note.CreateTime, DateTools.Resolution.SECOND);
 
-            doc.Add(new Field(FieldNameId, note.Id.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+            doc.Add(new Field(FieldNameId, note.Id, Field.Store.YES, Field.Index.NOT_ANALYZED));
             doc.Add(new Field(FieldNameCreateTime, timeString, Field.Store.YES, Field.Index.ANALYZED));
-            doc.Add(new Field(FieldNameName, note.Name, Field.Store.YES, Field.Index.ANALYZED));
+            doc.Add(new Field(FieldNameName, note.Name, Field.Store.YES, Field.Index.NOT_ANALYZED));
             doc.Add(new Field(FieldNameText, note.Text, Field.Store.NO, Field.Index.ANALYZED));
 
             return doc;
         }
 
-        public IEnumerable<Document> GetIndexedDocuments(params Note[] notes)
+        public IEnumerable<Document> GetIndexedDocuments(params INote[] notes)
         {
             return notes.Select(n => GetIndexedDocument(n));
         }
 
-        public Note GetNote(Document indexeDocument)
+        public NoteHeader GetNoteHeader(Document indexeDocument)
         {
-            return new Note()
+            return new NoteHeader()
             {
-                Id = Convert.ToInt32(indexeDocument.Get(FieldNameId)),
+                Id = indexeDocument.Get(FieldNameId),
                 CreateTime = DateTools.StringToDate(indexeDocument.Get(FieldNameCreateTime)),
                 Name = indexeDocument.Get(FieldNameName)
             };
