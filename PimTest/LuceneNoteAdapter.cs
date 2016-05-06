@@ -24,6 +24,7 @@ namespace PimTest
         public const string FieldNameLastUpdateTime = "LastUpdateTime";
         public const string FieldNameName = "Name";
         public const string FieldNameText = "Text";
+        public const string FieldNameVersion = "Version";
 
         /// <summary>
         ///     
@@ -55,7 +56,7 @@ namespace PimTest
             return notes.Select(n => GetIndexedDocument(n));
         }
 
-        public NoteHeader GetNoteHeader(Document indexeDocument)
+        public INoteHeader GetNoteHeader(Document indexeDocument)
         {
             return new NoteHeader()
             {
@@ -75,10 +76,10 @@ namespace PimTest
         ///     optional
         /// </param>
         /// <param name="from">
-        ///     Filter on <see cref="Note.CreateTime"/>, optional
+        ///     Filter on <see cref="INoteHeader.CreateTime"/>, optional
         /// </param>
         /// <param name="to">
-        ///     Filter on <see cref="Note.CreateTime"/>, optional
+        ///     Filter on <see cref="INoteHeader.CreateTime"/>, optional
         /// </param>
         /// <param name="fuzzy">
         ///     Whether to perform fuzzy search (performance hit)

@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace PimTest
 {
-    public class Note : INote
+    public class Note : IPersistentNote
     {
         private static Regex _nameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
 
@@ -20,6 +20,22 @@ namespace PimTest
 
         public DateTime CreateTime { get; set; }
         public DateTime LastUpdateTime { get; set; }
+
+        /// <summary>
+        ///     0 for unsaved, incremented every time it's updated in the storage
+        /// </summary>
+        public int Version { get; set; }
+
+        /// <summary>
+        ///     Register update
+        /// </summary>
+        /// <returns>
+        ///     New version
+        /// </returns>
+        public int IncrementVersion()
+        {
+            return (++Version);
+        }
 
         /// <summary>
         ///     Name is just cached first line of text; should not be persisted separately
@@ -42,16 +58,17 @@ namespace PimTest
         ///     Id is assigned after note is saved
         /// </summary>
         public bool IsTransient
-        { get { return string.IsNullOrEmpty(Id); } }
+        { get { return Version == 0; } }
 
         public static Note Create(string text)
         {
             var result = new Note()
             {
-                //Id = CreateShortGuid(),
+                Id = CreateShortGuid(),
                 Text = text,
                 CreateTime = DateTime.Now,
-                LastUpdateTime = DateTime.Now
+                LastUpdateTime = DateTime.Now,
+                Version = 0
             };
 
             if (string.IsNullOrEmpty(result.Name))

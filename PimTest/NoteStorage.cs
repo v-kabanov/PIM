@@ -13,7 +13,24 @@ using NFluent;
 
 namespace PimTest
 {
-    public class NoteStorage : IDisposable
+    public interface INoteStorage : IDisposable
+    {
+        SavedRevision SaveOrUpdate(IPersistentNote note);
+
+        Note GetExisting(string id);
+
+        Note Delete(string id);
+
+        IEnumerable<Note> GetAll();
+
+        /// <summary>
+        ///     Get total number of documents; potentially expensive
+        /// </summary>
+        /// <returns></returns>
+        int CountAll();
+    }
+
+    public class NoteStorage : INoteStorage
     {
         public const string AppName = "mynotes";
 
@@ -46,16 +63,20 @@ namespace PimTest
         /// <returns>
         ///     null if there is no change;
         /// </returns>
-        public SavedRevision SaveOrUpdate(Note note)
+        public SavedRevision SaveOrUpdate(IPersistentNote note)
         {
+            Check.That(note).IsNotNull();
+            Check.That(note.Id).IsNotEmpty();
+            Check.That(note.Name).IsNotEmpty();
+
             Document doc;
 
             bool save = note.IsTransient;
 
             if (note.IsTransient)
             {
-                doc = Database.CreateDocument();
-                note.Id = doc.Id;
+                doc = new Document(Database, note.Id);
+                // note.Id = doc.Id; // let db assign id
             }
             else
             {
@@ -76,7 +97,10 @@ namespace PimTest
             SavedRevision result = null;
 
             if (save)
+            {
+                note.IncrementVersion();
                 result = doc.PutProperties(ToDictionary(note));
+            }
 
             return result;
         }
@@ -89,7 +113,7 @@ namespace PimTest
         /// <returns>
         ///     null if not found
         /// </returns>
-        public Note GetExistingNote(string id)
+        public Note GetExisting(string id)
         {
             var doc = Database.GetExistingDocument(id);
 
@@ -99,13 +123,30 @@ namespace PimTest
             return ToNote(doc);
         }
 
-        public Note DeleteNote(string id)
+        public Note Delete(string id)
         {
             var doc = Database.GetExistingDocument(id);
 
             doc.Delete();
 
             return doc != null ? ToNote(doc) : null;
+        }
+
+        public IEnumerable<Note> GetAll()
+        {
+            foreach(var row in Database.CreateAllDocumentsQuery().Run())
+            {
+                yield return ToNote(row.Document);
+            }
+        }
+
+        /// <summary>
+        ///     Get total number of documents
+        /// </summary>
+        /// <returns></returns>
+        public int CountAll()
+        {
+            return Database.GetDocumentCount();
         }
 
         private Note ToNote(Document doc)
@@ -116,10 +157,11 @@ namespace PimTest
                 CreateTime = doc.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameCreateTime),
                 LastUpdateTime = doc.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameLastUpdateTime),
                 Text = doc.GetProperty<string>(LuceneNoteAdapter.FieldNameText),
+                Version = doc.GetProperty<int>(LuceneNoteAdapter.FieldNameVersion)
             };
         }
 
-        private Dictionary<string, object> ToDictionary(Note note)
+        private Dictionary<string, object> ToDictionary(INote note)
         {
             Check.That(note).IsNotNull();
 
@@ -128,6 +170,7 @@ namespace PimTest
                 { LuceneNoteAdapter.FieldNameCreateTime, note.CreateTime }
                 , { LuceneNoteAdapter.FieldNameText, note.Text }
                 , { LuceneNoteAdapter.FieldNameLastUpdateTime, note.LastUpdateTime }
+                , { LuceneNoteAdapter.FieldNameVersion, note.Version }
             };
         }
 

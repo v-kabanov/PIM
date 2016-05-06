@@ -10,11 +10,49 @@ using System.Linq;
 using System.Reflection;
 using Common.Logging;
 using Lucene.Net.Analysis;
+using Lucene.Net.Documents;
 using Lucene.Net.Search;
 using NFluent;
 
 namespace PimTest
 {
+    public interface IMultiIndex
+    {
+        void AddIndex(string name, ILuceneIndex index);
+
+        ILuceneIndex GetIndex(string name);
+
+        /// <summary>
+        ///     Clear index contents (e.g. to rebuild).
+        /// </summary>
+        void Clear();
+
+        List<INoteHeader> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20);
+
+        void Add(Document doc);
+
+        void Delete(string key);
+
+        void CleanupDeletes();
+
+        void Optimize();
+    }
+
+    public class MultiIndex : IMultiIndex
+    {
+        public string RootDirectory { get; private set; }
+        private Dictionary<string, ILuceneIndex> Indexes { get; set; }
+
+        public MultiIndex(string rootDirectory)
+        {
+            Check.That(rootDirectory).IsNotEmpty();
+
+            RootDirectory = rootDirectory;
+
+            Indexes = new Dictionary<string, ILuceneIndex>();
+        }
+    }
+
     /// <summary>
     ///     Wraps multiple lucene indexes (e.g. 1 per language) and exposes them as one.
     /// </summary>
@@ -36,7 +74,7 @@ namespace PimTest
 
         private LuceneNoteAdapter Adapter { get; set; }
 
-        private void AddIndex(string name, ILuceneIndex index)
+        public void AddIndex(string name, ILuceneIndex index)
         {
             Check.That(index).IsNotNull();
             Check.That(name).IsNotEmpty();
@@ -54,7 +92,7 @@ namespace PimTest
             Indexes.Add(name, index);
         }
 
-        public List<NoteHeader> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20)
+        public List<INoteHeader> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20)
         {
             _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, from, to, fuzzy, maxResults);
 

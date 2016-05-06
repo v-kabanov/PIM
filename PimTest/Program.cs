@@ -30,9 +30,17 @@ namespace PimTest
 
             var storage = new NoteStorage(@"c:\temp\MyNotes");
 
-            foreach (var note in notes)
+            if (storage.CountAll() > 0)
             {
-                storage.SaveOrUpdate(note);
+                notes = storage.GetAll().ToArray();
+            }
+            else
+            {
+                // filling database
+                foreach (var note in notes)
+                {
+                    storage.SaveOrUpdate(note);
+                }
             }
 
             var adapter = new LuceneNoteAdapter();
@@ -66,7 +74,7 @@ namespace PimTest
                     foreach (var hit in result.Select(h => new { NoteHeader = adapter.GetNoteHeader(h.Document), Score = h.Score }))
                     {
                         Console.WriteLine($"\t {hit.NoteHeader.Id} - {hit.NoteHeader.Name}; Score = {hit.Score}");
-                        var loaded = storage.GetExistingNote(hit.NoteHeader.Id);
+                        var loaded = storage.GetExisting(hit.NoteHeader.Id);
 
                         if (loaded == null)
                         {
