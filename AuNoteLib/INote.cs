@@ -6,7 +6,7 @@
 
 using System;
 
-namespace PimTest
+namespace AuNoteLib
 {
     /// <summary>
     ///     Interface exposed to GUI

@@ -6,19 +6,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Ru;
-using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
-using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Version = Lucene.Net.Util.Version;
+using Lucene.Net.Index;
+using System.IO;
+using Lucene.Net.QueryParsers;
+using NFluent;
 
-namespace PimTest
+namespace AuNoteLib
 {
     public class LuceneIndex : ILuceneIndex, IDisposable
     {
@@ -41,7 +40,7 @@ namespace PimTest
         }
 
         /// <summary>
-        ///     Name to pass to <see cref="Document.Get(string)"/> to get document's 'primary key'
+        ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string) 'primary key'
         /// </summary>
         public string KeyFieldName { get; private set; }
 
@@ -50,7 +49,7 @@ namespace PimTest
 
         public void Add(params Document[] docs)
         {
-            Add(docs.AsEnumerable());
+            Add((IEnumerable<Document>) docs.AsEnumerable());
         }
 
         public void Add(IEnumerable<Document> items)
@@ -91,7 +90,7 @@ namespace PimTest
             }
         }
 
-        public void DeleteAll()
+        public void Clear()
         {
             using (var writer = CreateWriter())
             {
@@ -121,8 +120,73 @@ namespace PimTest
             {
                 var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
 
-                return hits.Select(h => new SearchHit(search.Doc(h.Doc), h.Score)).ToList();
+                return hits.Select(h => new SearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
             }
+        }
+
+        public Filter CreateTimeRangeFilter(string fieldName, DateTime? @from, DateTime? to)
+        {
+            Check.That(from.HasValue || to.HasValue).IsTrue();
+            Check.That(!from.HasValue || !to.HasValue || from.Value < to.Value).IsTrue();
+
+            string fromString = from.HasValue ? DateTools.DateToString(from.Value, DateTools.Resolution.SECOND) : null;
+            string toString = to.HasValue ? DateTools.DateToString(to.Value, DateTools.Resolution.SECOND) : null;
+            return new TermRangeFilter(fieldName, fromString, toString, true, false);
+        }
+
+        public Query CreateQuery(string fieldName, string queryText, bool fuzzy)
+        {
+            Check.That(queryText).IsNotEmpty();
+
+            var terms = queryText.Trim()
+                .Replace("-", " ")
+                .Split(' ')
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x.Trim() + "*");
+
+            var termsString = string.Join(" ", terms);
+
+            var parser = new QueryParser(Version.LUCENE_30, fieldName, Analyzer);
+            parser.PhraseSlop = 2;
+            parser.FuzzyMinSim = 0.1f;
+            parser.DefaultOperator = QueryParser.Operator.OR;
+
+            var parsedQuery = Parse(queryText, parser);
+
+            var booleanQuery = new BooleanQuery();
+            booleanQuery.Add(parsedQuery, Occur.SHOULD);
+
+            //var parsedTermsQuery = Parse(termsString, parser);
+            //parsedTermsQuery.Boost = 0.3f;
+            //booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
+
+            var term = new Term(fieldName, queryText);
+
+            if (fuzzy)
+            {
+                booleanQuery.Add(new FuzzyQuery(term), Occur.SHOULD);
+            }
+
+            var phraseQuery = new PhraseQuery();
+            phraseQuery.Slop = 2;
+            phraseQuery.Boost = 1.5f;
+            phraseQuery.Add(term);
+
+            booleanQuery.Add(phraseQuery, Occur.SHOULD);
+
+            //booleanQuery.Add(new WildcardQuery(term), Occur.SHOULD);
+
+            return booleanQuery;
+        }
+
+        public Query AddFilter(Query query, Filter filter)
+        {
+            Check.That(filter).IsNotNull();
+
+            if (query == null)
+                query = new MatchAllDocsQuery();
+
+            return new FilteredQuery(query, filter);
         }
 
         public void CleanupDeletes()
@@ -156,6 +220,22 @@ namespace PimTest
                 writer.Commit();
             DocCount = writer.NumDocs();
         }
+
+        private Query Parse(string text, QueryParser parser)
+        {
+            Query result;
+            try
+            {
+                result = parser.Parse(text);
+            }
+            catch (ParseException)
+            {
+                result = parser.Parse(QueryParser.Escape(text.Trim()));
+            }
+
+            return result;
+        }
+
 
         public static FSDirectory PreparePersistentDirectory(string directoryPath)
         {

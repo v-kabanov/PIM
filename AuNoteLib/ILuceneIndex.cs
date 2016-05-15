@@ -4,14 +4,19 @@
 // Comment		
 // **********************************************************************************************/
 
+
+using System;
 using System.Collections.Generic;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 
-namespace PimTest
+namespace AuNoteLib
 {
+    /// <summary>
+    ///     Domain agnostic lucene full-text index.
+    /// </summary>
     public interface ILuceneIndex
     {
         Directory Directory { get; }
@@ -19,7 +24,7 @@ namespace PimTest
         Analyzer Analyzer { get; }
 
         /// <summary>
-        ///     Name to pass to <see cref="Document.Get(string)"/> to get document's 'primary key'
+        ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string)" /> 'primary key'
         /// </summary>
         string KeyFieldName { get; }
 
@@ -37,11 +42,17 @@ namespace PimTest
 
         void Delete(params Query[] queries);
 
-        void DeleteAll();
+        void Clear();
 
         IndexSearcher CreateSearcher(bool readOnly, bool calcScore);
 
         List<SearchHit> Search(Query query, int maxResults);
+
+        Filter CreateTimeRangeFilter(string fieldName, DateTime? from, DateTime? to);
+
+        Query CreateQuery(string searchFieldName, string queryText, bool fuzzy);
+
+        Query AddFilter(Query query, Filter filter);
 
         int DocCount { get; }
 

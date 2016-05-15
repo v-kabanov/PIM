@@ -6,13 +6,13 @@
 
 using System;
 
-namespace PimTest
+namespace AuNoteLib
 {
-    public class NoteHeader : INoteHeader
+    public interface INoteHeader
     {
-        public string Id { get; set; }
-        public DateTime CreateTime { get; set; }
-        public DateTime LastUpdateTime { get; set; }
-        public string Name { get; set; }
+        string Id { get; }
+        DateTime CreateTime { get; }
+
+        string Name { get; }
     }
 }

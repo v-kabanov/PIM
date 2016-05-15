@@ -6,55 +6,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Common.Logging;
-using Lucene.Net.Analysis;
-using Lucene.Net.Documents;
-using Lucene.Net.Search;
 using NFluent;
+using log4net;
+using System.Reflection;
+using System.Linq;
+using Lucene.Net.Search;
 
-namespace PimTest
+namespace AuNoteLib
 {
-    public interface IMultiIndex
-    {
-        void AddIndex(string name, ILuceneIndex index);
-
-        ILuceneIndex GetIndex(string name);
-
-        /// <summary>
-        ///     Clear index contents (e.g. to rebuild).
-        /// </summary>
-        void Clear();
-
-        List<INoteHeader> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20);
-
-        void Add(Document doc);
-
-        void Delete(string key);
-
-        void CleanupDeletes();
-
-        void Optimize();
-    }
-
-    public class MultiIndex : IMultiIndex
-    {
-        public string RootDirectory { get; private set; }
-        private Dictionary<string, ILuceneIndex> Indexes { get; set; }
-
-        public MultiIndex(string rootDirectory)
-        {
-            Check.That(rootDirectory).IsNotEmpty();
-
-            RootDirectory = rootDirectory;
-
-            Indexes = new Dictionary<string, ILuceneIndex>();
-        }
-    }
-
     /// <summary>
-    ///     Wraps multiple lucene indexes (e.g. 1 per language) and exposes them as one.
+    ///     Wraps <see cref="IMultiIndex"/> and adapts it to .
     /// </summary>
     public class SearchEngine
     {
@@ -110,12 +71,12 @@ namespace PimTest
 
             var allHits = results.SelectMany(p => p.Value);
 
-            var combinedResult = allHits.GroupBy(h => h.NoteId, (key, g) => new { Document = g.Select(h => h.Document).First(), Score = g.Sum(h => h.Score) })
+            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new { Document = g.Select(h => h.Document).First(), Score = g.Sum(h => h.Score) })
                 .OrderByDescending(i => i.Score)
                 .Take(maxResults)
                 .ToList();
 
-            return combinedResult.Select(r => Adapter.GetNoteHeader(r.Document)).ToList();
+            return combinedResult.Select(r => Adapter.GetHeader(r.Document)).ToList();
         }
 
         private Query CreateQuery(ILuceneIndex index, string queryText, DateTime? from, DateTime? to, bool fuzzy)

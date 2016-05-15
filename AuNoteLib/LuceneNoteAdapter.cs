@@ -4,20 +4,21 @@
 // Comment		
 // **********************************************************************************************/
 
-using System;
-using System.Linq;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
-using Version = Lucene.Net.Util.Version;
-using System.Collections.Generic;
-using Lucene.Net.Linq;
 using NFluent;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Version = Lucene.Net.Util.Version;
 
-namespace PimTest
+namespace AuNoteLib
 {
-    public class LuceneNoteAdapter
+    public interface ILuceneNoteAdapter : ILuceneEntityAdapter<INote, INoteHeader> { }
+
+    public class LuceneNoteAdapter : ILuceneNoteAdapter
     {
         public const string FieldNameId = "Id";
         public const string FieldNameCreateTime = "CreateTime";
@@ -56,7 +57,7 @@ namespace PimTest
             return notes.Select(n => GetIndexedDocument(n));
         }
 
-        public INoteHeader GetNoteHeader(Document indexeDocument)
+        public INoteHeader GetHeader(Document indexeDocument)
         {
             return new NoteHeader()
             {
@@ -107,7 +108,7 @@ namespace PimTest
             return query;
         }
 
-        public List<SearchHit> Search(ILuceneIndex index, string text, bool fuzzy = false, int maxResults = 100)
+        public List<SearchHit> Search(ILuceneIndex index, string text, int maxResults = 100, bool fuzzy = false)
         {
             return index.Search(CreateQuery(index, text, fuzzy), maxResults);
         }
@@ -189,6 +190,13 @@ namespace PimTest
             //booleanQuery.Add(new WildcardQuery(term), Occur.SHOULD);
 
             return booleanQuery;
+        }
+
+        public IList<INoteHeader> GetHeaders(IEnumerable<SearchHit> searchResult)
+        {
+            Check.That(searchResult).IsNotNull();
+
+            return searchResult.Select(h => GetHeader(h.Document)).ToList();
         }
 
         /// <summary>

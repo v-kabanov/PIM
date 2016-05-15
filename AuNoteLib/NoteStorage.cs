@@ -6,12 +6,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.Odbc;
-using System.IO;
 using Couchbase.Lite;
+using System.IO;
 using NFluent;
 
-namespace PimTest
+namespace AuNoteLib
 {
     public interface INoteStorage : IDisposable
     {

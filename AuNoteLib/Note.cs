@@ -6,9 +6,8 @@
 
 using System;
 using System.Text.RegularExpressions;
-using System.Threading;
 
-namespace PimTest
+namespace AuNoteLib
 {
     public class Note : IPersistentNote
     {
