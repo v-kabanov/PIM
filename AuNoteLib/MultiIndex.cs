@@ -24,14 +24,21 @@ namespace AuNoteLib
         public string RootDirectory { get; private set; }
         private Dictionary<string, ILuceneIndex> Indexes { get; set; }
 
-        public MultiIndex(string rootDirectory)
+        public MultiIndex(string rootDirectory, string keyFieldName)
         {
             Check.That(rootDirectory).IsNotEmpty();
+            Check.That(keyFieldName).IsNotEmpty();
 
             RootDirectory = rootDirectory;
 
             Indexes = new Dictionary<string, ILuceneIndex>();
+            KeyFieldName = keyFieldName;
         }
+
+        /// <summary>
+        ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string)" /> 'primary key'
+        /// </summary>
+        public string KeyFieldName { get; private set; }
 
         public void AddIndex(string name, ILuceneIndex index)
         {
@@ -58,16 +65,16 @@ namespace AuNoteLib
             }
         }
 
-        public List<SearchHit> Search(string queryText, DateTime? @from, DateTime? to, bool fuzzy = false, int maxResults = 20)
+        public List<SearchHit> Search(string searchFieldName, string queryText, int maxResults)
         {
-            _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, from, to, fuzzy, maxResults);
+            _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, maxResults);
 
             var results = new Dictionary<string, List<SearchHit>>();
             foreach (var key in Indexes.Keys)
             {
                 var index = Indexes[key];
 
-                var result = Adapter.Search(index, Adapter.CreateQuery(index, queryText, from, to, fuzzy), maxResults);
+                var result = index.Search(index.CreateQuery(searchFieldName, queryText, false), maxResults);
 
                 _log.DebugFormat("Index {0} matched {1} items", key, result.Count);
 
@@ -76,12 +83,12 @@ namespace AuNoteLib
 
             var allHits = results.SelectMany(p => p.Value);
 
-            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new { Document = g.Select(h => h.Document).First(), Score = g.Sum(h => h.Score) })
+            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new SearchHit(g.Select(h => h.Document).First(), g.Sum(h => h.Score), KeyFieldName))
                 .OrderByDescending(i => i.Score)
                 .Take(maxResults)
                 .ToList();
 
-            return combinedResult.Select(r => Adapter.GetHeader(r.Document)).ToList();
+            return combinedResult;
         }
 
         public void Add(Document doc)

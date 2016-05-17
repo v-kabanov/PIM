@@ -189,6 +189,18 @@ namespace AuNoteLib
             return new FilteredQuery(query, filter);
         }
 
+        /// <summary>
+        ///     Create query which only applies filter to all documents
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public Query CreateQueryFromFilter(Filter filter)
+        {
+            Check.That(filter).IsNotNull();
+
+            return AddFilter(null, filter);
+        }
+
         public void CleanupDeletes()
         {
             using (var writer = CreateWriter())

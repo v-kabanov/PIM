@@ -6,6 +6,7 @@
 
 using System;
 using System.Linq;
+using AuNoteLib;
 using Newtonsoft.Json.Serialization;
 
 namespace PimTest
@@ -71,7 +72,7 @@ namespace PimTest
                     var query = adapter.CreateQuery(index, queryText);
                     var result = index.Search(query, 100);
                     Console.WriteLine($"Found {result.Count} items");
-                    foreach (var hit in result.Select(h => new { NoteHeader = adapter.GetNoteHeader(h.Document), Score = h.Score }))
+                    foreach (var hit in result.Select(h => new { NoteHeader = adapter.GetHeader(h.Document), Score = h.Score }))
                     {
                         Console.WriteLine($"\t {hit.NoteHeader.Id} - {hit.NoteHeader.Name}; Score = {hit.Score}");
                         var loaded = storage.GetExisting(hit.NoteHeader.Id);

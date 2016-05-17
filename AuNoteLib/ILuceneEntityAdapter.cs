@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using Lucene.Net.Documents;
+using Lucene.Net.Index;
 using Lucene.Net.Search;
 
 namespace AuNoteLib
@@ -24,6 +25,8 @@ namespace AuNoteLib
         where THeader : class
         where TData : THeader
     {
+        Term GetKeyTerm(THeader header);
+
         Document GetIndexedDocument(TData item);
 
         IEnumerable<Document> GetIndexedDocuments(params TData[] items);

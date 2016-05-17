@@ -14,6 +14,7 @@ using Lucene.Net.Store;
 
 namespace AuNoteLib
 {
+
     /// <summary>
     ///     Domain agnostic lucene full-text index.
     /// </summary>
@@ -53,6 +54,11 @@ namespace AuNoteLib
         Query CreateQuery(string searchFieldName, string queryText, bool fuzzy);
 
         Query AddFilter(Query query, Filter filter);
+
+        /// <summary>
+        ///     Create query which only applies filter to all documents
+        /// </summary>
+        Query CreateQueryFromFilter(Filter filter);
 
         int DocCount { get; }
 

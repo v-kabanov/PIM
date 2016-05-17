@@ -12,6 +12,11 @@ namespace AuNoteLib
 {
     public interface IMultiIndex
     {
+        /// <summary>
+        ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string)" /> 'primary key'
+        /// </summary>
+        string KeyFieldName { get; }
+
         void AddIndex(string name, ILuceneIndex index);
 
         ILuceneIndex GetIndex(string name);
@@ -21,7 +26,7 @@ namespace AuNoteLib
         /// </summary>
         void Clear();
 
-        List<SearchHit> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20);
+        List<SearchHit> Search(string searchFieldName, string queryText, int maxResults);
 
         void Add(Document doc);
 
