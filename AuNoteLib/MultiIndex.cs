@@ -45,6 +45,11 @@ namespace AuNoteLib
         /// </summary>
         public string DefaultIndexName { get; set; }
 
+        /// <summary>
+        ///     Number of currently active lucene indexes
+        /// </summary>
+        public int IndexCount { get { return Indexes.Count; } }
+
         public void AddIndex(string name, ILuceneIndex index)
         {
             CheckNotDisposed();
@@ -60,11 +65,12 @@ namespace AuNoteLib
             CheckNotDisposed();
 
             Check.That(name).IsNotEmpty();
-
             if (string.Equals(name, DefaultIndexName, StringComparison.InvariantCultureIgnoreCase))
                 throw new ApplicationException("Default index cannot be deleted; change default before deleting the index");
 
-            GetIndex(name).Dispose();
+            var index = GetIndex(name);
+            Check.That(index).IsNotNull();
+            index.Dispose();
             Indexes.Remove(name);
         }
 
@@ -92,13 +98,13 @@ namespace AuNoteLib
             }
         }
 
-        public IList<SearchHit> Search(string searchFieldName, string queryText, int maxResults)
+        public IList<LuceneSearchHit> Search(string searchFieldName, string queryText, int maxResults)
         {
             CheckNotDisposed();
 
             _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, maxResults);
 
-            var results = new Dictionary<string, IList<SearchHit>>();
+            var results = new Dictionary<string, IList<LuceneSearchHit>>();
             foreach (var key in Indexes.Keys)
             {
                 var index = Indexes[key];
@@ -112,7 +118,7 @@ namespace AuNoteLib
 
             var allHits = results.SelectMany(p => p.Value);
 
-            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new SearchHit(g.Select(h => h.Document).First(), g.Sum(h => h.Score), KeyFieldName))
+            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new LuceneSearchHit(g.Select(h => h.Document).First(), g.Sum(h => h.Score), KeyFieldName))
                 .OrderByDescending(i => i.Score)
                 .Take(maxResults)
                 .ToList();
@@ -138,16 +144,13 @@ namespace AuNoteLib
         /// </param>
         /// <returns>
         /// </returns>
-        public IList<SearchHit> GetTopInPeriod(string timeFieldName, DateTime periodStart, DateTime periodEnd, int maxResults)
+        public IList<LuceneSearchHit> GetTopInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, int maxResults)
         {
             CheckNotDisposed();
 
             Check.That(timeFieldName).IsNotEmpty();
 
-            if (Indexes.Count == 0)
-            {
-                throw new InvalidOperationException("No active indexes");
-            }
+            CheckActive();
 
             var index = GetIndex(DefaultIndexName);
             if (null == index)
@@ -155,8 +158,10 @@ namespace AuNoteLib
 
             var searcher = index.CreateSearcher(true, false);
             var sort = new Sort(new SortField(timeFieldName, CultureInfo.InvariantCulture, true));
-            List<SearchHit> result = searcher.Search((Query)null, index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd), maxResults, sort)
-                .ScoreDocs.Select(d => new SearchHit(searcher.Doc(d.Doc), d.Score, KeyFieldName))
+            var query = index.CreateQueryFromFilter(index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd));
+
+            List<LuceneSearchHit> result = searcher.Search(query, null, maxResults, sort)
+                .ScoreDocs.Select(d => new LuceneSearchHit(searcher.Doc(d.Doc), d.Score, KeyFieldName))
                 .ToList();
 
             return result;
@@ -165,10 +170,33 @@ namespace AuNoteLib
         public void Add(Document doc)
         {
             CheckNotDisposed();
+            CheckActive();
 
             foreach (var index in Indexes.Values)
             {
                 index.Add(doc);
+            }
+        }
+
+        public void Add(params Document[] docs)
+        {
+            CheckNotDisposed();
+            CheckActive();
+
+            foreach (var index in Indexes.Values)
+            {
+                index.Add(docs);
+            }
+        }
+
+        public void Add(IEnumerable<Document> docs)
+        {
+            CheckNotDisposed();
+            CheckActive();
+
+            foreach (var index in Indexes.Values)
+            {
+                index.Add(docs);
             }
         }
 
@@ -200,6 +228,15 @@ namespace AuNoteLib
             {
                 index.Optimize();
             }
+        }
+
+        /// <summary>
+        ///     Check readiness to accept docs and search
+        /// </summary>
+        private void CheckActive()
+        {
+            if (Indexes.Count == 0)
+                throw new InvalidOperationException("No active fulltext indexes");
         }
 
         private void CheckNotDisposed()

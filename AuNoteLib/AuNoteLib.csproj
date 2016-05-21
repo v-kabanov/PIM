@@ -165,7 +165,7 @@
     <Compile Include="QueryBuilding\SearchCombination.cs" />
     <Compile Include="QueryBuilding\TimeFilter.cs" />
     <Compile Include="SearchEngine.cs" />
-    <Compile Include="SearchHit.cs" />
+    <Compile Include="LuceneSearchHit.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
   </ItemGroup>

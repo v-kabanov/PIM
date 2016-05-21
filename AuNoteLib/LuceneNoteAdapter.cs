@@ -6,13 +6,10 @@
 
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.QueryParsers;
-using Lucene.Net.Search;
 using NFluent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Version = Lucene.Net.Util.Version;
 
 namespace AuNoteLib
 {
@@ -33,6 +30,18 @@ namespace AuNoteLib
         public LuceneNoteAdapter()
         {
         }
+
+        public string DocumentKeyName { get { return FieldNameId; } }
+
+        /// <summary>
+        ///     Name (in the lucene <see cref="Document"/>) of the field containing note creation time.
+        /// </summary>
+        public string TimeFieldName { get { return FieldNameCreateTime; } }
+
+        /// <summary>
+        ///     Name of the field in lucene <see cref="Document"/> which is analyzed and searched by full text queries.
+        /// </summary>
+        public string SearchFieldName { get { return FieldNameText; } }
 
         public Term GetKeyTerm(INoteHeader note)
         {
@@ -67,7 +76,7 @@ namespace AuNoteLib
             };
         }
 
-        public IList<INoteHeader> GetHeaders(IEnumerable<SearchHit> searchResult)
+        public IList<INoteHeader> GetHeaders(IEnumerable<LuceneSearchHit> searchResult)
         {
             Check.That(searchResult).IsNotNull();
 

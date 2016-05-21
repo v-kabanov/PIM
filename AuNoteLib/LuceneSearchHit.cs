@@ -8,9 +8,9 @@ using Lucene.Net.Documents;
 
 namespace AuNoteLib
 {
-    public class SearchHit
+    public class LuceneSearchHit
     {
-        public SearchHit(Document document, float score, string keyFieldName)
+        public LuceneSearchHit(Document document, float score, string keyFieldName)
         {
             KeyFieldName = keyFieldName;
             Document = document;

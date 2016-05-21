@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using Lucene.Net.Documents;
 
 namespace AuNoteLib
@@ -24,6 +25,11 @@ namespace AuNoteLib
         string DefaultIndexName { get; set; }
 
         /// <summary>
+        ///     Number of currently active lucene indexes
+        /// </summary>
+        int IndexCount { get; }
+
+        /// <summary>
         ///     Add new index to be used in parallel with existing ones. Index must be prepopulated already if necessary, no data is added to it here.
         /// </summary>
         /// <param name="name">
@@ -38,8 +44,20 @@ namespace AuNoteLib
         /// </summary>
         /// <param name="name">
         /// </param>
+        /// <exception cref="ApplicationException">
+        ///     index does not exist
+        /// </exception>
         void RemoveIndex(string name);
 
+        /// <summary>
+        ///     Get index by name
+        /// </summary>
+        /// <param name="name">
+        ///     Case-insensitive
+        /// </param>
+        /// <returns>
+        ///     null if does not exist
+        /// </returns>
         ILuceneIndex GetIndex(string name);
 
         /// <summary>
@@ -47,7 +65,7 @@ namespace AuNoteLib
         /// </summary>
         void Clear();
 
-        IList<SearchHit> Search(string searchFieldName, string queryText, int maxResults);
+        IList<LuceneSearchHit> Search(string searchFieldName, string queryText, int maxResults);
 
         /// <summary>
         ///     Get last <paramref name="maxResults"/> documents with time field (identified by <paramref name="timeFieldName"/>) value
@@ -67,9 +85,13 @@ namespace AuNoteLib
         /// </param>
         /// <returns>
         /// </returns>
-        IList<SearchHit> GetTopInPeriod(string timeFieldName, DateTime periodStart, DateTime periodEnd, int maxResults);
+        IList<LuceneSearchHit> GetTopInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, int maxResults);
 
         void Add(Document doc);
+
+        void Add(params Document[] docs);
+
+        void Add(IEnumerable<Document> docs);
 
         void Delete(string key);
 

@@ -6,94 +6,137 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NFluent;
 using log4net;
 using System.Reflection;
-using System.Linq;
-using Lucene.Net.Search;
+using Lucene.Net.Analysis;
 
 namespace AuNoteLib
 {
     /// <summary>
-    ///     Wraps <see cref="IMultiIndex"/> and adapts it to .
+    ///     Generic lucene search engine supporting multiple parallel indexes per e.g. language and generic entity
+    ///     with 1 or 2 searchable fields (in lucene index): text and optional time.
     /// </summary>
-    public class SearchEngine
+    public class SearchEngine<TData, THeader>
+        where THeader : class
+        where TData : THeader
     {
         private static readonly ILog _log = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
 
         public string RootDirectory { get; private set; }
-        private Dictionary<string, ILuceneIndex> Indexes { get; set; }
 
-        public SearchEngine(string rootDirectory)
+        public IMultiIndex MultiIndex { get; private set; }
+
+        public ILuceneEntityAdapter<TData, THeader> EntityAdapter { get; private set; }
+
+        /// <summary>
+        ///     Constructor
+        /// </summary>
+        /// <param name="rootDirectory">
+        ///     must exist
+        /// </param>
+        /// <param name="entityAdapter">
+        /// </param>
+        /// <param name="multiIndex">
+        ///     Implements collection of named <see cref="ILuceneIndex"/> used in parallel for e.g. multi-lingual search.
+        /// </param>
+        public SearchEngine(string rootDirectory, ILuceneEntityAdapter<TData, THeader> entityAdapter, IMultiIndex multiIndex)
         {
+            Check.That(rootDirectory).IsNotEmpty();
+            Check.That(entityAdapter).IsNotNull();
+            Check.That(multiIndex).IsNotNull();
+
+            Check.That(Directory.Exists(rootDirectory));
+
             RootDirectory = rootDirectory;
-
-            Indexes = new Dictionary<string, ILuceneIndex>();
-
-            Adapter = new LuceneNoteAdapter();
+            EntityAdapter = entityAdapter;
+            MultiIndex = multiIndex;
         }
 
-        private LuceneNoteAdapter Adapter { get; set; }
-
-        public void AddIndex(string name, ILuceneIndex index)
+        /// <summary>
+        ///     Sets index as default if it's the first one.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="analyzer"></param>
+        public void AddIndex(string name, Analyzer analyzer)
         {
-            Check.That(index).IsNotNull();
+            Check.That(name).IsNotEmpty();
+            Check.That(analyzer).IsNotNull();
+
+            var indexDirectoryPath = GetIndexRootFolder(name);
+            var dirInfo = new DirectoryInfo(indexDirectoryPath);
+            if (dirInfo.Exists)
+            {
+                Check.That(IsDirectoryEmpty(dirInfo));
+            }
+            else
+            {
+                dirInfo.Create();
+            }
+
+            var luceneDir = LuceneIndex.PreparePersistentDirectory(indexDirectoryPath);
+
+            var newIndex = new LuceneIndex(analyzer, luceneDir, EntityAdapter.DocumentKeyName);
+
+            MultiIndex.AddIndex(name, newIndex);
+
+            if (MultiIndex.IndexCount == 1)
+            {
+                SetDefaultIndex(name);
+            }
+        }
+
+        public void RemoveIndex(string name)
+        {
             Check.That(name).IsNotEmpty();
 
-            if (Indexes.ContainsKey(name))
-            {
-                throw new ApplicationException("Index with the specified name already exists");
-            }
+            string path = GetIndexRootFolder(name);
+            MultiIndex.RemoveIndex(name);
 
-            if (Indexes.ContainsValue(index))
-            {
-                throw new ApplicationException("Index instance already exists");
-            }
-
-            Indexes.Add(name, index);
+            Directory.Delete(path, true);
         }
 
-        public List<INoteHeader> Search(string queryText, DateTime? from, DateTime? to, bool fuzzy = false, int maxResults = 20)
+        public void SetDefaultIndex(string name)
         {
-            _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, from, to, fuzzy, maxResults);
+            Check.That(name).IsNotEmpty();
+            Check.That(MultiIndex.GetIndex(name) != null);
 
-            var results = new Dictionary<string, List<SearchHit>>();
-            foreach (var key in Indexes.Keys)
-            {
-                var index = Indexes[key];
-
-                var result = Adapter.Search(index, Adapter.CreateQuery(index, queryText, from, to, fuzzy), maxResults);
-
-                _log.DebugFormat("Index {0} matched {1} items", key, result.Count);
-
-                results.Add(key, result);
-            }
-
-            var allHits = results.SelectMany(p => p.Value);
-
-            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new { Document = g.Select(h => h.Document).First(), Score = g.Sum(h => h.Score) })
-                .OrderByDescending(i => i.Score)
-                .Take(maxResults)
-                .ToList();
-
-            return combinedResult.Select(r => Adapter.GetHeader(r.Document)).ToList();
+            MultiIndex.DefaultIndexName = name;
         }
 
-        private Query CreateQuery(ILuceneIndex index, string queryText, DateTime? from, DateTime? to, bool fuzzy)
+        public void Add(params TData[] docs)
         {
-            Query query = null;
+            var luceneDocs = EntityAdapter.GetIndexedDocuments(docs);
 
-            if (!string.IsNullOrEmpty(queryText))
-            {
-                query = Adapter.CreateQuery(index, queryText, fuzzy);
-            }
-            
-            if (from.HasValue || to.HasValue)
-            {
-                query = Adapter.AddFilter(query, Adapter.CreateTimeRangeFilter(from, to));
-            }
+            MultiIndex.Add(luceneDocs);
+        }
 
-            return query;
+        public IList<THeader> Search(string queryText, int maxResults)
+        {
+            _log.Debug($"Searching '{queryText}', maxResults = {maxResults}");
+
+            var result = MultiIndex.Search(EntityAdapter.SearchFieldName, queryText, maxResults);
+
+            return EntityAdapter.GetHeaders(result);
+        }
+
+        public IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults)
+        {
+            return EntityAdapter.GetHeaders(
+                MultiIndex.GetTopInPeriod(EntityAdapter.TimeFieldName, periodStart, periodEnd, maxResults));
+        }
+
+        private bool IsDirectoryEmpty(DirectoryInfo dir)
+        {
+            return dir.GetDirectories().Length == 0 && dir.GetFiles().Length == 0;
+        }
+
+        private string GetIndexRootFolder(string name)
+        {
+            Check.That(name).IsNotEmpty();
+
+            return Path.Combine(RootDirectory, name);
         }
     }
 }

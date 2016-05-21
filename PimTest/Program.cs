@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 
 using System;
+using System.IO;
 using System.Linq;
 using AuNoteLib;
 using Newtonsoft.Json.Serialization;
@@ -15,8 +16,6 @@ namespace PimTest
     {
         static void Main(string[] args)
         {
-            var index = new LuceneIndex(LuceneIndex.CreateDefaultAnalyzer("English"), LuceneIndex.CreateTransientDirectory());
-
             var notes = new Note[]
             {
                 Note.Create("Evaluating Evernote\r\n GMBH encryption support. interface is not too bad, local supported, no symmetric encryption, no fulltext search."),
@@ -44,21 +43,29 @@ namespace PimTest
                 }
             }
 
+            var fullTextDir = new DirectoryInfo(@"c:\temp\AuNotes\ft");
+            if (fullTextDir.Exists)
+            {
+                fullTextDir.Delete(true);
+            }
+            fullTextDir.Create();
+
             var adapter = new LuceneNoteAdapter();
+            var searchEngine = new SearchEngine<INote, INoteHeader>(
+                fullTextDir.FullName, adapter, new MultiIndex(adapter.DocumentKeyName));
 
-            index.Add(adapter.GetIndexedDocuments(notes));
+            var indexNameEnglish = "en";
+            var englishAnalyzer = LuceneIndex.CreateDefaultAnalyzer("English");
 
-            var result1 = adapter.Search(
-                index
-                , adapter.CreateQueryFromFilter(
-                    adapter.CreateTimeRangeFilter(null, DateTime.Now.AddSeconds(-1))));
+            searchEngine.AddIndex(indexNameEnglish, englishAnalyzer);
 
-            var result2 = adapter.Search(
-                index
-                , adapter.CreateQueryFromFilter(
-                    adapter.CreateTimeRangeFilter(DateTime.Now.AddSeconds(-10), null)));
+            searchEngine.Add(notes);
 
-            // problem: does not find 'erasing' by 'erase'; but 'erasure' works
+            var result1 = searchEngine.GetTopInPeriod(null, DateTime.Now.AddSeconds(-1), 4);
+
+            var result2 = searchEngine.GetTopInPeriod(DateTime.Now.AddSeconds(-10), null, 4);
+
+            // problem in the past: did not find 'erasing' by 'erase'; but 'erasure' works
 
             bool finish;
             do
@@ -69,17 +76,16 @@ namespace PimTest
                 finish = string.IsNullOrEmpty(queryText);
                 if (!finish)
                 {
-                    var query = adapter.CreateQuery(index, queryText);
-                    var result = index.Search(query, 100);
+                    var result = searchEngine.Search(queryText, 100);
                     Console.WriteLine($"Found {result.Count} items");
-                    foreach (var hit in result.Select(h => new { NoteHeader = adapter.GetHeader(h.Document), Score = h.Score }))
+                    foreach (var hit in result)
                     {
-                        Console.WriteLine($"\t {hit.NoteHeader.Id} - {hit.NoteHeader.Name}; Score = {hit.Score}");
-                        var loaded = storage.GetExisting(hit.NoteHeader.Id);
+                        Console.WriteLine($"\t {hit.Id} - {hit.Name};");
+                        var loaded = storage.GetExisting(hit.Id);
 
                         if (loaded == null)
                         {
-                            Console.WriteLine($"Note {hit.NoteHeader.Id} not found in database");
+                            Console.WriteLine($"Note {hit.Id} not found in database");
                         }
                     }
                 }

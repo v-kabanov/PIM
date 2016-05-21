@@ -118,13 +118,13 @@ namespace AuNoteLib
         /// <param name="query"></param>
         /// <param name="maxResults"></param>
         /// <returns></returns>
-        public IList<SearchHit> Search(Query query, int maxResults)
+        public IList<LuceneSearchHit> Search(Query query, int maxResults)
         {
             using (var search = CreateSearcher(true, true))
             {
                 var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
 
-                return hits.Select(h => new SearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
+                return hits.Select(h => new LuceneSearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
             }
         }
 
@@ -222,11 +222,6 @@ namespace AuNoteLib
             }
         }
 
-        public void DeleteIndex()
-        {
-            
-        }
-
         private IndexWriter CreateWriter()
         {
             return new IndexWriter(Directory, Analyzer, IndexWriter.MaxFieldLength.UNLIMITED);
@@ -257,7 +252,6 @@ namespace AuNoteLib
             return result;
         }
 
-
         public static FSDirectory PreparePersistentDirectory(string directoryPath)
         {
             var directoryInfo = new DirectoryInfo(directoryPath);
@@ -283,6 +277,13 @@ namespace AuNoteLib
             return new RAMDirectory();
         }
 
+        /// <summary>
+        ///     
+        /// </summary>
+        /// <param name="name">
+        ///     Name understood by Snowball - name of the filter class
+        /// </param>
+        /// <returns></returns>
         public static Analyzer CreateDefaultAnalyzer(string name)
         {
             return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, name);

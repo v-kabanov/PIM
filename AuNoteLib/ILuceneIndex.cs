@@ -47,7 +47,7 @@ namespace AuNoteLib
 
         IndexSearcher CreateSearcher(bool readOnly, bool calcScore);
 
-        IList<SearchHit> Search(Query query, int maxResults);
+        IList<LuceneSearchHit> Search(Query query, int maxResults);
 
         Filter CreateTimeRangeFilter(string fieldName, DateTime? from, DateTime? to);
 
