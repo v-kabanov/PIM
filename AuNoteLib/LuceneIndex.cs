@@ -19,7 +19,7 @@ using NFluent;
 
 namespace AuNoteLib
 {
-    public class LuceneIndex : ILuceneIndex, IDisposable
+    public class LuceneIndex : ILuceneIndex
     {
         private const string WriteLockFileName = "write.lock";
 
@@ -29,6 +29,10 @@ namespace AuNoteLib
 
         public LuceneIndex(Analyzer analyzer, Lucene.Net.Store.Directory fullTextDirectory, string documentKeyName = "Id")
         {
+            Check.That(analyzer).IsNotNull();
+            Check.That(fullTextDirectory).IsNotNull();
+            Check.That(documentKeyName).IsNotEmpty();
+
             KeyFieldName = documentKeyName;
             Analyzer = analyzer;
             Directory = fullTextDirectory;
@@ -114,7 +118,7 @@ namespace AuNoteLib
         /// <param name="query"></param>
         /// <param name="maxResults"></param>
         /// <returns></returns>
-        public List<SearchHit> Search(Query query, int maxResults)
+        public IList<SearchHit> Search(Query query, int maxResults)
         {
             using (var search = CreateSearcher(true, true))
             {
@@ -216,6 +220,11 @@ namespace AuNoteLib
             {
                 writer.Optimize();
             }
+        }
+
+        public void DeleteIndex()
+        {
+            
         }
 
         private IndexWriter CreateWriter()

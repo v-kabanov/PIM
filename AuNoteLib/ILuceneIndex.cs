@@ -18,7 +18,7 @@ namespace AuNoteLib
     /// <summary>
     ///     Domain agnostic lucene full-text index.
     /// </summary>
-    public interface ILuceneIndex
+    public interface ILuceneIndex : IDisposable
     {
         Directory Directory { get; }
 
@@ -47,7 +47,7 @@ namespace AuNoteLib
 
         IndexSearcher CreateSearcher(bool readOnly, bool calcScore);
 
-        List<SearchHit> Search(Query query, int maxResults);
+        IList<SearchHit> Search(Query query, int maxResults);
 
         Filter CreateTimeRangeFilter(string fieldName, DateTime? from, DateTime? to);
 
