@@ -281,12 +281,29 @@ namespace AuNoteLib
         ///     
         /// </summary>
         /// <param name="name">
-        ///     Name understood by Snowball - name of the filter class
+        ///     The name of a stemmer is the part of the class name before "Stemmer", e.g., the stemmer in EnglishStemmer is named "English". 
         /// </param>
         /// <returns></returns>
-        public static Analyzer CreateDefaultAnalyzer(string name)
+        public static Analyzer CreateDefaultAnalyzer(string stemmerName)
         {
-            return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, name);
+            Check.That(GetAvailableSnowballStemmers()).Contains(stemmerName);
+
+            return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, stemmerName);
+        }
+
+        /// <summary>
+        ///     Get name
+        /// </summary>
+        /// <returns></returns>
+        public static IEnumerable<string> GetAvailableSnowballStemmers()
+        {
+            var namespaceName = typeof(SF.Snowball.Ext.EnglishStemmer).Namespace;
+            const string stemmerSuffix = "Stemmer";
+
+            return (typeof(SF.Snowball.Ext.EnglishStemmer)).Assembly.GetTypes()
+                .Where(t => t.Namespace == namespaceName)
+                .Where(t => t.Name.EndsWith(stemmerSuffix))
+                .Select(t => t.Name.Substring(0, t.Name.Length - stemmerSuffix.Length));
         }
 
         #region IDisposable Support
