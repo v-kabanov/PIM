@@ -98,6 +98,8 @@ namespace AuNoteLib
             }
         }
 
+        public bool UseFuzzySearch { get; set; }
+
         public IList<LuceneSearchHit> Search(string searchFieldName, string queryText, int maxResults)
         {
             CheckNotDisposed();
@@ -109,7 +111,7 @@ namespace AuNoteLib
             {
                 var index = Indexes[key];
 
-                var result = index.Search(index.CreateQuery(searchFieldName, queryText, false), maxResults);
+                var result = index.Search(index.CreateQuery(searchFieldName, queryText, UseFuzzySearch), maxResults);
 
                 _log.DebugFormat("Index {0} matched {1} items", key, result.Count);
 

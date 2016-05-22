@@ -284,7 +284,7 @@ namespace AuNoteLib
         ///     The name of a stemmer is the part of the class name before "Stemmer", e.g., the stemmer in EnglishStemmer is named "English". 
         /// </param>
         /// <returns></returns>
-        public static Analyzer CreateDefaultAnalyzer(string stemmerName)
+        public static Analyzer CreateSnowballAnalyzer(string stemmerName)
         {
             Check.That(GetAvailableSnowballStemmers()).Contains(stemmerName);
 
@@ -301,6 +301,7 @@ namespace AuNoteLib
             const string stemmerSuffix = "Stemmer";
 
             return (typeof(SF.Snowball.Ext.EnglishStemmer)).Assembly.GetTypes()
+                .Where(t => t.IsClass)
                 .Where(t => t.Namespace == namespaceName)
                 .Where(t => t.Name.EndsWith(stemmerSuffix))
                 .Select(t => t.Name.Substring(0, t.Name.Length - stemmerSuffix.Length));

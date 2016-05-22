@@ -16,6 +16,13 @@ namespace PimTest
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Available stemmers:");
+
+            foreach (var n in LuceneIndex.GetAvailableSnowballStemmers())
+            {
+                Console.WriteLine(n);
+            }
+
             var notes = new Note[]
             {
                 Note.Create("Evaluating Evernote\r\n GMBH encryption support. interface is not too bad, local supported, no symmetric encryption, no fulltext search."),
@@ -26,6 +33,8 @@ namespace PimTest
                 Note.Create("blog post \r\n publishing tomorrow "),
                 Note.Create("Apple \r\n not tolerated well"),
                 Note.Create("Egg \r\n tolerated well, but high in cholesterol if you beleive it"),
+                Note.Create("Masha \r\n Maria Мария"),
+                Note.Create("Mama \r\n mum mother Tanya"),
             };
 
             var storage = new NoteStorage(@"c:\temp\MyNotes");
@@ -54,10 +63,14 @@ namespace PimTest
             var searchEngine = new SearchEngine<INote, INoteHeader>(
                 fullTextDir.FullName, adapter, new MultiIndex(adapter.DocumentKeyName));
 
+            searchEngine.UseFuzzySearch = true;
+
             var indexNameEnglish = "en";
-            var englishAnalyzer = LuceneIndex.CreateDefaultAnalyzer("English");
+            var englishAnalyzer = LuceneIndex.CreateSnowballAnalyzer("English");
+            var russianAnalyzer = LuceneIndex.CreateSnowballAnalyzer("Russian");
 
             searchEngine.AddIndex(indexNameEnglish, englishAnalyzer);
+            searchEngine.AddIndex("ru", russianAnalyzer);
 
             searchEngine.Add(notes);
 

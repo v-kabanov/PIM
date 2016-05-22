@@ -112,6 +112,12 @@ namespace AuNoteLib
             MultiIndex.Add(luceneDocs);
         }
 
+        public bool UseFuzzySearch
+        {
+            get { return MultiIndex.UseFuzzySearch; }
+            set { MultiIndex.UseFuzzySearch = value; }
+        }
+
         public IList<THeader> Search(string queryText, int maxResults)
         {
             _log.Debug($"Searching '{queryText}', maxResults = {maxResults}");

@@ -65,6 +65,8 @@ namespace AuNoteLib
         /// </summary>
         void Clear();
 
+        bool UseFuzzySearch { get; set; }
+
         IList<LuceneSearchHit> Search(string searchFieldName, string queryText, int maxResults);
 
         /// <summary>
