@@ -23,7 +23,7 @@ namespace PimTest
                 Console.WriteLine(n);
             }
 
-            var notes = new Note[]
+            var notes = new[]
             {
                 Note.Create("Evaluating Evernote\r\n GMBH encryption support. interface is not too bad, local supported, no symmetric encryption, no fulltext search."),
                 Note.Create("Evaluating OneNote\r\n interface is not too bad, local supported, no symmetric key encryption, no fulltext search, although claimed."),

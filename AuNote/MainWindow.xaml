@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:AuNote"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-  <StackPanel>
-    <Grid>
+  <StackPanel VerticalAlignment="Stretch">
+    <Grid VerticalAlignment="Stretch">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto">
         </ColumnDefinition>
@@ -18,13 +18,22 @@
       </Grid.ColumnDefinitions>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" MinHeight="20"></RowDefinition>
+        <RowDefinition Height="Auto" MinHeight="10"></RowDefinition>
       </Grid.RowDefinitions>
-      <TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Center">Search: </TextBlock>
-      <TextBox Grid.Column="1" Grid.Row="0"></TextBox>
+      <TextBlock Grid.Column="0" Grid.Row="0" VerticalAlignment="Center">Search:</TextBlock>
+      <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding SearchText}" TextChanged="{Binding }"></TextBox>
       <Button Grid.Column="2" Grid.Row="0">New note</Button>
     </Grid>
+    <ListView Name="LvNotes" Margin="5" VerticalAlignment="Stretch" ItemsSource="{Binding NoteHeaders}" >
+      <ListView.View>
+        <GridView>
+          <GridViewColumn Header="Created" Width="Auto" DisplayMemberBinding="{Binding CreationTime}"/>
+          <GridViewColumn Header="Content" DisplayMemberBinding="{Binding Name}" />
+        </GridView>
+      </ListView.View>
+    </ListView>
 
   </StackPanel>
-  
+
 
 </Window>
