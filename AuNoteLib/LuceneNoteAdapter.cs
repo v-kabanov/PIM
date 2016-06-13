@@ -31,17 +31,17 @@ namespace AuNoteLib
         {
         }
 
-        public string DocumentKeyName { get { return FieldNameId; } }
+        public string DocumentKeyName => FieldNameId;
 
         /// <summary>
         ///     Name (in the lucene <see cref="Document"/>) of the field containing note creation time.
         /// </summary>
-        public string TimeFieldName { get { return FieldNameCreateTime; } }
+        public string TimeFieldName => FieldNameCreateTime;
 
         /// <summary>
         ///     Name of the field in lucene <see cref="Document"/> which is analyzed and searched by full text queries.
         /// </summary>
-        public string SearchFieldName { get { return FieldNameText; } }
+        public string SearchFieldName => FieldNameText;
 
         public Term GetKeyTerm(INoteHeader note)
         {
@@ -63,7 +63,12 @@ namespace AuNoteLib
 
         public IEnumerable<Document> GetIndexedDocuments(params INote[] notes)
         {
-            return notes.Select(n => GetIndexedDocument(n));
+            return notes.Select(GetIndexedDocument);
+        }
+
+        public IEnumerable<Document> GetIndexedDocuments(IEnumerable<INote> notes)
+        {
+            return notes.Select(GetIndexedDocument);
         }
 
         public INoteHeader GetHeader(Document indexeDocument)

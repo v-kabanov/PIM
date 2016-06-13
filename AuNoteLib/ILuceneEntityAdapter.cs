@@ -43,6 +43,8 @@ namespace AuNoteLib
 
         IEnumerable<Document> GetIndexedDocuments(params TData[] items);
 
+        IEnumerable<Document> GetIndexedDocuments(IEnumerable<TData> items);
+
         THeader GetHeader(Document doc);
 
         IList<THeader> GetHeaders(IEnumerable<LuceneSearchHit> searchResult);

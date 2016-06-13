@@ -131,6 +131,12 @@ namespace AuNoteLib
             return doc != null ? ToNote(doc) : null;
         }
 
+        /// <summary>
+        ///     Get lazily loaded collection of all notes in the database.
+        /// </summary>
+        /// <returns>
+        ///     Lazily loaded collection; safe to invoke on large databases.
+        /// </returns>
         public IEnumerable<Note> GetAll()
         {
             foreach(var row in Database.CreateAllDocumentsQuery().Run())

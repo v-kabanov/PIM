@@ -6,7 +6,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
+using System.Linq;
 using NFluent;
 using log4net;
 using System.Reflection;
@@ -22,13 +24,15 @@ namespace AuNoteLib
         where THeader : class
         where TData : THeader
     {
-        private static readonly ILog _log = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
+        private static readonly ILog Log = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
 
         public string RootDirectory { get; private set; }
 
         public IMultiIndex MultiIndex { get; private set; }
 
         public ILuceneEntityAdapter<TData, THeader> EntityAdapter { get; private set; }
+
+        private readonly string[] languages;
 
         /// <summary>
         ///     Constructor
@@ -59,7 +63,10 @@ namespace AuNoteLib
         /// </summary>
         /// <param name="name"></param>
         /// <param name="analyzer"></param>
-        public void AddIndex(string name, Analyzer analyzer)
+        /// <returns>
+        ///     The new index
+        /// </returns>
+        public ILuceneIndex AddIndex(string name, Analyzer analyzer)
         {
             Check.That(name).IsNotEmpty();
             Check.That(analyzer).IsNotNull();
@@ -85,6 +92,26 @@ namespace AuNoteLib
             {
                 SetDefaultIndex(name);
             }
+
+            return newIndex;
+        }
+
+        /// <summary>
+        ///     Does not load all documents into memory at once - safe to invoke for big databases if <paramref name="docs"/> is lazy.
+        /// </summary>
+        /// <param name="indexName">
+        ///     Name of the snowball stemmer (language) which is used as index name.
+        /// </param>
+        /// <param name="docs">
+        ///     All documents in the storage.
+        /// </param>
+        public void RebuildIndex(string indexName, IEnumerable<TData> docs)
+        {
+            var index = MultiIndex.GetIndex(indexName);
+            Check.That(index).IsNotNull();
+
+            index.Clear();
+            index.Add(EntityAdapter.GetIndexedDocuments(docs));
         }
 
         public void RemoveIndex(string name)
@@ -120,7 +147,7 @@ namespace AuNoteLib
 
         public IList<THeader> Search(string queryText, int maxResults)
         {
-            _log.Debug($"Searching '{queryText}', maxResults = {maxResults}");
+            Log.Debug($"Searching '{queryText}', maxResults = {maxResults}");
 
             var result = MultiIndex.Search(EntityAdapter.SearchFieldName, queryText, maxResults);
 
