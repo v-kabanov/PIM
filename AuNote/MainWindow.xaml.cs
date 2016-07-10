@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using AuNote.ViewModel;
 using AuNoteLib;
 
 namespace AuNote
@@ -31,6 +32,16 @@ namespace AuNote
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new MainViewModel();
         }
+
+        /*
+         * solution for when UpdateSourceTrigger is unavailable for binding such as in Silverlight
+        private void TextBoxBase_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            var binding = ((TextBox)sender).GetBindingExpression(TextBox.TextProperty);
+            binding.UpdateSource();
+        }
+        */
     }
 }

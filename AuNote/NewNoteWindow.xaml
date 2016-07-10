@@ -1,0 +1,23 @@
+﻿<Window x:Class="AuNote.NewNoteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AuNote"
+        mc:Ignorable="d"
+        Title="New Note" Height="230.534" Width="386.26">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"></ColumnDefinition>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"></RowDefinition>
+      <RowDefinition Height="Auto"></RowDefinition>
+    </Grid.RowDefinitions>
+    <RichTextBox Name="TextBox" Grid.Column="0" Grid.Row="0" VerticalAlignment="Stretch" Margin="3"></RichTextBox>
+    <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Name="SaveButton" Width="Auto" HorizontalAlignment="Right">Delete</Button>
+      <Button Name="OkButton" Width="Auto" HorizontalAlignment="Right">OK</Button>
+    </StackPanel>
+  </Grid>
+</Window>
