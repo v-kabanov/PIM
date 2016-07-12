@@ -32,7 +32,6 @@ namespace AuNote
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
         }
 
         /*

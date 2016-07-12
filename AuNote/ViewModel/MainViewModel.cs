@@ -156,7 +156,7 @@ namespace AuNote.ViewModel
             }
             else
             {
-                notes = SearchEngine.GetTopInPeriod(null, null, NoteListSize);
+                notes = SearchEngine.GetTopInPeriod(null, DateTime.Now, NoteListSize);
             }
 
             MergeIntoExistingList(notes);
