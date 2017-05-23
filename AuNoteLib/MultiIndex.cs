@@ -158,7 +158,7 @@ namespace AuNoteLib
             if (null == index)
                 index = Indexes.Values.First();
 
-            var searcher = index.CreateSearcher(true, false);
+            var searcher = index.NonScoringSearcher;
             var sort = new Sort(new SortField(timeFieldName, CultureInfo.InvariantCulture, true));
             var query = index.CreateQueryFromFilter(index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd));
 
@@ -244,7 +244,7 @@ namespace AuNoteLib
         private void CheckNotDisposed()
         {
             if (disposedValue)
-                throw new ObjectDisposedException(MethodInfo.GetCurrentMethod().DeclaringType.Name);
+                throw new ObjectDisposedException(MethodBase.GetCurrentMethod().DeclaringType.Name);
         }
 
         #region IDisposable Support

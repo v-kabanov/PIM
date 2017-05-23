@@ -34,8 +34,13 @@ namespace AuNoteLib
         /// <summary>
         ///     Exists because repeated creation and disposal of IndexWriter for every document to be saved is inefficient.
         /// </summary>
-        /// <param name="doc"></param>
-        void Add(IEnumerable<Document> doc);
+        /// <param name="items">
+        ///     Mandatory
+        /// </param>
+        /// <param name="progressReporter">
+        ///     Optional delegate receiving number of items added so far.
+        /// </param>
+        void Add(IEnumerable<Document> items, Action<int> progressReporter = null);
 
         void Delete(string key);
 
@@ -45,7 +50,15 @@ namespace AuNoteLib
 
         void Clear();
 
-        IndexSearcher CreateSearcher(bool readOnly, bool calcScore);
+        /// <summary>
+        ///     Fully thread safe lazy instance
+        /// </summary>
+        IndexSearcher ScoringSearcher { get; }
+
+        /// <summary>
+        ///     Fully thread safe lazy instance
+        /// </summary>
+        IndexSearcher NonScoringSearcher { get; }
 
         IList<LuceneSearchHit> Search(Query query, int maxResults);
 

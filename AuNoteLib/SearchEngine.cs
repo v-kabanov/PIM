@@ -6,9 +6,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
-using System.Linq;
 using NFluent;
 using log4net;
 using System.Reflection;
@@ -16,6 +14,23 @@ using Lucene.Net.Analysis;
 
 namespace AuNoteLib
 {
+    public class IndexInformation
+    {
+        public IndexInformation(string name)
+        {
+            Name = name;
+        }
+
+        public ILuceneIndex LuceneIndex { get; set; }
+
+        /// <summary>
+        ///     Just created
+        /// </summary>
+        public bool IsNew { get; set; }
+
+        public string Name { get; }
+    }
+
     /// <summary>
     ///     Generic lucene search engine supporting multiple parallel indexes per e.g. language and generic entity
     ///     with 1 or 2 searchable fields (in lucene index): text and optional time.
@@ -24,7 +39,7 @@ namespace AuNoteLib
         where THeader : class
         where TData : THeader
     {
-        private static readonly ILog Log = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public string RootDirectory { get; private set; }
 
@@ -61,26 +76,32 @@ namespace AuNoteLib
         /// <summary>
         ///     Sets index as default if it's the first one.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="analyzer"></param>
+        /// <param name="name">
+        ///     Index name translated into name of the folder under FT catalog directory
+        /// </param>
+        /// <param name="analyzer">
+        /// </param>
+        /// <param name="dropExisting">
+        ///     Whether to drop existing index if exists
+        /// </param>
         /// <returns>
         ///     The new index
         /// </returns>
-        public ILuceneIndex AddIndex(string name, Analyzer analyzer)
+        public IndexInformation AddIndex(string name, Analyzer analyzer, bool dropExisting = false)
         {
             Check.That(name).IsNotEmpty();
             Check.That(analyzer).IsNotNull();
 
+            var result = new IndexInformation(name);
+
             var indexDirectoryPath = GetIndexRootFolder(name);
             var dirInfo = new DirectoryInfo(indexDirectoryPath);
-            if (dirInfo.Exists)
-            {
-                Check.That(IsDirectoryEmpty(dirInfo));
-            }
-            else
-            {
+            result.IsNew = !dirInfo.Exists;
+
+            if (!result.IsNew)
                 dirInfo.Create();
-            }
+            else if (dropExisting)
+                dirInfo.Delete(true);
 
             var luceneDir = LuceneIndex.PreparePersistentDirectory(indexDirectoryPath);
 
@@ -89,11 +110,18 @@ namespace AuNoteLib
             MultiIndex.AddIndex(name, newIndex);
 
             if (MultiIndex.IndexCount == 1)
-            {
                 SetDefaultIndex(name);
-            }
 
-            return newIndex;
+            return result;
+        }
+
+
+
+        public IndexInformation AddOrOpenSnowballIndex(string snowballStemmerName)
+        {
+            var analyzer = LuceneIndex.CreateSnowballAnalyzer(snowballStemmerName);
+
+            return AddIndex(snowballStemmerName, analyzer, false);
         }
 
         /// <summary>
@@ -105,13 +133,16 @@ namespace AuNoteLib
         /// <param name="docs">
         ///     All documents in the storage.
         /// </param>
-        public void RebuildIndex(string indexName, IEnumerable<TData> docs)
+        /// <param name="progressReporter">
+        ///     Optional delegate receiving number of items added so far.
+        /// </param>
+        public void RebuildIndex(string indexName, IEnumerable<TData> docs, Action<int> progressReporter = null)
         {
             var index = MultiIndex.GetIndex(indexName);
             Check.That(index).IsNotNull();
 
             index.Clear();
-            index.Add(EntityAdapter.GetIndexedDocuments(docs));
+            index.Add(EntityAdapter.GetIndexedDocuments(docs), progressReporter);
         }
 
         public void RemoveIndex(string name)

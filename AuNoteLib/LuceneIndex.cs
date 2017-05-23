@@ -27,6 +27,11 @@ namespace AuNoteLib
 
         public Analyzer Analyzer { get; private set; }
 
+        private readonly IndexWriter _indexWriter;
+
+        private volatile Lazy<IndexSearcher> _scoringSearcher;
+        private volatile Lazy<IndexSearcher> _nonScoringSearcher;
+
         public LuceneIndex(Analyzer analyzer, Lucene.Net.Store.Directory fullTextDirectory, string documentKeyName = "Id")
         {
             Check.That(analyzer).IsNotNull();
@@ -37,11 +42,21 @@ namespace AuNoteLib
             Analyzer = analyzer;
             Directory = fullTextDirectory;
 
-            using (var writer = CreateWriter())
-            {
-                CommitAndRefreshStats(writer, false);
-            }
+            _indexWriter = CreateWriter();
+
+            CommitAndRefreshStats(false);
+            ResetSearch();
         }
+
+        /// <summary>
+        ///     Fully thread safe lazy instance
+        /// </summary>
+        public IndexSearcher ScoringSearcher => _scoringSearcher.Value;
+
+        /// <summary>
+        ///     Fully thread safe lazy instance
+        /// </summary>
+        public IndexSearcher NonScoringSearcher => _nonScoringSearcher.Value;
 
         /// <summary>
         ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string) 'primary key'
@@ -53,20 +68,26 @@ namespace AuNoteLib
 
         public void Add(params Document[] docs)
         {
-            Add((IEnumerable<Document>) docs.AsEnumerable());
+            Add(docs.AsEnumerable());
         }
 
-        public void Add(IEnumerable<Document> items)
+        /// <summary>
+        ///     Add all documents to index.
+        /// </summary>
+        /// <param name="items"></param>
+        /// <param name="progressReporter">
+        ///     Optional delegate receiving number of items added so far
+        /// </param>
+        public void Add(IEnumerable<Document> items, Action<int> progressReporter = null)
         {
-            using (var writer = CreateWriter())
+            var documentIndex = 0;
+            foreach (var item in items)
             {
-                foreach (var item in items)
-                {
-                    writer.UpdateDocument(new Term(KeyFieldName, item.Get(KeyFieldName)), item);
-                }
-
-                CommitAndRefreshStats(writer);
+                _indexWriter.UpdateDocument(new Term(KeyFieldName, item.Get(KeyFieldName)), item);
+                progressReporter?.Invoke(++documentIndex);
             }
+
+            CommitAndRefreshStats();
         }
 
         public void Delete(string key)
@@ -76,32 +97,23 @@ namespace AuNoteLib
 
         public void Delete(params Term[] terms)
         {
-            using (var writer = CreateWriter())
-            {
-                writer.DeleteDocuments(terms);
+            _indexWriter.DeleteDocuments(terms);
 
-                CommitAndRefreshStats(writer);
-            }
+            CommitAndRefreshStats();
         }
 
         public void Delete(params Query[] queries)
         {
-            using (var writer = CreateWriter())
-            {
-                writer.DeleteDocuments(queries);
+            _indexWriter.DeleteDocuments(queries);
 
-                CommitAndRefreshStats(writer);
-            }
+            CommitAndRefreshStats();
         }
 
         public void Clear()
         {
-            using (var writer = CreateWriter())
-            {
-                writer.DeleteAll();
+            _indexWriter.DeleteAll();
 
-                CommitAndRefreshStats(writer);
-            }
+            CommitAndRefreshStats();
         }
 
         public IndexSearcher CreateSearcher(bool readOnly, bool calcScore)
@@ -120,12 +132,11 @@ namespace AuNoteLib
         /// <returns></returns>
         public IList<LuceneSearchHit> Search(Query query, int maxResults)
         {
-            using (var search = CreateSearcher(true, true))
-            {
-                var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
+            var search = ScoringSearcher;
 
-                return hits.Select(h => new LuceneSearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
-            }
+            var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
+
+            return hits.Select(h => new LuceneSearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
         }
 
         public Filter CreateTimeRangeFilter(string fieldName, DateTime? @from, DateTime? to)
@@ -207,19 +218,14 @@ namespace AuNoteLib
 
         public void CleanupDeletes()
         {
-            using (var writer = CreateWriter())
-            {
-                writer.ExpungeDeletes();
-                writer.Commit();
-            }
+            _indexWriter.ExpungeDeletes();
+            Commit();
         }
 
         public void Optimize()
         {
-            using (var writer = CreateWriter())
-            {
-                writer.Optimize();
-            }
+            _indexWriter.Optimize();
+            ResetSearch();
         }
 
         private IndexWriter CreateWriter()
@@ -230,11 +236,18 @@ namespace AuNoteLib
         /// <summary>
         ///     To be called after each update so that stats are reported correctly.
         /// </summary>
-        private void CommitAndRefreshStats(IndexWriter writer, bool commit = true)
+        private void CommitAndRefreshStats(bool commit = true)
         {
             if (commit)
-                writer.Commit();
-            DocCount = writer.NumDocs();
+                Commit();
+
+            DocCount = _indexWriter.NumDocs();
+        }
+
+        private void Commit()
+        {
+            _indexWriter.Commit();
+            ResetSearch();
         }
 
         private Query Parse(string text, QueryParser parser)
@@ -250,6 +263,16 @@ namespace AuNoteLib
             }
 
             return result;
+        }
+
+        /// <summary>
+        ///     Needs to be done after every write.
+        /// </summary>
+        private void ResetSearch()
+        {
+            _scoringSearcher = new Lazy<IndexSearcher>(() => CreateSearcher(true, true));
+
+            _nonScoringSearcher = new Lazy<IndexSearcher>(() => CreateSearcher(true, false));
         }
 
         public static FSDirectory PreparePersistentDirectory(string directoryPath)
@@ -316,6 +339,14 @@ namespace AuNoteLib
             {
                 if (disposing)
                 {
+                    _indexWriter?.Dispose();
+
+                    if (_scoringSearcher.IsValueCreated)
+                        _scoringSearcher.Value.Dispose();
+
+                    if (_nonScoringSearcher.IsValueCreated)
+                        _nonScoringSearcher.Value.Dispose();
+
                     if (Directory != null)
                     {
                         Directory.Dispose();

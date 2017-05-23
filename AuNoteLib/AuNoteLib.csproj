@@ -60,6 +60,10 @@
       <HintPath>..\packages\SharpZipLib.Portable.0.86.0.0003\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid+Xamarin.iOS10\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="JetBrains.Annotations, Version=10.4.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\JetBrains.Annotations.10.4.0\lib\net\JetBrains.Annotations.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
@@ -174,6 +178,33 @@
     <Compile Include="QueryBuilding\TimeFilter.cs" />
     <Compile Include="SearchEngine.cs" />
     <Compile Include="LuceneSearchHit.cs" />
+    <Compile Include="Util\ActionTask.cs" />
+    <Compile Include="Util\Check.cs" />
+    <Compile Include="Util\CompositeTask.cs" />
+    <Compile Include="Util\ConditionalTask.cs" />
+    <Compile Include="Util\DedicatedThreadTaskScheduler.cs" />
+    <Compile Include="Util\DelegatingFactory.cs" />
+    <Compile Include="Util\DeleteFileTask.cs" />
+    <Compile Include="Util\DictionaryExtensions.cs" />
+    <Compile Include="Util\EnumerableExtensions.cs" />
+    <Compile Include="Util\Exceptions.cs" />
+    <Compile Include="Util\HashHelper.cs" />
+    <Compile Include="Util\IExceptionHandlerTask.cs" />
+    <Compile Include="Util\IFactory.cs" />
+    <Compile Include="Util\ITask.cs" />
+    <Compile Include="Util\ITaskExecutor.cs" />
+    <Compile Include="Util\LimitedConcurrencyScheduler.cs" />
+    <Compile Include="Util\ListExtension.cs" />
+    <Compile Include="Util\NotifyingTask.cs" />
+    <Compile Include="Util\ObjectExtensions.cs" />
+    <Compile Include="Util\RetryTask.cs" />
+    <Compile Include="Util\SingletonFactory.cs" />
+    <Compile Include="Util\StatefulTask.cs" />
+    <Compile Include="Util\StatisticalFunctions.cs" />
+    <Compile Include="Util\TaskExecutedEventArgs.cs" />
+    <Compile Include="Util\TaskExecutor.cs" />
+    <Compile Include="Util\TaskExtensions.cs" />
+    <Compile Include="Util\TryTask.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
   </ItemGroup>
