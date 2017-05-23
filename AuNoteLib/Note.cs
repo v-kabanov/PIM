@@ -33,7 +33,7 @@ namespace AuNoteLib
         /// </returns>
         public int IncrementVersion()
         {
-            return (++Version);
+            return ++Version;
         }
 
         /// <summary>
