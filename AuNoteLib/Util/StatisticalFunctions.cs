@@ -34,18 +34,18 @@ namespace AuNoteLib.Util
         private static double? CalculateStDev(double[] values, bool entirePopulation)
         {
 
-            int count = 0;
+            var count = 0;
             double var = 0;
             double prec = 0;
             double dSum = 0;
             double sqrSum = 0;
 
-            int adjustment = 1;
+            var adjustment = 1;
 
             if (entirePopulation)
                 adjustment = 0;
 
-            foreach (double val in values)
+            foreach (var val in values)
             {
                 dSum += val;
                 sqrSum += val * val;

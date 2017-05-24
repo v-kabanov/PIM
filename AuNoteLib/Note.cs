@@ -56,8 +56,7 @@ namespace AuNoteLib
         /// <summary>
         ///     Id is assigned after note is saved
         /// </summary>
-        public bool IsTransient
-        { get { return Version == 0; } }
+        public bool IsTransient => Version == 0;
 
         public static Note Create(string text)
         {
@@ -89,7 +88,7 @@ namespace AuNoteLib
 
         public static string CreateShortGuid()
         {
-            string encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            var encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
 
             encoded = encoded
               .Replace("/", "_")

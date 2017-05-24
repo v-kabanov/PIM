@@ -23,6 +23,6 @@ namespace AuNoteLib.QueryBuilding
             return new Search(Index, additionalQuery);
         }
 
-        private Occur Occur {  get { return Operation == BooleanOperation.And ? Occur.MUST : Occur.SHOULD; } }
+        private Occur Occur => Operation == BooleanOperation.And ? Occur.MUST : Occur.SHOULD;
     }
 }

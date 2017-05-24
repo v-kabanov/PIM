@@ -41,7 +41,7 @@ namespace AuNoteLib.Util
 		{
 			unchecked
 			{
-				int hash = 0;
+				var hash = 0;
 				foreach (var item in list)
 				{
 					hash = hash.CombineHashCode(item);
@@ -54,7 +54,7 @@ namespace AuNoteLib.Util
 		{
 			unchecked
 			{
-				int hash = 0;
+				var hash = 0;
 				foreach (var item in list)
 				{
                     hash = hash.CombineHashCode(item);
@@ -72,8 +72,8 @@ namespace AuNoteLib.Util
 		{
 			unchecked
 			{
-				int hash = 0;
-				int count = 0;
+				var hash = 0;
+				var count = 0;
 				foreach (var item in list)
 				{
 					hash += item.GetHashCode();

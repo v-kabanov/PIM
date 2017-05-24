@@ -69,8 +69,8 @@ namespace PimTest
             var englishAnalyzer = LuceneIndex.CreateSnowballAnalyzer("English");
             var russianAnalyzer = LuceneIndex.CreateSnowballAnalyzer("Russian");
 
-            searchEngine.AddIndex(indexNameEnglish, englishAnalyzer);
-            searchEngine.AddIndex("ru", russianAnalyzer);
+            searchEngine.AddOrOpenIndex(indexNameEnglish, englishAnalyzer);
+            searchEngine.AddOrOpenIndex("ru", russianAnalyzer);
 
             searchEngine.Add(notes);
 

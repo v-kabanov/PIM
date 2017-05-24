@@ -70,7 +70,7 @@ namespace AuNoteLib
 
             Document doc;
 
-            bool save = note.IsTransient;
+            var save = note.IsTransient;
 
             if (note.IsTransient)
             {

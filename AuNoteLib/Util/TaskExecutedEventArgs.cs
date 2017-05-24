@@ -32,10 +32,7 @@ namespace AuNoteLib.Util
             _exception = exception;
         }
 
-        public Exception Exception
-        {
-            get { return _exception; }
-        }
+        public Exception Exception => _exception;
 
         /// <summary>
         /// Whether task executed without exceptions.
@@ -44,14 +41,8 @@ namespace AuNoteLib.Util
         /// <remarks>
         /// If this property returns False, <see cref="Exception" /> will return the thrown exception.
         /// </remarks>
-        public bool Succeeded
-        {
-            get { return _exception == null; }
-        }
+        public bool Succeeded => _exception == null;
 
-        public ITask Task
-        {
-            get { return _task; }
-        }
+        public ITask Task => _task;
     }
 }

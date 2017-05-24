@@ -79,7 +79,7 @@ namespace AuNoteLib.Util
         {
             Check.DoRequireArgumentNotNull(task, nameof(task));
             CheckAcceptingNewTasks();
-            StatefulTask wrapper = new StatefulTask(task);
+            var wrapper = new StatefulTask(task);
 
             lock (_syncRoot)
             {
@@ -129,7 +129,7 @@ namespace AuNoteLib.Util
             {
                 try
                 {
-                    int millisecondsTimeout = -1;
+                    var millisecondsTimeout = -1;
                     do
                     {
                         if (maxWaitMilliseconds > 0)
@@ -217,7 +217,7 @@ namespace AuNoteLib.Util
                 if (disposing)
                 {
                     // dispose managed state (managed objects).
-                    IDisposable disposable = TaskFactory.Scheduler as IDisposable;
+                    var disposable = TaskFactory.Scheduler as IDisposable;
                     disposable?.Dispose();
 
                     TaskFactory = null;

@@ -26,9 +26,6 @@ namespace AuNoteLib
 
         public float Score { get; private set; }
 
-        public string EntityId
-        {
-            get { return Document.Get(KeyFieldName); }
-        }
+        public string EntityId => Document.Get(KeyFieldName);
     }
 }

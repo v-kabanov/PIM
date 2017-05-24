@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NFluent;
 using log4net;
 using System.Reflection;
@@ -41,13 +42,11 @@ namespace AuNoteLib
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public string RootDirectory { get; private set; }
+        public string RootDirectory { get; }
 
-        public IMultiIndex MultiIndex { get; private set; }
+        public IMultiIndex MultiIndex { get; }
 
-        public ILuceneEntityAdapter<TData, THeader> EntityAdapter { get; private set; }
-
-        private readonly string[] languages;
+        public ILuceneEntityAdapter<TData, THeader> EntityAdapter { get; }
 
         /// <summary>
         ///     Constructor
@@ -87,7 +86,7 @@ namespace AuNoteLib
         /// <returns>
         ///     The new index
         /// </returns>
-        public IndexInformation AddIndex(string name, Analyzer analyzer, bool dropExisting = false)
+        public IndexInformation AddOrOpenIndex(string name, Analyzer analyzer, bool dropExisting = false)
         {
             Check.That(name).IsNotEmpty();
             Check.That(analyzer).IsNotNull();
@@ -121,7 +120,7 @@ namespace AuNoteLib
         {
             var analyzer = LuceneIndex.CreateSnowballAnalyzer(snowballStemmerName);
 
-            return AddIndex(snowballStemmerName, analyzer, false);
+            return AddOrOpenIndex(snowballStemmerName, analyzer, false);
         }
 
         /// <summary>
@@ -136,20 +135,30 @@ namespace AuNoteLib
         /// <param name="progressReporter">
         ///     Optional delegate receiving number of items added so far.
         /// </param>
-        public void RebuildIndex(string indexName, IEnumerable<TData> docs, Action<int> progressReporter = null)
+        public void RebuildIndex(string indexName, IEnumerable<TData> docs, int docCount, Action<double> progressReporter = null)
         {
-            var index = MultiIndex.GetIndex(indexName);
-            Check.That(index).IsNotNull();
+            RebuildIndexes(new[] { indexName }, docs, docCount, progressReporter);
+        }
 
-            index.Clear();
-            index.Add(EntityAdapter.GetIndexedDocuments(docs), progressReporter);
+        /// <summary>
+        ///     
+        /// </summary>
+        /// <param name="names"></param>
+        /// <param name="documents">
+        ///     All documents in the database; collection not expected to be fully loaded into RAM
+        /// </param>
+        /// <param name="docCount"></param>
+        /// <param name="progressReporter"></param>
+        public void RebuildIndexes(IEnumerable<string> names, IEnumerable<TData> documents, int docCount, Action<double> progressReporter = null)
+        {
+            MultiIndex.RebuildIndexes(names, EntityAdapter.GetIndexedDocuments(documents), docCount, progressReporter);
         }
 
         public void RemoveIndex(string name)
         {
             Check.That(name).IsNotEmpty();
 
-            string path = GetIndexRootFolder(name);
+            var path = GetIndexRootFolder(name);
             MultiIndex.RemoveIndex(name);
 
             Directory.Delete(path, true);

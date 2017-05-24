@@ -20,7 +20,7 @@ namespace AuNoteLib
     /// <typeparam name="THeader">
     ///     Metadata or part of entity that will be stored in the lucene index
     /// </typeparam>
-    public interface ILuceneEntityAdapter<TData, THeader>
+    public interface ILuceneEntityAdapter<in TData, THeader>
         where THeader : class
         where TData : THeader
     {

@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 using Lucene.Net.Documents;
 
 namespace AuNoteLib
@@ -28,6 +27,10 @@ namespace AuNoteLib
         ///     Number of currently active lucene indexes
         /// </summary>
         int IndexCount { get; }
+
+        ILuceneIndex[] AllIndexes { get; }
+
+        IEnumerable<string> AllIndexNames { get; }
 
         /// <summary>
         ///     Add new index to be used in parallel with existing ones. Index must be prepopulated already if necessary, no data is added to it here.
@@ -100,5 +103,14 @@ namespace AuNoteLib
         void CleanupDeletes();
 
         void Optimize();
+
+        /// <summary>
+        ///     Rebuild all or only specified indexes.
+        /// </summary>
+        /// <param name="names"></param>
+        /// <param name="documents"></param>
+        /// <param name="docCount"></param>
+        /// <param name="progressReporter"></param>
+        void RebuildIndexes(IEnumerable<string> names, IEnumerable<Document> documents, int docCount, Action<double> progressReporter = null);
     }
 }

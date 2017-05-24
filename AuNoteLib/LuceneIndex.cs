@@ -23,9 +23,9 @@ namespace AuNoteLib
     {
         private const string WriteLockFileName = "write.lock";
 
-        public Lucene.Net.Store.Directory Directory { get; private set; }
+        public Lucene.Net.Store.Directory Directory { get; }
 
-        public Analyzer Analyzer { get; private set; }
+        public Analyzer Analyzer { get; }
 
         private readonly IndexWriter _indexWriter;
 
@@ -44,7 +44,7 @@ namespace AuNoteLib
 
             _indexWriter = CreateWriter();
 
-            CommitAndRefreshStats(false);
+            RefreshStats();
             ResetSearch();
         }
 
@@ -61,14 +61,26 @@ namespace AuNoteLib
         /// <summary>
         ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string) 'primary key'
         /// </summary>
-        public string KeyFieldName { get; private set; }
+        public string KeyFieldName { get; }
 
         public int DocCount { get; private set; }
         public int DeletedDocCount { get; private set; }
 
+        public void Add(Document document)
+        {
+            _indexWriter.UpdateDocument(new Term(KeyFieldName, document.Get(KeyFieldName)), document);
+        }
+
+        public void Commit()
+        {
+            _indexWriter.Commit();
+            RefreshStats();
+            ResetSearch();
+        }
+
         public void Add(params Document[] docs)
         {
-            Add(docs.AsEnumerable());
+            AddAll(docs.AsEnumerable());
         }
 
         /// <summary>
@@ -78,16 +90,14 @@ namespace AuNoteLib
         /// <param name="progressReporter">
         ///     Optional delegate receiving number of items added so far
         /// </param>
-        public void Add(IEnumerable<Document> items, Action<int> progressReporter = null)
+        public void AddAll(IEnumerable<Document> items, Action<int> progressReporter = null)
         {
             var documentIndex = 0;
             foreach (var item in items)
             {
-                _indexWriter.UpdateDocument(new Term(KeyFieldName, item.Get(KeyFieldName)), item);
+                Add(item);
                 progressReporter?.Invoke(++documentIndex);
             }
-
-            CommitAndRefreshStats();
         }
 
         public void Delete(string key)
@@ -99,21 +109,21 @@ namespace AuNoteLib
         {
             _indexWriter.DeleteDocuments(terms);
 
-            CommitAndRefreshStats();
+            RefreshStats();
         }
 
         public void Delete(params Query[] queries)
         {
             _indexWriter.DeleteDocuments(queries);
 
-            CommitAndRefreshStats();
+            RefreshStats();
         }
 
-        public void Clear()
+        public void Clear(bool commit = true)
         {
             _indexWriter.DeleteAll();
-
-            CommitAndRefreshStats();
+            if (commit)
+                Commit();
         }
 
         public IndexSearcher CreateSearcher(bool readOnly, bool calcScore)
@@ -144,8 +154,8 @@ namespace AuNoteLib
             Check.That(from.HasValue || to.HasValue).IsTrue();
             Check.That(!from.HasValue || !to.HasValue || from.Value < to.Value).IsTrue();
 
-            string fromString = from.HasValue ? DateTools.DateToString(from.Value, DateTools.Resolution.SECOND) : null;
-            string toString = to.HasValue ? DateTools.DateToString(to.Value, DateTools.Resolution.SECOND) : null;
+            var fromString = from.HasValue ? DateTools.DateToString(from.Value, DateTools.Resolution.SECOND) : null;
+            var toString = to.HasValue ? DateTools.DateToString(to.Value, DateTools.Resolution.SECOND) : null;
             return new TermRangeFilter(fieldName, fromString, toString, true, false);
         }
 
@@ -236,18 +246,9 @@ namespace AuNoteLib
         /// <summary>
         ///     To be called after each update so that stats are reported correctly.
         /// </summary>
-        private void CommitAndRefreshStats(bool commit = true)
+        private void RefreshStats()
         {
-            if (commit)
-                Commit();
-
             DocCount = _indexWriter.NumDocs();
-        }
-
-        private void Commit()
-        {
-            _indexWriter.Commit();
-            ResetSearch();
         }
 
         private Query Parse(string text, QueryParser parser)

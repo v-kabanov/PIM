@@ -29,10 +29,12 @@ namespace AuNoteLib
         /// </summary>
         string KeyFieldName { get; }
 
+        void Add(Document document);
+
         void Add(params Document[] docs);
 
         /// <summary>
-        ///     Exists because repeated creation and disposal of IndexWriter for every document to be saved is inefficient.
+        ///     Add all items.
         /// </summary>
         /// <param name="items">
         ///     Mandatory
@@ -40,7 +42,9 @@ namespace AuNoteLib
         /// <param name="progressReporter">
         ///     Optional delegate receiving number of items added so far.
         /// </param>
-        void Add(IEnumerable<Document> items, Action<int> progressReporter = null);
+        void AddAll(IEnumerable<Document> items, Action<int> progressReporter = null);
+
+        void Commit();
 
         void Delete(string key);
 
@@ -48,7 +52,7 @@ namespace AuNoteLib
 
         void Delete(params Query[] queries);
 
-        void Clear();
+        void Clear(bool commit = true);
 
         /// <summary>
         ///     Fully thread safe lazy instance

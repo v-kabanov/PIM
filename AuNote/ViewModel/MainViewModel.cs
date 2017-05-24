@@ -232,9 +232,9 @@ namespace AuNote.ViewModel
 
                 var analyzer = LuceneIndex.CreateSnowballAnalyzer(snowballStemmerName);
 
-                SearchEngine.AddIndex(snowballStemmerName, analyzer);
+                SearchEngine.AddOrOpenIndex(snowballStemmerName, analyzer);
 
-                SearchEngine.RebuildIndex(snowballStemmerName, Storage.GetAll());
+                SearchEngine.RebuildIndex(snowballStemmerName, Storage.GetAll(), Storage.CountAll());
             }
             else
             {

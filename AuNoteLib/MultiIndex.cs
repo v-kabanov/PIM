@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,9 +23,9 @@ namespace AuNoteLib
     /// </summary>
     public class MultiIndex : IMultiIndex
     {
-        private static readonly ILog _log = LogManager.GetLogger(MethodInfo.GetCurrentMethod().DeclaringType);
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private Dictionary<string, ILuceneIndex> Indexes { get; set; }
+        private Dictionary<string, ILuceneIndex> Indexes { get; }
 
         public MultiIndex(string keyFieldName)
         {
@@ -37,7 +38,7 @@ namespace AuNoteLib
         /// <summary>
         ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string)" /> 'primary key'
         /// </summary>
-        public string KeyFieldName { get; private set; }
+        public string KeyFieldName { get; }
 
         /// <summary>
         ///     The index to use by default when e.g. they are [supposed to be] interchangeable such as when searching by time.
@@ -48,7 +49,11 @@ namespace AuNoteLib
         /// <summary>
         ///     Number of currently active lucene indexes
         /// </summary>
-        public int IndexCount { get { return Indexes.Count; } }
+        public int IndexCount => Indexes.Count;
+
+        public ILuceneIndex[] AllIndexes => Indexes.Values.ToArray();
+
+        public IEnumerable<string> AllIndexNames => Indexes.Keys;
 
         public void AddIndex(string name, ILuceneIndex index)
         {
@@ -104,7 +109,7 @@ namespace AuNoteLib
         {
             CheckNotDisposed();
 
-            _log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, maxResults);
+            Log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, maxResults);
 
             var results = new Dictionary<string, IList<LuceneSearchHit>>();
             foreach (var key in Indexes.Keys)
@@ -113,7 +118,7 @@ namespace AuNoteLib
 
                 var result = index.Search(index.CreateQuery(searchFieldName, queryText, UseFuzzySearch), maxResults);
 
-                _log.DebugFormat("Index {0} matched {1} items", key, result.Count);
+                Log.DebugFormat("Index {0} matched {1} items", key, result.Count);
 
                 results.Add(key, result);
             }
@@ -162,7 +167,7 @@ namespace AuNoteLib
             var sort = new Sort(new SortField(timeFieldName, CultureInfo.InvariantCulture, true));
             var query = index.CreateQueryFromFilter(index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd));
 
-            List<LuceneSearchHit> result = searcher.Search(query, null, maxResults, sort)
+            var result = searcher.Search(query, null, maxResults, sort)
                 .ScoreDocs.Select(d => new LuceneSearchHit(searcher.Doc(d.Doc), d.Score, KeyFieldName))
                 .ToList();
 
@@ -198,7 +203,7 @@ namespace AuNoteLib
 
             foreach (var index in Indexes.Values)
             {
-                index.Add(docs);
+                index.AddAll(docs);
             }
         }
 
@@ -229,6 +234,59 @@ namespace AuNoteLib
             foreach (var index in Indexes.Values)
             {
                 index.Optimize();
+            }
+        }
+
+        /// <summary>
+        ///     Rebuild all or specified indexes
+        /// </summary>
+        /// <param name="names">
+        ///     Optional, indexes to rebuild; null means all
+        /// </param>
+        /// <param name="documents">
+        ///     All documents in the database.
+        /// </param>
+        /// <param name="docCount">
+        ///     Total number of documents in the database, for progress reporting
+        /// </param>
+        /// <param name="progressReporter">
+        ///     Optional, delegate to receive progress report (0..1)
+        /// </param>
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        public void RebuildIndexes(IEnumerable<string> names, IEnumerable<Document> documents, int docCount, Action<double> progressReporter = null)
+        {
+            Util.Check.DoRequireArgumentNotNull(documents, nameof(documents));
+
+            var firstBadName = names?.Select(name => new { Name = name, Index = GetIndex(name) })
+                .FirstOrDefault(x => x.Index == null);
+            if (firstBadName != null)
+                throw new ArgumentException($"Unknown index {firstBadName.Name}");
+
+            var indexesToRebuild = names?.Select(GetIndex).ToArray() ?? AllIndexes;
+
+            if (indexesToRebuild.Length == 0)
+                return;
+
+            foreach (var index in indexesToRebuild)
+                index.Clear(false);
+
+            var docIndex = 0;
+            foreach (var document in documents)
+            {
+                ++docIndex;
+                for (var indexIndex = 0; indexIndex < indexesToRebuild.Length; ++indexIndex)
+                {
+                    var index = indexesToRebuild[indexIndex];
+                    index.Add(document);
+                    progressReporter?.Invoke(0.5D * (indexIndex * docCount + docIndex) / docCount * indexesToRebuild.Length);
+                }
+            }
+
+            for (var indexIndex = 0; indexIndex < indexesToRebuild.Length; ++indexIndex)
+            {
+                var index = indexesToRebuild[indexIndex];
+                index.Commit();
+                progressReporter?.Invoke(0.5D * (1 + ((double)indexIndex + 1) / indexesToRebuild.Length));
             }
         }
 
