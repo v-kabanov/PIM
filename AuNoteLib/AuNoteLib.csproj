@@ -158,11 +158,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IDocumentStorage.cs" />
+    <Compile Include="IDocumentStorageWithFulltextSearch.cs" />
+    <Compile Include="IFulltextSearchEngine.cs" />
     <Compile Include="ILuceneEntityAdapter.cs" />
     <Compile Include="ILuceneIndex.cs" />
     <Compile Include="IMultiIndex.cs" />
     <Compile Include="INote.cs" />
     <Compile Include="INoteHeader.cs" />
+    <Compile Include="IStandaloneFulltextSearchEngine.cs" />
     <Compile Include="LuceneIndex.cs" />
     <Compile Include="LuceneNoteAdapter.cs" />
     <Compile Include="MultiIndex.cs" />

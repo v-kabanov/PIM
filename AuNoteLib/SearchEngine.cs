@@ -36,7 +36,7 @@ namespace AuNoteLib
     ///     Generic lucene search engine supporting multiple parallel indexes per e.g. language and generic entity
     ///     with 1 or 2 searchable fields (in lucene index): text and optional time.
     /// </summary>
-    public class SearchEngine<TData, THeader>
+    public class SearchEngine<TData, THeader> : IStandaloneFulltextSearchEngine<TData, THeader>
         where THeader : class
         where TData : THeader
     {
@@ -114,8 +114,6 @@ namespace AuNoteLib
             return result;
         }
 
-
-
         public IndexInformation AddOrOpenSnowballIndex(string snowballStemmerName)
         {
             var analyzer = LuceneIndex.CreateSnowballAnalyzer(snowballStemmerName);
@@ -141,17 +139,21 @@ namespace AuNoteLib
         }
 
         /// <summary>
-        ///     
+        ///     Rebuild all specified indexes
         /// </summary>
-        /// <param name="names"></param>
+        /// <param name="indexNames"></param>
         /// <param name="documents">
         ///     All documents in the database; collection not expected to be fully loaded into RAM
         /// </param>
-        /// <param name="docCount"></param>
-        /// <param name="progressReporter"></param>
-        public void RebuildIndexes(IEnumerable<string> names, IEnumerable<TData> documents, int docCount, Action<double> progressReporter = null)
+        /// <param name="docCount">
+        ///     Optional, document count to be used in progress reporting.
+        /// </param>
+        /// <param name="progressReporter">
+        ///     Optional delegate receiving progress report.
+        /// </param>
+        public void RebuildIndexes(IEnumerable<string> indexNames, IEnumerable<TData> documents, int docCount = -1, Action<double> progressReporter = null)
         {
-            MultiIndex.RebuildIndexes(names, EntityAdapter.GetIndexedDocuments(documents), docCount, progressReporter);
+            MultiIndex.RebuildIndexes(indexNames, EntityAdapter.GetIndexedDocuments(documents), docCount, progressReporter);
         }
 
         public void RemoveIndex(string name)

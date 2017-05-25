@@ -75,7 +75,7 @@ namespace AuNote.ViewModel
                 var unknownLangs = string.Join(",", configuredLanguageNames.Where(n => !allSupportedLangs.Contains(n)));
                 if (!string.IsNullOrEmpty(unknownLangs))
                 {
-                    Log.Error($"The following configured languages are not supported: {unknownLangs}");
+                    Log.ErrorFormat("The following configured languages are not supported: {0}", unknownLangs);
                 }
 
                 var configuredSupportedLangs = configuredLanguageNames.Intersect(allSupportedLangs).ToList();
@@ -131,7 +131,7 @@ namespace AuNote.ViewModel
         {
             foreach (var noteHeader in headers)
             {
-                Log.Debug($"Deleting #{noteHeader.Id}: {noteHeader.Name}");
+                Log.DebugFormat("Deleting #{0}: {1}", noteHeader.Id, noteHeader.Name);
                 Storage.Delete(noteHeader.Id);
             }
         }
@@ -228,7 +228,7 @@ namespace AuNote.ViewModel
 
             if (SearchEngine.MultiIndex.GetIndex(snowballStemmerName) == null)
             {
-                Log.Info($"Adding index {snowballStemmerName}");
+                Log.InfoFormat("Adding index {0}", snowballStemmerName);
 
                 var analyzer = LuceneIndex.CreateSnowballAnalyzer(snowballStemmerName);
 
@@ -238,7 +238,7 @@ namespace AuNote.ViewModel
             }
             else
             {
-                Log.Info($"EnsureFulltextIndex: {snowballStemmerName} index already exists");
+                Log.InfoFormat("EnsureFulltextIndex: {0} index already exists", snowballStemmerName);
             }
         }
     }
