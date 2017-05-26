@@ -8,11 +8,21 @@ using System;
 
 namespace AuNoteLib
 {
-    public interface INoteHeader
+    public interface IFulltextIndexEntry
     {
+        /// <summary>
+        ///     This is fulltext key.
+        /// </summary>
         string Id { get; }
-        DateTime CreateTime { get; }
 
+        /// <summary>
+        ///     This will appear in search results.
+        /// </summary>
         string Name { get; }
+    }
+
+    public interface INoteHeader : IFulltextIndexEntry
+    {
+        DateTime CreateTime { get; }
     }
 }

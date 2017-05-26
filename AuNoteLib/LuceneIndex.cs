@@ -19,6 +19,7 @@ using NFluent;
 
 namespace AuNoteLib
 {
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class LuceneIndex : ILuceneIndex
     {
         private const string WriteLockFileName = "write.lock";
@@ -64,8 +65,15 @@ namespace AuNoteLib
         public string KeyFieldName { get; }
 
         public int DocCount { get; private set; }
-        public int DeletedDocCount { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="document"></param>
+        /// <remarks>
+        ///     Lucen throws <see cref="CorruptIndexException"/> or passes through low level <see cref="IOException"/>.
+        ///     Also <see cref="OutOfMemoryException"/> may result in which case index should be closed immediately.
+        /// </remarks>
         public void Add(Document document)
         {
             _indexWriter.UpdateDocument(new Term(KeyFieldName, document.Get(KeyFieldName)), document);
@@ -105,18 +113,20 @@ namespace AuNoteLib
             Delete(new Term(KeyFieldName, key));
         }
 
+        public void Delete(params string[] keys)
+        {
+            foreach (var key in keys)
+                Delete(key);
+        }
+
         public void Delete(params Term[] terms)
         {
             _indexWriter.DeleteDocuments(terms);
-
-            RefreshStats();
         }
 
         public void Delete(params Query[] queries)
         {
             _indexWriter.DeleteDocuments(queries);
-
-            RefreshStats();
         }
 
         public void Clear(bool commit = true)
@@ -124,14 +134,6 @@ namespace AuNoteLib
             _indexWriter.DeleteAll();
             if (commit)
                 Commit();
-        }
-
-        public IndexSearcher CreateSearcher(bool readOnly, bool calcScore)
-        {
-            var result = new IndexSearcher(Directory, readOnly);
-            if (calcScore)
-                result.SetDefaultFieldSortScoring(true, true);
-            return result;
         }
 
         /// <summary>
@@ -163,23 +165,24 @@ namespace AuNoteLib
         {
             Check.That(queryText).IsNotEmpty();
 
-            var terms = queryText.Trim()
-                .Replace("-", " ")
-                .Split(' ')
-                .Where(x => !string.IsNullOrEmpty(x))
-                .Select(x => x.Trim() + "*");
+            //var terms = queryText.Trim()
+            //    .Replace("-", " ")
+            //    .Split(' ')
+            //    .Where(x => !string.IsNullOrEmpty(x))
+            //    .Select(x => x.Trim() + "*");
 
-            var termsString = string.Join(" ", terms);
+            //var termsString = string.Join(" ", terms);
 
-            var parser = new QueryParser(Version.LUCENE_30, fieldName, Analyzer);
-            parser.PhraseSlop = 2;
-            parser.FuzzyMinSim = 0.1f;
-            parser.DefaultOperator = QueryParser.Operator.OR;
+            var parser = new QueryParser(Version.LUCENE_30, fieldName, Analyzer)
+            {
+                PhraseSlop = 2,
+                FuzzyMinSim = 0.1f,
+                DefaultOperator = QueryParser.Operator.OR
+            };
 
             var parsedQuery = Parse(queryText, parser);
 
-            var booleanQuery = new BooleanQuery();
-            booleanQuery.Add(parsedQuery, Occur.SHOULD);
+            var booleanQuery = new BooleanQuery {{parsedQuery, Occur.SHOULD}};
 
             //var parsedTermsQuery = Parse(termsString, parser);
             //parsedTermsQuery.Boost = 0.3f;
@@ -188,13 +191,13 @@ namespace AuNoteLib
             var term = new Term(fieldName, queryText);
 
             if (fuzzy)
-            {
                 booleanQuery.Add(new FuzzyQuery(term), Occur.SHOULD);
-            }
 
-            var phraseQuery = new PhraseQuery();
-            phraseQuery.Slop = 2;
-            phraseQuery.Boost = 1.5f;
+            var phraseQuery = new PhraseQuery
+            {
+                Slop = 2,
+                Boost = 1.5f
+            };
             phraseQuery.Add(term);
 
             booleanQuery.Add(phraseQuery, Occur.SHOULD);
@@ -229,13 +232,19 @@ namespace AuNoteLib
         public void CleanupDeletes()
         {
             _indexWriter.ExpungeDeletes();
-            Commit();
         }
 
         public void Optimize()
         {
             _indexWriter.Optimize();
-            ResetSearch();
+        }
+
+        public IndexSearcher CreateSearcher(bool readOnly, bool calcScore)
+        {
+            var result = new IndexSearcher(Directory, readOnly);
+            if (calcScore)
+                result.SetDefaultFieldSortScoring(true, true);
+            return result;
         }
 
         private IndexWriter CreateWriter()
@@ -251,7 +260,7 @@ namespace AuNoteLib
             DocCount = _indexWriter.NumDocs();
         }
 
-        private Query Parse(string text, QueryParser parser)
+        private static Query Parse(string text, QueryParser parser)
         {
             Query result;
             try
@@ -304,7 +313,7 @@ namespace AuNoteLib
         /// <summary>
         ///     
         /// </summary>
-        /// <param name="name">
+        /// <param name="stemmerName">
         ///     The name of a stemmer is the part of the class name before "Stemmer", e.g., the stemmer in EnglishStemmer is named "English". 
         /// </param>
         /// <returns></returns>
@@ -331,12 +340,11 @@ namespace AuNoteLib
                 .Select(t => t.Name.Substring(0, t.Name.Length - stemmerSuffix.Length));
         }
 
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
@@ -348,25 +356,19 @@ namespace AuNoteLib
                     if (_nonScoringSearcher.IsValueCreated)
                         _nonScoringSearcher.Value.Dispose();
 
-                    if (Directory != null)
-                    {
-                        Directory.Dispose();
-                    }
+                    Directory?.Dispose();
 
-                    if (Analyzer != null)
-                    {
-                        Analyzer.Dispose();
-                    }
+                    Analyzer?.Dispose();
                 }
 
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
+                // free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // set large fields to null.
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~LuceneIndex() {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
@@ -377,10 +379,8 @@ namespace AuNoteLib
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
+            // uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
         }
-        #endregion IDisposable Support
-
     }
 }

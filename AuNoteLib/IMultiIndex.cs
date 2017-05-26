@@ -96,13 +96,24 @@ namespace AuNoteLib
 
         void Add(params Document[] docs);
 
+        /// <summary>
+        ///     Does not commit
+        /// </summary>
+        /// <param name="docs">
+        /// </param>
         void Add(IEnumerable<Document> docs);
 
         void Delete(string key);
 
+        void Delete(params string[] keys);
+
+        void Delete(params Lucene.Net.Index.Term[] terms);
+
         void CleanupDeletes();
 
         void Optimize();
+
+        void Commit();
 
         /// <summary>
         ///     Rebuild all or only specified indexes.

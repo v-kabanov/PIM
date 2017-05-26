@@ -14,15 +14,18 @@ namespace AuNoteLib
     /// <summary>
     ///     Adapter of entity with 1 or 2 searchable fields: text and optional time.
     /// </summary>
-    /// <typeparam name="TData">
+    /// <typeparam name="TDoc">
     ///     The type exposing both data stored in full-text index and searchable data not stored in index
     /// </typeparam>
     /// <typeparam name="THeader">
-    ///     Metadata or part of entity that will be stored in the lucene index
+    ///     Metadata or part of entity that will be stored in the lucene index; note that some data may be indexed, but not stored in index.
     /// </typeparam>
-    public interface ILuceneEntityAdapter<in TData, THeader>
-        where THeader : class
-        where TData : THeader
+    /// <typeparam name="TStorageKey">
+    ///     Type of the primary key used by document database
+    /// </typeparam>
+    public interface ILuceneEntityAdapter<in TDoc, THeader, TStorageKey>
+        where THeader : IFulltextIndexEntry
+        where TDoc : class
     {
         string DocumentKeyName { get; }
 
@@ -39,11 +42,53 @@ namespace AuNoteLib
 
         Term GetKeyTerm(THeader header);
 
-        Document GetIndexedDocument(TData item);
+        string GetFulltextKey(TDoc doc);
 
-        IEnumerable<Document> GetIndexedDocuments(params TData[] items);
+        TStorageKey GetStorageKey(THeader header);
 
-        IEnumerable<Document> GetIndexedDocuments(IEnumerable<TData> items);
+        /// <summary>
+        ///     Convert storage key to fulltext key.
+        /// </summary>
+        /// <param name="storageKey">
+        ///     Primary key used by document storage.
+        /// </param>
+        /// <returns>
+        ///     Fulltext key
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///     <see cref="CanConvertStorageKey"/> is false
+        /// </exception>
+        string GetFulltextFromStorageKey(TStorageKey storageKey);
+
+        /// <summary>
+        ///     Convert fulltext key to storage key.
+        /// </summary>
+        /// <param name="fulltextKey">
+        ///     Mandatory
+        /// </param>
+        /// <returns>
+        ///     Storage key
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        ///     <see cref="CanConvertFulltextKey"/> is false
+        /// </exception>
+        TStorageKey GetStorageFromFulltextKey(string fulltextKey);
+
+        /// <summary>
+        ///     Whether adapter can convert storage key to fulltext key (see <see cref="GetFulltextFromStorageKey"/>)
+        /// </summary>
+        bool CanConvertStorageKey { get; }
+
+        /// <summary>
+        ///     Whether adapter can convert fulltext key to storage key (see <see cref="GetStorageFromFulltextKey"/>)
+        /// </summary>
+        bool CanConvertFulltextKey { get; }
+
+        Document GetIndexedDocument(TDoc item);
+
+        IEnumerable<Document> GetIndexedDocuments(params TDoc[] items);
+
+        IEnumerable<Document> GetIndexedDocuments(IEnumerable<TDoc> items);
 
         THeader GetHeader(Document doc);
 

@@ -8,45 +8,32 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NFluent;
 using log4net;
 using System.Reflection;
+using AuNoteLib.Util;
 using Lucene.Net.Analysis;
 
 namespace AuNoteLib
 {
-    public class IndexInformation
+    public class SearchEngineBase
     {
-        public IndexInformation(string name)
-        {
-            Name = name;
-        }
-
-        public ILuceneIndex LuceneIndex { get; set; }
-
-        /// <summary>
-        ///     Just created
-        /// </summary>
-        public bool IsNew { get; set; }
-
-        public string Name { get; }
+        protected static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
     }
 
     /// <summary>
     ///     Generic lucene search engine supporting multiple parallel indexes per e.g. language and generic entity
     ///     with 1 or 2 searchable fields (in lucene index): text and optional time.
+    ///     To <see cref="MultiIndex"/> it adds bridging between source data and indexed part of it.
     /// </summary>
-    public class SearchEngine<TData, THeader> : IStandaloneFulltextSearchEngine<TData, THeader>
+    public class SearchEngine<TDoc, THeader, TStorageKey> : SearchEngineBase, IStandaloneFulltextSearchEngine<TDoc, THeader, TStorageKey>
         where THeader : class
-        where TData : THeader
+        where TDoc : class
     {
-        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
         public string RootDirectory { get; }
 
         public IMultiIndex MultiIndex { get; }
 
-        public ILuceneEntityAdapter<TData, THeader> EntityAdapter { get; }
+        public ILuceneEntityAdapter<TDoc, THeader, TStorageKey> EntityAdapter { get; }
 
         /// <summary>
         ///     Constructor
@@ -59,13 +46,13 @@ namespace AuNoteLib
         /// <param name="multiIndex">
         ///     Implements collection of named <see cref="ILuceneIndex"/> used in parallel for e.g. multi-lingual search.
         /// </param>
-        public SearchEngine(string rootDirectory, ILuceneEntityAdapter<TData, THeader> entityAdapter, IMultiIndex multiIndex)
+        public SearchEngine(string rootDirectory, ILuceneEntityAdapter<TDoc, THeader, TStorageKey> entityAdapter, IMultiIndex multiIndex)
         {
-            Check.That(rootDirectory).IsNotEmpty();
-            Check.That(entityAdapter).IsNotNull();
-            Check.That(multiIndex).IsNotNull();
+            Check.DoRequireArgumentNotBlank(rootDirectory, nameof(rootDirectory));
+            Check.DoRequireArgumentNotNull(entityAdapter, nameof(entityAdapter));
+            Check.DoRequireArgumentNotNull(multiIndex, nameof(multiIndex));
 
-            Check.That(Directory.Exists(rootDirectory));
+            Check.DoCheckArgument(Directory.Exists(rootDirectory), "Root directory does not exist");
 
             RootDirectory = rootDirectory;
             EntityAdapter = entityAdapter;
@@ -88,8 +75,8 @@ namespace AuNoteLib
         /// </returns>
         public IndexInformation AddOrOpenIndex(string name, Analyzer analyzer, bool dropExisting = false)
         {
-            Check.That(name).IsNotEmpty();
-            Check.That(analyzer).IsNotNull();
+            Check.DoRequireArgumentNotBlank(name, nameof(name));
+            Check.DoRequireArgumentNotNull(analyzer, nameof(analyzer));
 
             var result = new IndexInformation(name);
 
@@ -130,10 +117,13 @@ namespace AuNoteLib
         /// <param name="docs">
         ///     All documents in the storage.
         /// </param>
+        /// <param name="docCount">
+        ///     Optional, total number of documents for progress reporting
+        /// </param>
         /// <param name="progressReporter">
         ///     Optional delegate receiving number of items added so far.
         /// </param>
-        public void RebuildIndex(string indexName, IEnumerable<TData> docs, int docCount, Action<double> progressReporter = null)
+        public void RebuildIndex(string indexName, IEnumerable<TDoc> docs, int docCount, Action<double> progressReporter = null)
         {
             RebuildIndexes(new[] { indexName }, docs, docCount, progressReporter);
         }
@@ -146,19 +136,19 @@ namespace AuNoteLib
         ///     All documents in the database; collection not expected to be fully loaded into RAM
         /// </param>
         /// <param name="docCount">
-        ///     Optional, document count to be used in progress reporting.
+        ///     Optional, total number of documents for progress reporting
         /// </param>
         /// <param name="progressReporter">
         ///     Optional delegate receiving progress report.
         /// </param>
-        public void RebuildIndexes(IEnumerable<string> indexNames, IEnumerable<TData> documents, int docCount = -1, Action<double> progressReporter = null)
+        public void RebuildIndexes(IEnumerable<string> indexNames, IEnumerable<TDoc> documents, int docCount = -1, Action<double> progressReporter = null)
         {
             MultiIndex.RebuildIndexes(indexNames, EntityAdapter.GetIndexedDocuments(documents), docCount, progressReporter);
         }
 
         public void RemoveIndex(string name)
         {
-            Check.That(name).IsNotEmpty();
+            Check.DoRequireArgumentNotBlank(name, nameof(name));
 
             var path = GetIndexRootFolder(name);
             MultiIndex.RemoveIndex(name);
@@ -168,13 +158,13 @@ namespace AuNoteLib
 
         public void SetDefaultIndex(string name)
         {
-            Check.That(name).IsNotEmpty();
-            Check.That(MultiIndex.GetIndex(name) != null);
+            Check.DoRequireArgumentNotBlank(name, nameof(name));
+            Check.DoCheckArgument(MultiIndex.GetIndex(name) != null, () => $"Index {name} does not exist.");
 
             MultiIndex.DefaultIndexName = name;
         }
 
-        public void Add(params TData[] docs)
+        public void Add(params TDoc[] docs)
         {
             var luceneDocs = EntityAdapter.GetIndexedDocuments(docs);
 
@@ -189,7 +179,7 @@ namespace AuNoteLib
 
         public IList<THeader> Search(string queryText, int maxResults)
         {
-            Log.Debug($"Searching '{queryText}', maxResults = {maxResults}");
+            Log.DebugFormat("Searching '{0}', maxResults = {1}", queryText, maxResults);
 
             var result = MultiIndex.Search(EntityAdapter.SearchFieldName, queryText, maxResults);
 
@@ -202,16 +192,65 @@ namespace AuNoteLib
                 MultiIndex.GetTopInPeriod(EntityAdapter.TimeFieldName, periodStart, periodEnd, maxResults));
         }
 
-        private bool IsDirectoryEmpty(DirectoryInfo dir)
+        public IEnumerable<string> ActiveIndexNames { get; }
+
+        public void Delete(params THeader[] docHeaders)
         {
-            return dir.GetDirectories().Length == 0 && dir.GetFiles().Length == 0;
+            var terms = docHeaders.Select(h => EntityAdapter.GetKeyTerm(h)).ToArray();
+
+            if (terms.Length > 0)
+                MultiIndex.Delete(terms);
+        }
+
+        public void Delete(params string[] keys)
+        {
+            MultiIndex.Delete(keys[0]);
+        }
+
+        public void CommitFulltextIndex()
+        {
+            MultiIndex.Commit();
         }
 
         private string GetIndexRootFolder(string name)
         {
-            Check.That(name).IsNotEmpty();
+            Check.DoRequireArgumentNotBlank(name, nameof(name));
 
             return Path.Combine(RootDirectory, name);
+        }
+
+        private bool _disposedValue; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    // dispose managed state (managed objects).
+                    MultiIndex?.Dispose();
+                }
+
+                // free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // set large fields to null.
+
+                _disposedValue = true;
+            }
+        }
+
+        // override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~SearchEngine() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
         }
     }
 }

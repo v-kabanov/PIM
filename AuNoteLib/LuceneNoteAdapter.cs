@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace AuNoteLib
 {
-    public interface ILuceneNoteAdapter : ILuceneEntityAdapter<INote, INoteHeader> { }
+    public interface ILuceneNoteAdapter : ILuceneEntityAdapter<INote, INoteHeader, string> { }
 
     public class LuceneNoteAdapter : ILuceneNoteAdapter
     {
@@ -43,9 +43,32 @@ namespace AuNoteLib
         /// </summary>
         public string SearchFieldName => FieldNameText;
 
+        public string GetFulltextKey(INote doc)
+        {
+            return doc.Id;
+        }
+
+        public string GetStorageKey(INoteHeader header)
+        {
+            return header.Id;
+        }
+
+        public string GetFulltextFromStorageKey(string storageKey)
+        {
+            return storageKey;
+        }
+
+        public string GetStorageFromFulltextKey(string fulltextKey)
+        {
+            return fulltextKey;
+        }
+
+        public bool CanConvertStorageKey => true;
+        public bool CanConvertFulltextKey => true;
+
         public Term GetKeyTerm(INoteHeader note)
         {
-            return new Term(FieldNameId, Convert.ToString(note.Id));
+            return new Term(FieldNameId, note.Id);
         }
 
         public Document GetIndexedDocument(INote note)

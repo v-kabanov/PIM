@@ -24,6 +24,8 @@ namespace AuNoteLib
         /// </param>
         void SaveOrUpdate(TDoc document);
 
+        void SaveOrUpdate(params TDoc[] docs);
+
         /// <summary>
         ///     Returns null if not found; exception thrown if found, but conversion failed.
         /// </summary>

@@ -34,7 +34,7 @@ namespace AuNoteLib
         void Add(params Document[] docs);
 
         /// <summary>
-        ///     Add all items.
+        ///     Add all items. Does not commit.
         /// </summary>
         /// <param name="items">
         ///     Mandatory
@@ -47,6 +47,8 @@ namespace AuNoteLib
         void Commit();
 
         void Delete(string key);
+
+        void Delete(params string[] keys);
 
         void Delete(params Lucene.Net.Index.Term[] terms);
 

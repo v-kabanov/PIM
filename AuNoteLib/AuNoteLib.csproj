@@ -158,6 +158,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DocumentStorageWithFulltextSearch.cs" />
+    <Compile Include="FulltextException.cs" />
     <Compile Include="IDocumentStorage.cs" />
     <Compile Include="IDocumentStorageWithFulltextSearch.cs" />
     <Compile Include="IFulltextSearchEngine.cs" />

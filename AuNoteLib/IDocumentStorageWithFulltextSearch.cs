@@ -6,8 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using log4net;
 
 namespace AuNoteLib
 {
@@ -24,9 +22,9 @@ namespace AuNoteLib
     /// <typeparam name="THeader">
     ///     Document summary type representing part of the document added contained in fulltext indexes.
     /// </typeparam>
-    public interface IDocumentStorageWithFulltextSearch<TDoc, TKey, THeader> : IDocumentStorage<TDoc, TKey>, IFulltextSearchEngine<THeader>
-        where THeader : class
-        where TDoc : class, THeader
+    public interface IDocumentStorageWithFulltextSearch<TDoc, TKey, THeader> : IDocumentStorage<TDoc, TKey>, IFulltextSearchEngine<TDoc, THeader>
+        where THeader : IFulltextIndexEntry
+        where TDoc : class
     {
         /// <summary>
         ///     Opens existing indexes.
@@ -51,96 +49,6 @@ namespace AuNoteLib
 
         void RemoveIndex(string stemmerName);
 
-        void SetDefaultIndex(string stemmerName);
-    }
-
-    public class DocumentStorageWithFulltextSearch<TDoc, TKey, THeader> : IDocumentStorageWithFulltextSearch<TDoc, TKey, THeader>
-        where THeader : class
-        where TDoc : class, THeader
-    {
-        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        public string RootDirectory { get; }
-
-        public IMultiIndex MultiIndex { get; }
-
-        public ILuceneEntityAdapter<TDoc, THeader> EntityAdapter { get; }
-
-        public IDocumentStorage<TDoc, TKey> Storage { get; }
-
-        public IFulltextSearchEngine<THeader> SearchEngine { get; }
-
-        public void SaveOrUpdate(TDoc document)
-        {
-            Storage.SaveOrUpdate(document);
-
-            SearchEngine.
-        }
-
-        public TDoc GetExisting(TKey id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public TDoc Delete(TKey id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<TDoc> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public int CountAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> ActiveIndexNames { get; }
-        public IList<THeader> Search(string queryText, int maxResults)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Open()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void EnsureIndexesAsync(IEnumerable<string> stemmerNames, Action<double> progressReporter = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RebuildIndex(string stemmerName, Action<double> progressReporter = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RebuildIndexes(IEnumerable<string> names, Action<double> progressReporter = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void AddIndex(string stemmerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RemoveIndex(string stemmerName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetDefaultIndex(string stemmerName)
-        {
-            throw new NotImplementedException();
-        }
+        void Delete(params THeader[] docHeaders);
     }
 }

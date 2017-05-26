@@ -12,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using log4net;
 using Lucene.Net.Documents;
+using Lucene.Net.Index;
 using Lucene.Net.Search;
 using NFluent;
 
@@ -83,7 +84,7 @@ namespace AuNoteLib
         {
             CheckNotDisposed();
 
-            ILuceneIndex result = null;
+            ILuceneIndex result;
 
             Indexes.TryGetValue(name, out result);
 
@@ -98,9 +99,7 @@ namespace AuNoteLib
             CheckNotDisposed();
 
             foreach (var luceneIndex in Indexes.Values)
-            {
                 luceneIndex.Clear();
-            }
         }
 
         public bool UseFuzzySearch { get; set; }
@@ -191,9 +190,7 @@ namespace AuNoteLib
             CheckActive();
 
             foreach (var index in Indexes.Values)
-            {
                 index.Add(docs);
-            }
         }
 
         public void Add(IEnumerable<Document> docs)
@@ -203,6 +200,7 @@ namespace AuNoteLib
 
             foreach (var index in Indexes.Values)
             {
+                // ReSharper disable once PossibleMultipleEnumeration
                 index.AddAll(docs);
             }
         }
@@ -212,9 +210,23 @@ namespace AuNoteLib
             CheckNotDisposed();
 
             foreach (var index in Indexes.Values)
-            {
                 index.Delete(key);
-            }
+        }
+
+        public void Delete(params string[] keys)
+        {
+            CheckNotDisposed();
+
+            foreach (var index in Indexes.Values)
+                index.Delete(keys);
+        }
+
+        public void Delete(params Term[] terms)
+        {
+            CheckNotDisposed();
+
+            foreach (var index in Indexes.Values)
+                index.Delete(terms);
         }
 
         public void CleanupDeletes()
@@ -222,9 +234,7 @@ namespace AuNoteLib
             CheckNotDisposed();
 
             foreach (var index in Indexes.Values)
-            {
                 index.CleanupDeletes();
-            }
         }
 
         public void Optimize()
@@ -232,9 +242,15 @@ namespace AuNoteLib
             CheckNotDisposed();
 
             foreach (var index in Indexes.Values)
-            {
                 index.Optimize();
-            }
+        }
+
+        public void Commit()
+        {
+            CheckNotDisposed();
+
+            foreach (var index in Indexes.Values)
+                index.Commit();
         }
 
         /// <summary>

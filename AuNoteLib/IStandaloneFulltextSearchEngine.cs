@@ -10,6 +10,23 @@ using Lucene.Net.Analysis;
 
 namespace AuNoteLib
 {
+    public class IndexInformation
+    {
+        public IndexInformation(string name)
+        {
+            Name = name;
+        }
+
+        public ILuceneIndex LuceneIndex { get; set; }
+
+        /// <summary>
+        ///     Just created
+        /// </summary>
+        public bool IsNew { get; set; }
+
+        public string Name { get; }
+    }
+
     /// <summary>
     ///     Adds maintenance and management operation to fulltext search functionality.
     /// </summary>
@@ -19,11 +36,11 @@ namespace AuNoteLib
     /// <typeparam name="THeader">
     ///     Type representing part of <typeparamref name="TDoc"/> stored in fulltext search.
     /// </typeparam>
-    public interface IStandaloneFulltextSearchEngine<in TDoc, THeader> : IFulltextSearchEngine<THeader>
-        where THeader : class
-        where TDoc : THeader
+    public interface IStandaloneFulltextSearchEngine<in TDoc, THeader, TStorageKey> : IFulltextSearchEngine<TDoc, THeader>, IDisposable
+        where THeader : IFulltextIndexEntry
+        where TDoc : class
     {
-        ILuceneEntityAdapter<TDoc, THeader> EntityAdapter { get; }
+        ILuceneEntityAdapter<TDoc, THeader, TStorageKey> EntityAdapter { get; }
 
         /// <summary>
         ///     Sets index as default if it's the first one.
@@ -52,6 +69,9 @@ namespace AuNoteLib
         /// <param name="docs">
         ///     All documents in the storage.
         /// </param>
+        /// <param name="docCount">
+        ///     Optional, total number of documents for progress reporting
+        /// </param>
         /// <param name="progressReporter">
         ///     Optional delegate receiving number of items added so far.
         /// </param>
@@ -65,7 +85,7 @@ namespace AuNoteLib
         ///     All documents in the database; collection not expected to be fully loaded into RAM
         /// </param>
         /// <param name="docCount">
-        ///     Optional, document count to be used in progress reporting.
+        ///     Optional, total number of documents for progress reporting
         /// </param>
         /// <param name="progressReporter">
         ///     Optional delegate receiving progress report.
@@ -82,6 +102,21 @@ namespace AuNoteLib
 
         bool UseFuzzySearch { get; set; }
 
+        /// <summary>
+        ///     Add new documents to index or update existing ones.
+        /// </summary>
+        /// <param name="docs">
+        ///     New or existing documents.
+        /// </param>
         void Add(params TDoc[] docs);
+
+        void Delete(params THeader[] docHeaders);
+
+        void Delete(params string[] keys);
+
+        /// <summary>
+        ///     Commit all changes to fulltext indexes
+        /// </summary>
+        void CommitFulltextIndex();
     }
 }
