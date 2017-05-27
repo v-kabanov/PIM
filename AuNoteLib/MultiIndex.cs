@@ -10,11 +10,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using AuNoteLib.Util;
 using log4net;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
-using NFluent;
 
 namespace AuNoteLib
 {
@@ -30,7 +30,7 @@ namespace AuNoteLib
 
         public MultiIndex(string keyFieldName)
         {
-            Check.That(keyFieldName).IsNotEmpty();
+            Check.DoRequireArgumentNotBlank(keyFieldName, nameof(keyFieldName));
 
             Indexes = new Dictionary<string, ILuceneIndex>(StringComparer.InvariantCultureIgnoreCase);
             KeyFieldName = keyFieldName;
@@ -60,8 +60,8 @@ namespace AuNoteLib
         {
             CheckNotDisposed();
 
-            Check.That(GetIndex(name)).IsNull();
-            Check.That(index).IsNotNull();
+            Check.DoCheckArgument(GetIndex(name) != null, () => $"Index {name} already exists.");
+            Check.DoRequireArgumentNotNull(index, nameof(index));
 
             Indexes.Add(name, index);
         }
@@ -70,12 +70,13 @@ namespace AuNoteLib
         {
             CheckNotDisposed();
 
-            Check.That(name).IsNotEmpty();
+            Check.DoRequireArgumentNotBlank(name, nameof(name));
             if (string.Equals(name, DefaultIndexName, StringComparison.InvariantCultureIgnoreCase))
                 throw new ApplicationException("Default index cannot be deleted; change default before deleting the index");
 
             var index = GetIndex(name);
-            Check.That(index).IsNotNull();
+            Check.DoCheckArgument(index != null, () => $"Index {name} is not active.");
+
             index.Dispose();
             Indexes.Remove(name);
         }
@@ -154,7 +155,7 @@ namespace AuNoteLib
         {
             CheckNotDisposed();
 
-            Check.That(timeFieldName).IsNotEmpty();
+            Check.DoRequireArgumentNotBlank(timeFieldName, nameof(timeFieldName));
 
             CheckActive();
 
@@ -210,7 +211,17 @@ namespace AuNoteLib
             CheckNotDisposed();
 
             foreach (var index in Indexes.Values)
-                index.Delete(key);
+            {
+                try
+                {
+                    index.Delete(key);
+                }
+                catch (Exception exception)
+                {
+                    Log.ErrorFormat("Exception deleting item#{0} index {1}: {2}", key, index.Name, exception.Message);
+                    throw new FulltextException($"Failed to delete item from index {index.Name}", exception);
+                }
+            }
         }
 
         public void Delete(params string[] keys)
@@ -284,7 +295,15 @@ namespace AuNoteLib
                 return;
 
             foreach (var index in indexesToRebuild)
-                index.Clear(false);
+                try
+                {
+                    index.Clear(false);
+                }
+                catch (Exception exception)
+                {
+                    Log.ErrorFormat("Exception clearing index {0}: {1}", index.Name, exception.Message);
+                    throw new FulltextException($"Failed to clear index {index.Name}", exception);
+                }
 
             var docIndex = 0;
             foreach (var document in documents)
@@ -293,7 +312,15 @@ namespace AuNoteLib
                 for (var indexIndex = 0; indexIndex < indexesToRebuild.Length; ++indexIndex)
                 {
                     var index = indexesToRebuild[indexIndex];
-                    index.Add(document);
+                    try
+                    {
+                        index.Add(document);
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.ErrorFormat("Exception adding document to index {0}: {1}", index.Name, exception.Message);
+                        throw new FulltextException($"Failed to add document to index {index.Name}", exception);
+                    }
                     progressReporter?.Invoke(0.5D * (indexIndex * docCount + docIndex) / docCount * indexesToRebuild.Length);
                 }
             }
@@ -301,7 +328,15 @@ namespace AuNoteLib
             for (var indexIndex = 0; indexIndex < indexesToRebuild.Length; ++indexIndex)
             {
                 var index = indexesToRebuild[indexIndex];
-                index.Commit();
+                try
+                {
+                    index.Commit();
+                }
+                catch (Exception exception)
+                {
+                    Log.ErrorFormat("Exception committing changes to index {0}: {1}", index.Name, exception.Message);
+                    throw new FulltextException($"Failed commit changes to index {index.Name}", exception);
+                }
                 progressReporter?.Invoke(0.5D * (1 + ((double)indexIndex + 1) / indexesToRebuild.Length));
             }
         }
@@ -317,34 +352,33 @@ namespace AuNoteLib
 
         private void CheckNotDisposed()
         {
-            if (disposedValue)
+            if (_disposedValue)
                 throw new ObjectDisposedException(MethodBase.GetCurrentMethod().DeclaringType.Name);
         }
 
-        #region IDisposable Support
-        private bool disposedValue; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects).
+                    // dispose managed state (managed objects).
                     foreach(var index in Indexes)
                     {
                         index.Value.Dispose();
                     }
                 }
 
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
+                // free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // set large fields to null.
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~MultiIndex() {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
@@ -355,9 +389,8 @@ namespace AuNoteLib
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
+            // uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
         }
-        #endregion
     }
 }

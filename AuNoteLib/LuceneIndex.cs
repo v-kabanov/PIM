@@ -14,8 +14,8 @@ using Lucene.Net.Store;
 using Version = Lucene.Net.Util.Version;
 using Lucene.Net.Index;
 using System.IO;
+using AuNoteLib.Util;
 using Lucene.Net.QueryParsers;
-using NFluent;
 
 namespace AuNoteLib
 {
@@ -33,11 +33,14 @@ namespace AuNoteLib
         private volatile Lazy<IndexSearcher> _scoringSearcher;
         private volatile Lazy<IndexSearcher> _nonScoringSearcher;
 
-        public LuceneIndex(Analyzer analyzer, Lucene.Net.Store.Directory fullTextDirectory, string documentKeyName = "Id")
+        public LuceneIndex(string path, Analyzer analyzer, Lucene.Net.Store.Directory fullTextDirectory, string documentKeyName = "Id")
         {
-            Check.That(analyzer).IsNotNull();
-            Check.That(fullTextDirectory).IsNotNull();
-            Check.That(documentKeyName).IsNotEmpty();
+            Check.DoRequireArgumentNotNull(path, nameof(path));
+            Check.DoRequireArgumentNotNull(analyzer, nameof(analyzer));
+            Check.DoRequireArgumentNotNull(fullTextDirectory, nameof(fullTextDirectory));
+            Check.DoRequireArgumentNotBlank(documentKeyName, nameof(documentKeyName));
+
+            Name = new DirectoryInfo(path).Name;
 
             KeyFieldName = documentKeyName;
             Analyzer = analyzer;
@@ -48,6 +51,10 @@ namespace AuNoteLib
             RefreshStats();
             ResetSearch();
         }
+
+        public string Name { get; }
+
+        public string Path { get; }
 
         /// <summary>
         ///     Fully thread safe lazy instance
@@ -153,8 +160,8 @@ namespace AuNoteLib
 
         public Filter CreateTimeRangeFilter(string fieldName, DateTime? @from, DateTime? to)
         {
-            Check.That(from.HasValue || to.HasValue).IsTrue();
-            Check.That(!from.HasValue || !to.HasValue || from.Value < to.Value).IsTrue();
+            Check.DoCheckArgument(from.HasValue || to.HasValue);
+            Check.DoCheckArgument(!from.HasValue || !to.HasValue || from.Value < to.Value);
 
             var fromString = from.HasValue ? DateTools.DateToString(from.Value, DateTools.Resolution.SECOND) : null;
             var toString = to.HasValue ? DateTools.DateToString(to.Value, DateTools.Resolution.SECOND) : null;
@@ -163,7 +170,7 @@ namespace AuNoteLib
 
         public Query CreateQuery(string fieldName, string queryText, bool fuzzy)
         {
-            Check.That(queryText).IsNotEmpty();
+            Check.DoRequireArgumentNotBlank(queryText, nameof(queryText));
 
             //var terms = queryText.Trim()
             //    .Replace("-", " ")
@@ -209,7 +216,7 @@ namespace AuNoteLib
 
         public Query AddFilter(Query query, Filter filter)
         {
-            Check.That(filter).IsNotNull();
+            Check.DoRequireArgumentNotNull(filter, nameof(filter));
 
             if (query == null)
                 query = new MatchAllDocsQuery();
@@ -224,7 +231,7 @@ namespace AuNoteLib
         /// <returns></returns>
         public Query CreateQueryFromFilter(Filter filter)
         {
-            Check.That(filter).IsNotNull();
+            Check.DoRequireArgumentNotNull(filter, nameof(filter));
 
             return AddFilter(null, filter);
         }
@@ -297,7 +304,7 @@ namespace AuNoteLib
             if (IndexWriter.IsLocked(dir))
                 IndexWriter.Unlock(dir);
 
-            var lockFilePath = Path.Combine(directoryPath, WriteLockFileName);
+            var lockFilePath = System.IO.Path.Combine(directoryPath, WriteLockFileName);
 
             if (File.Exists(lockFilePath))
                 File.Delete(lockFilePath);
@@ -319,7 +326,7 @@ namespace AuNoteLib
         /// <returns></returns>
         public static Analyzer CreateSnowballAnalyzer(string stemmerName)
         {
-            Check.That(GetAvailableSnowballStemmers()).Contains(stemmerName);
+            Check.DoCheckArgument(GetAvailableSnowballStemmers().Contains(stemmerName), () => $"Snowball stemmer {stemmerName} is not supported.");
 
             return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, stemmerName);
         }

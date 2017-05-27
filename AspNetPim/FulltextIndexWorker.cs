@@ -37,7 +37,7 @@ namespace AspNetPim
         /// </summary>
         public IList<string> ActiveLanguages { get; private set; }
 
-        public SearchEngine<INote, INoteHeader> SearchEngine { get; }
+        public SearchEngine<INote, INoteHeader, string> SearchEngine { get; }
 
         public INoteStorage NoteStorage { get; }
 
@@ -55,7 +55,7 @@ namespace AspNetPim
             }
         }
 
-        public FulltextIndexWorker(string commaSeparatedLanguageNames, SearchEngine<INote, INoteHeader> searchEngine, INoteStorage storage)
+        public FulltextIndexWorker(string commaSeparatedLanguageNames, SearchEngine<INote, INoteHeader, string> searchEngine, INoteStorage storage)
         {
             Check.DoRequireArgumentNotNull(searchEngine, nameof(searchEngine));
             Check.DoRequireArgumentNotNull(storage, nameof(storage));

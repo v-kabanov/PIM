@@ -7,20 +7,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using AuNoteLib.Util;
 using Couchbase.Lite;
-using NFluent;
 
 namespace AuNoteLib
 {
-    public interface INoteStorage : IDocumentStorage<Note, string>
-    {
-    }
-
     /// <summary>
     ///     Couchbase Lite based storage for notes.
     /// </summary>
     // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
-    public class NoteStorage : INoteStorage
+    public class CouchbaseStorage<TDoc> : IDocumentStorage<TDoc, string>
+        where TDoc : class
     {
         private const string AppName = "mynotes";
 
@@ -28,17 +25,26 @@ namespace AuNoteLib
 
         private Database Database { get; }
 
-        /// <summary>
-        ///     
-        /// </summary>
-        /// <param name="path"></param>
-        public NoteStorage(string path)
+        public ICouchbaseDocumentAdapter<TDoc> DocumentAdapter { get; }
+
+        /// <param name="path">
+        ///     Mandatory, root storage directory path. Created if it does not exist.
+        /// </param>
+        /// <param name="documentAdapter">
+        ///     Mandatory
+        /// </param>
+        public CouchbaseStorage(string path, ICouchbaseDocumentAdapter<TDoc> documentAdapter)
         {
+            Check.DoRequireArgumentNotNull(path, nameof(path));
+            Check.DoRequireArgumentNotNull(documentAdapter, nameof(documentAdapter));
+
             var di = new DirectoryInfo(path);
             if (!di.Exists)
             {
                 di.Create();
             }
+
+            DocumentAdapter = documentAdapter;
 
             Manager = new Manager(di, ManagerOptions.Default);
 
@@ -55,9 +61,15 @@ namespace AuNoteLib
         /// <param name="document">
         ///     Mandatory
         /// </param>
-        public void SaveOrUpdate(Note document)
+        public void SaveOrUpdate(TDoc document)
         {
             SaveOrUpdateImpl(document);
+        }
+
+        public void SaveOrUpdate(params TDoc[] docs)
+        {
+            foreach(var document in docs)
+                SaveOrUpdateImpl(document);
         }
 
         /// <summary>
@@ -68,14 +80,14 @@ namespace AuNoteLib
         /// <returns>
         ///     null if not found
         /// </returns>
-        public Note GetExisting(string id)
+        public TDoc GetExisting(string id)
         {
             var doc = Database.GetExistingDocument(id);
 
             if (doc == null)
                 return null;
 
-            return ToNote(doc);
+            return DocumentAdapter.Read(doc);
         }
 
         /// <summary>
@@ -87,7 +99,7 @@ namespace AuNoteLib
         /// <returns>
         ///     Null if not found
         /// </returns>
-        public Note Delete(string id)
+        public TDoc Delete(string id)
         {
             var doc = Database.GetExistingDocument(id);
 
@@ -96,7 +108,7 @@ namespace AuNoteLib
 
             doc.Delete();
 
-            return ToNote(doc);
+            return DocumentAdapter.Read(doc);
         }
 
         /// <summary>
@@ -105,12 +117,11 @@ namespace AuNoteLib
         /// <returns>
         ///     Lazily loaded collection; safe to invoke on large databases.
         /// </returns>
-        public IEnumerable<Note> GetAll()
+        public IEnumerable<TDoc> GetAll()
         {
+            // ReSharper disable once LoopCanBeConvertedToQuery
             foreach(var row in Database.CreateAllDocumentsQuery().Run())
-            {
-                yield return ToNote(row.Document);
-            }
+                yield return DocumentAdapter.Read(row.Document);
         }
 
         /// <summary>
@@ -129,40 +140,39 @@ namespace AuNoteLib
         ///         - note is not <see cref="INote.IsTransient"/>, but does not exist in the database yet; uses its <see cref="INoteHeader.Id"/><br/>
         ///     Updates is not transient, exists in db and <see cref="INote.Text"/> is different from what is in the db.
         /// </summary>
-        /// <param name="note">
+        /// <param name="document">
         ///     not nullable
         /// </param>
         /// <returns>
         ///     null if there is no change;
         /// </returns>
-        public SavedRevision SaveOrUpdateImpl(IPersistentNote note)
+        private SavedRevision SaveOrUpdateImpl(TDoc document)
         {
-            Check.That(note).IsNotNull();
-            Check.That(note.Id).IsNotEmpty();
-            Check.That(note.Name).IsNotEmpty();
+            Check.DoRequireArgumentNotNull(document, nameof(document));
 
             Document doc;
 
-            var save = note.IsTransient;
+            var save = DocumentAdapter.IsTransient(document);
 
-            if (note.IsTransient)
+            if (save)
             {
-                doc = new Document(Database, note.Id);
-                // note.Id = doc.Id; // let db assign id
+                doc = Database.CreateDocument();
             }
             else
             {
-                doc = Database.GetExistingDocument(note.Id);
+                var id = DocumentAdapter.GetId(document);
+                doc = Database.GetExistingDocument(id);
                 save = doc == null;
 
                 if (doc != null)
                 {
-                    var existingNote = ToNote(doc);
-                    save = existingNote.Text != note.Text;
+                    var existingNote = DocumentAdapter.Read(doc);
+                    save = DocumentAdapter.IsChanged(existingNote, document);
                 }
                 else
                 {
-                    doc = new Document(Database, note.Id);
+                    doc = Database.CreateDocument();
+                    doc.Id = id;
                 }
             }
 
@@ -170,36 +180,11 @@ namespace AuNoteLib
 
             if (save)
             {
-                note.IncrementVersion();
-                result = doc.PutProperties(ToDictionary(note));
+                DocumentAdapter.IncrementVersion(document);
+                result = doc.PutProperties(DocumentAdapter.ToDictionary(document));
             }
 
             return result;
-        }
-
-        private Note ToNote(Document doc)
-        {
-            return new Note
-            {
-                Id = doc.Id,
-                CreateTime = doc.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameCreateTime),
-                LastUpdateTime = doc.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameLastUpdateTime),
-                Text = doc.GetProperty<string>(LuceneNoteAdapter.FieldNameText),
-                Version = doc.GetProperty<int>(LuceneNoteAdapter.FieldNameVersion)
-            };
-        }
-
-        private Dictionary<string, object> ToDictionary(INote note)
-        {
-            Check.That(note).IsNotNull();
-
-            return new Dictionary<string, object>
-            {
-                { LuceneNoteAdapter.FieldNameCreateTime, note.CreateTime }
-                , { LuceneNoteAdapter.FieldNameText, note.Text }
-                , { LuceneNoteAdapter.FieldNameLastUpdateTime, note.LastUpdateTime }
-                , { LuceneNoteAdapter.FieldNameVersion, note.Version }
-            };
         }
 
         private bool _disposedValue; // To detect redundant calls

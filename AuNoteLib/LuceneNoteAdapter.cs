@@ -6,10 +6,10 @@
 
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using NFluent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AuNoteLib.Util;
 
 namespace AuNoteLib
 {
@@ -106,7 +106,7 @@ namespace AuNoteLib
 
         public IList<INoteHeader> GetHeaders(IEnumerable<LuceneSearchHit> searchResult)
         {
-            Check.That(searchResult).IsNotNull();
+            Check.DoRequireArgumentNotNull(searchResult, nameof(searchResult));
 
             return searchResult.Select(h => GetHeader(h.Document)).ToList();
         }

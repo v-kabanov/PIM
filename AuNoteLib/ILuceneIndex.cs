@@ -20,6 +20,16 @@ namespace AuNoteLib
     /// </summary>
     public interface ILuceneIndex : IDisposable
     {
+        /// <summary>
+        ///     Should generally match root directory name.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        ///     Index root directory
+        /// </summary>
+        string Path { get; }
+
         Directory Directory { get; }
 
         Analyzer Analyzer { get; }

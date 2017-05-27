@@ -36,8 +36,8 @@ namespace AuNote.ViewModel
         private const string AppSettingKeyFulltextIndexLanguages = "FulltextIndexLanguages";
         private const string SnowballStemmerNameEnglish = "English";
 
-        private NoteStorage Storage { get; set; }
-        private SearchEngine<INote, INoteHeader> SearchEngine { get; set; }
+        private CouchbaseStorage<Note> Storage { get; set; }
+        private SearchEngine<INote, INoteHeader, string> SearchEngine { get; set; }
 
         private int NoteListSize => 20;
 
@@ -63,9 +63,9 @@ namespace AuNote.ViewModel
                 var fullTextFolder = Path.Combine(DataRootPath, "ft");
                 var dbFolder = Path.Combine(DataRootPath, "db");
 
-                Storage = new NoteStorage(dbFolder);
+                Storage = new CouchbaseStorage<Note>(dbFolder, new NoteCouchbaseAdapter());
                 var adapter = new LuceneNoteAdapter();
-                SearchEngine = new SearchEngine<INote, INoteHeader>(fullTextFolder, adapter, new MultiIndex(adapter.DocumentKeyName));
+                SearchEngine = new SearchEngine<INote, INoteHeader, string>(fullTextFolder, adapter, new MultiIndex(adapter.DocumentKeyName));
 
 
                 var configuredLanguageNames = ConfigurationManager.AppSettings[AppSettingKeyFulltextIndexLanguages]?.Split(',').Select(s => s.Trim()).ToList();

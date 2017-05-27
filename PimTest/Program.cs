@@ -37,7 +37,7 @@ namespace PimTest
                 Note.Create("Mama \r\n mum mother Tanya"),
             };
 
-            var storage = new NoteStorage(@"c:\temp\MyNotes");
+            var storage = new CouchbaseStorage<Note>(@"c:\temp\MyNotes", new NoteCouchbaseAdapter());
 
             if (storage.CountAll() > 0)
             {
@@ -60,7 +60,7 @@ namespace PimTest
             fullTextDir.Create();
 
             var adapter = new LuceneNoteAdapter();
-            var searchEngine = new SearchEngine<INote, INoteHeader>(
+            var searchEngine = new SearchEngine<INote, INoteHeader, string>(
                 fullTextDir.FullName, adapter, new MultiIndex(adapter.DocumentKeyName));
 
             searchEngine.UseFuzzySearch = true;

@@ -39,11 +39,13 @@ namespace AuNoteLib
         /// <param name="progressReporter">
         ///     Optional delegate receiving progress updates (completion percent 0..1)
         /// </param>
-        void EnsureIndexesAsync(IEnumerable<string> stemmerNames, Action<double> progressReporter = null);
+        void OpenOrCreateIndexes(IEnumerable<string> stemmerNames, Action<double> progressReporter = null);
 
         void RebuildIndex(string stemmerName, Action<double> progressReporter = null);
 
-        void RebuildIndexes(IEnumerable<string> names, Action<double> progressReporter = null);
+        void RebuildIndexes(IEnumerable<string> stemmerNames, Action<double> progressReporter = null);
+
+        void RebuildAllIndexes(Action<double> progressReporter = null);
 
         void AddIndex(string stemmerName);
 

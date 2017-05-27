@@ -9,9 +9,12 @@ using System.Text.RegularExpressions;
 
 namespace AuNoteLib
 {
+    public interface INoteStorage : IDocumentStorage<Note, string>
+    { }
+
     public class Note : IPersistentNote
     {
-        private static Regex _nameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
+        private static readonly Regex NameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
 
         private string _text;
 
@@ -80,7 +83,7 @@ namespace AuNoteLib
         /// </returns>
         private static string ExtractFirstLine(string text)
         {
-            var nameMatch = _nameRegex.Match(text);
+            var nameMatch = NameRegex.Match(text);
             return nameMatch.Success
                 ? nameMatch.Groups[1].Value
                 : null;

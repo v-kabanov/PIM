@@ -30,7 +30,7 @@ namespace AspNetPim
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
 
-        public SearchEngine<INote, INoteHeader> SearchEngine { get; private set; }
+        public SearchEngine<INote, INoteHeader, string> SearchEngine { get; private set; }
 
         private void ConfigureBackend()
         {
@@ -42,7 +42,7 @@ namespace AspNetPim
 
             var storage = new NoteStorage(dbFolder);
             var adapter = new LuceneNoteAdapter();
-            SearchEngine = new SearchEngine<INote, INoteHeader>(fullTextFolder, adapter, new MultiIndex(adapter.DocumentKeyName));
+            SearchEngine = new SearchEngine<INote, INoteHeader, string>(fullTextFolder, adapter, new MultiIndex(adapter.DocumentKeyName));
 
             var builder = new ContainerBuilder();
 

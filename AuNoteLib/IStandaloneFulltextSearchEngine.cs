@@ -42,6 +42,8 @@ namespace AuNoteLib
     {
         ILuceneEntityAdapter<TDoc, THeader, TStorageKey> EntityAdapter { get; }
 
+        IMultiIndex MultiIndex { get; }
+
         /// <summary>
         ///     Sets index as default if it's the first one.
         /// </summary>

@@ -26,7 +26,7 @@ namespace AuNoteLib
     ///     To <see cref="MultiIndex"/> it adds bridging between source data and indexed part of it.
     /// </summary>
     public class SearchEngine<TDoc, THeader, TStorageKey> : SearchEngineBase, IStandaloneFulltextSearchEngine<TDoc, THeader, TStorageKey>
-        where THeader : class
+        where THeader : IFulltextIndexEntry
         where TDoc : class
     {
         public string RootDirectory { get; }
@@ -91,7 +91,7 @@ namespace AuNoteLib
 
             var luceneDir = LuceneIndex.PreparePersistentDirectory(indexDirectoryPath);
 
-            var newIndex = new LuceneIndex(analyzer, luceneDir, EntityAdapter.DocumentKeyName);
+            var newIndex = new LuceneIndex(indexDirectoryPath, analyzer, luceneDir, EntityAdapter.DocumentKeyName);
 
             MultiIndex.AddIndex(name, newIndex);
 
