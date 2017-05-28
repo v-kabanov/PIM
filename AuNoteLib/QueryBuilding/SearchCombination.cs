@@ -1,6 +1,6 @@
 using Lucene.Net.Search;
 
-namespace AuNoteLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding
 {
     class SearchCombination
     {

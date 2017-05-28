@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using log4net;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Executes a sequence of tasks, stops after failure (does not catch exceptions).

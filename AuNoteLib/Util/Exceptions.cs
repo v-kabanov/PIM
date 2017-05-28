@@ -7,7 +7,7 @@
 using System;
 using System.Text;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Exception helpers.

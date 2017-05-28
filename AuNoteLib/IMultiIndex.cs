@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using Lucene.Net.Documents;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public interface IMultiIndex : IDisposable
     {

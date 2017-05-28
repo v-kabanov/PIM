@@ -1,7 +1,7 @@
 using Lucene.Net.Search;
 using NFluent;
 
-namespace AuNoteLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding
 {
     class Search
     {

@@ -4,9 +4,10 @@
 // Comment  
 // **********************************************************************************************/
 // 
+
 using System.IO;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Simple file deletion task, no exception handling, use <see cref="TryTask"/> etc if needed.

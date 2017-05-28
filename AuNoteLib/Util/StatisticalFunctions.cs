@@ -6,7 +6,7 @@
 
 using System;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     public static class StatisticalFunctions
     {

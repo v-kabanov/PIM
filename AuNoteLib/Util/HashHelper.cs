@@ -6,7 +6,7 @@
 
 using System.Collections.Generic;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     // http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode
 	public static class HashHelper

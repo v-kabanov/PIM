@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
 
     /// <summary>

@@ -7,7 +7,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Wraps POCO task object in a <see cref="Task"/> so that framework's infrastructure can work with it (e.g. <see cref="TaskScheduler"/>).

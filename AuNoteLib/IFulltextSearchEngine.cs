@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     /// <summary>
     ///     Object implementing full text searching on existing indexes with data for indexing provided by client.

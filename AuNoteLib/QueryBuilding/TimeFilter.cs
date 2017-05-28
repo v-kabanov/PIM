@@ -1,6 +1,6 @@
 using System;
 
-namespace AuNoteLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding
 {
     class TimeFilter : QueryTerm
     {

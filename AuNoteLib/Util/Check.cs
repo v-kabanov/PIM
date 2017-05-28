@@ -24,14 +24,12 @@
 // #endif
 //
 // Alternatively, you can define these in the project properties dialog.
-  
+
 using System;
 using System.Diagnostics;
-using System.Linq.Expressions;
-
 using log4net;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
 	/// <summary>
 	/// Design By Contract Checks.

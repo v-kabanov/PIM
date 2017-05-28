@@ -4,14 +4,13 @@
 // Comment		
 // **********************************************************************************************/
 
-using Lucene.Net.Documents;
-using Lucene.Net.Index;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuNoteLib.Util;
+using FulltextStorageLib.Util;
+using Lucene.Net.Documents;
+using Lucene.Net.Index;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public interface ILuceneNoteAdapter : ILuceneEntityAdapter<INote, INoteHeader, string> { }
 

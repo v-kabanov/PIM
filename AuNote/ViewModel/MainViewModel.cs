@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Navigation;
-using AuNoteLib;
+using FulltextStorageLib;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
 using log4net;

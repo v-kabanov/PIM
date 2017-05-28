@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection;
 using log4net;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Task executing one task and then another (try - finally block) even if first one throws exception.

@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Threading;
 using log4net;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Wrap task so that it is retried up to a number of times if <typeparamref name="TE"/> exception is thrown when it is executed.

@@ -4,7 +4,7 @@
 // Comment		
 // **********************************************************************************************/
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
 
     /// <summary>

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PimTest", "PimTest\PimTest.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuNote", "AuNote\AuNote.csproj", "{99656F91-C488-4221-ABFA-1435D68A7F45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuNoteLib", "AuNoteLib\AuNoteLib.csproj", "{5F0C603E-F305-4D23-8D6F-CD8AEC00CBC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FulltextStorageLib", "AuNoteLib\FulltextStorageLib.csproj", "{5F0C603E-F305-4D23-8D6F-CD8AEC00CBC4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetPim", "AspNetPim\AspNetPim.csproj", "{3F27DAB0-C3BB-4DF5-AF7B-B603366F2412}"
 EndProject

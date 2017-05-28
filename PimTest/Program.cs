@@ -7,7 +7,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using AuNoteLib;
+using FulltextStorageLib;
 using Newtonsoft.Json.Serialization;
 
 namespace PimTest

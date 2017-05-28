@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     /// <summary>
     ///     Adapter of entity with 1 or 2 searchable fields: text and optional time.

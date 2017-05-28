@@ -8,7 +8,7 @@ using System;
 using System.Reflection;
 using log4net;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     public class ConditionalTask : ITask
     {

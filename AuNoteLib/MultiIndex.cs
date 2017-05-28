@@ -10,13 +10,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using AuNoteLib.Util;
+using FulltextStorageLib.Util;
 using log4net;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     /// <summary>
     ///     Domain agnostic multi lingual lucene index.

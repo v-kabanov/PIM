@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     /// <summary>
     ///     Component which adds fulltext search to document storage. It contains storage because access to it is required for index
@@ -27,8 +27,11 @@ namespace AuNoteLib
         where TDoc : class
     {
         /// <summary>
-        ///     Opens existing indexes.
+        ///     Opens existing indexes. Repeated calls result in exception if some indexes are already opened.
         /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     Some indexes are already open.
+        /// </exception>
         void Open();
 
         /// <summary>

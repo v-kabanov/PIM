@@ -1,5 +1,4 @@
-﻿using AuNoteLib;
-using Autofac;
+﻿using Autofac;
 using Autofac.Integration.Mvc;
 using log4net;
 using System;
@@ -11,6 +10,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using FulltextStorageLib;
 
 namespace AspNetPim
 {

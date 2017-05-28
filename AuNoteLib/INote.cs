@@ -6,7 +6,7 @@
 
 using System;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     /// <summary>
     ///     Interface exposed to GUI

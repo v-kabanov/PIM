@@ -6,7 +6,7 @@
 
 using System;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     /// <summary>
     ///     Task that is handling exception thrown from another task

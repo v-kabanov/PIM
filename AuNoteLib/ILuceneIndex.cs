@@ -12,7 +12,7 @@ using Lucene.Net.Documents;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
 
     /// <summary>

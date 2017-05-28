@@ -4,13 +4,12 @@
 // Comment		
 // **********************************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using AuNoteLib.Util;
 using Couchbase.Lite;
+using FulltextStorageLib.Util;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     /// <summary>
     ///     Couchbase Lite based storage for notes.

@@ -6,18 +6,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using FulltextStorageLib.Util;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
+using Lucene.Net.Index;
+using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Version = Lucene.Net.Util.Version;
-using Lucene.Net.Index;
-using System.IO;
-using AuNoteLib.Util;
-using Lucene.Net.QueryParsers;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class LuceneIndex : ILuceneIndex

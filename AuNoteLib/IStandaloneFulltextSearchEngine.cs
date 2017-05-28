@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using Lucene.Net.Analysis;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public class IndexInformation
     {
@@ -43,6 +43,11 @@ namespace AuNoteLib
         ILuceneEntityAdapter<TDoc, THeader, TStorageKey> EntityAdapter { get; }
 
         IMultiIndex MultiIndex { get; }
+
+        /// <summary>
+        ///     Get names of indexes that exist on disk.
+        /// </summary>
+        IEnumerable<string> GetExistingIndexNames();
 
         /// <summary>
         ///     Sets index as default if it's the first one.

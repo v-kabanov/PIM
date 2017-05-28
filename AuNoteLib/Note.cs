@@ -7,7 +7,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public interface INoteStorage : IDocumentStorage<Note, string>
     { }

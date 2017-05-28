@@ -1,4 +1,4 @@
-namespace AuNoteLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding
 {
     class FullTextQueryTerm : QueryTerm
     {

@@ -7,8 +7,8 @@
     <ProjectGuid>{5F0C603E-F305-4D23-8D6F-CD8AEC00CBC4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AuNoteLib</RootNamespace>
-    <AssemblyName>AuNoteLib</AssemblyName>
+    <RootNamespace>FulltextStorageLib</RootNamespace>
+    <AssemblyName>FulltextStorageLib</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>

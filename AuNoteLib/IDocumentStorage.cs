@@ -7,7 +7,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public interface IDocumentStorage<TDoc, TKey> : IDisposable
         where TDoc: class

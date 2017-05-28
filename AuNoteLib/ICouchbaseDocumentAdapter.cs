@@ -4,10 +4,11 @@
 // Comment  
 // **********************************************************************************************/
 // 
+
 using System.Collections.Generic;
 using Couchbase.Lite;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public interface ICouchbaseDocumentAdapter<TDoc>
     {

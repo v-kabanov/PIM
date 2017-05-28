@@ -7,7 +7,7 @@
 using System;
 using System.Linq;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     public static class TaskExtensions
     {

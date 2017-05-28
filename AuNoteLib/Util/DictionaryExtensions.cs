@@ -4,9 +4,10 @@
 // Comment  
 // **********************************************************************************************/
 // 
+
 using System.Collections.Generic;
 
-namespace AuNoteLib.Util
+namespace FulltextStorageLib.Util
 {
     public static class DictionaryExtensions
     {

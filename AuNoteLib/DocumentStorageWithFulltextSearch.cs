@@ -4,16 +4,17 @@
 // Comment  
 // **********************************************************************************************/
 // 
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using AuNoteLib.Util;
+using FulltextStorageLib.Util;
 using log4net;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public class DocumentStorageWithFulltextSearchBase
     {
@@ -21,7 +22,7 @@ namespace AuNoteLib
     }
 
     /// <summary>
-    ///     TODO: async fulltext operations
+    ///     async fulltext operations
     /// </summary>
     /// <typeparam name="TDoc"></typeparam>
     /// <typeparam name="TKey">
@@ -32,10 +33,6 @@ namespace AuNoteLib
         where THeader : IFulltextIndexEntry
         where TDoc : class
     {
-        private const string SnowballStemmerNameEnglish = "English";
-
-        public string RootDirectory { get; }
-
         public IMultiIndex MultiIndex => SearchEngine.MultiIndex;
 
         public ILuceneEntityAdapter<TDoc, THeader, TKey> EntityAdapter { get; }
@@ -123,8 +120,19 @@ namespace AuNoteLib
             return SearchEngine.GetTopInPeriod(periodStart, periodEnd, maxResults);
         }
 
+        /// <summary>
+        ///     Opens existing indexes. Repeated calls result in exception if some indexes are already opened.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        ///     Some indexes are already open.
+        /// </exception>
         public void Open()
         {
+            Check.DoCheckOperationValid(SearchEngine.MultiIndex.AllIndexes.Length == 0, "Already opened");
+
+            var existingIndexes = SearchEngine.GetExistingIndexNames();
+
+            OpenOrCreateIndexes(existingIndexes);
         }
 
         /// <summary>
@@ -135,6 +143,7 @@ namespace AuNoteLib
         /// <param name="progressReporter">
         ///     Optional delegate receiving progress updates (completion percent 0..1)
         /// </param>
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public void OpenOrCreateIndexes(IEnumerable<string> stemmerNames, Action<double> progressReporter = null)
         {
             Check.DoRequireArgumentNotNull(stemmerNames, nameof(stemmerNames));
@@ -214,33 +223,40 @@ namespace AuNoteLib
 
         /// <summary>
         ///     Factory method creating typical configuration with Couchbase Lite as storage and Lucene fulltext search engine.
+        ///     Initiates opening of existing fulltext indexes.
         /// </summary>
-        /// <param name="rootDirectoryPath"></param>
-        /// <param name="couchbaseAdapter"></param>
-        /// <param name="luceneAdapter"></param>
-        /// <returns></returns>
+        /// <param name="rootDirectoryPath">
+        ///     Mandatory, rot directory of indexed storage. Will contain 2 subfolders 'db' with Couchbase Lite database and 'ft' with fulltext indexes.
+        /// </param>
+        /// <param name="couchbaseAdapter">
+        ///     Adapter for generic Couchbase storage implementation (see <see cref="CouchbaseStorage{TDoc}"/>)
+        /// </param>
+        /// <param name="luceneAdapter">
+        ///     Adapter for generic Lucene multi index search engine implementation (see <see cref="SearchEngine"/>)
+        /// </param>
+        /// <returns>
+        ///     Instantiated storage component in need of opening (see <see cref="IDocumentStorageWithFulltextSearch{TDoc,TKey,THeader}.Open"/>).
+        ///     Fulltext indexes are not yet opened in the returned instance.
+        /// </returns>
         public static DocumentStorageWithFulltextSearch<TDoc, string, THeader> CreateStandard(
             string rootDirectoryPath
             , ICouchbaseDocumentAdapter<TDoc> couchbaseAdapter
-            , ILuceneEntityAdapter<TDoc, THeader, string> luceneAdapter
-            , Action<double> fulltextProgressReporter = null)
+            , ILuceneEntityAdapter<TDoc, THeader, string> luceneAdapter)
         {
+            Check.DoRequireArgumentNotNull(rootDirectoryPath, nameof(rootDirectoryPath));
+            Check.DoRequireArgumentNotNull(couchbaseAdapter, nameof(couchbaseAdapter));
+            Check.DoRequireArgumentNotNull(luceneAdapter, nameof(luceneAdapter));
+
             var dbPath = Path.Combine(rootDirectoryPath, "db");
             var fulltextPath = Path.Combine(rootDirectoryPath, "ft");
 
             Directory.CreateDirectory(dbPath);
-            var fulltextDirectoryInfo = Directory.CreateDirectory(fulltextPath);
 
             var storage = new CouchbaseStorage<TDoc>(rootDirectoryPath, couchbaseAdapter);
             var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
             var searchEngine = new SearchEngine<TDoc, THeader, string>(fulltextPath, luceneAdapter, multiIndex);
 
-            var existingStemmerNames = fulltextDirectoryInfo.EnumerateDirectories().Select(i => i.Name).ToList();
-
             var result = new DocumentStorageWithFulltextSearch<TDoc, string, THeader>(storage, searchEngine);
-
-            if (existingStemmerNames.Count > 0)
-                result.OpenOrCreateIndexes(existingStemmerNames, fulltextProgressReporter);
 
             return result;
         }

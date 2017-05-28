@@ -9,8 +9,8 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
-using AuNoteLib;
-using AuNoteLib.Util;
+using FulltextStorageLib;
+using FulltextStorageLib.Util;
 using log4net;
 
 namespace AspNetPim

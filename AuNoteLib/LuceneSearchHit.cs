@@ -6,7 +6,7 @@
 
 using Lucene.Net.Documents;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public class LuceneSearchHit
     {

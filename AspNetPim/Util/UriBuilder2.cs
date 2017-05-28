@@ -4,10 +4,10 @@
 // Comment		
 // **********************************************************************************************/
 
-using AuNoteLib.Util;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
+using FulltextStorageLib.Util;
 
 namespace AspNetPim.Util
 {

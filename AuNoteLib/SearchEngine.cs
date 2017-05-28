@@ -8,12 +8,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using log4net;
 using System.Reflection;
-using AuNoteLib.Util;
+using FulltextStorageLib.Util;
+using log4net;
 using Lucene.Net.Analysis;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public class SearchEngineBase
     {
@@ -57,6 +57,11 @@ namespace AuNoteLib
             RootDirectory = rootDirectory;
             EntityAdapter = entityAdapter;
             MultiIndex = multiIndex;
+        }
+
+        public IEnumerable<string> GetExistingIndexNames()
+        {
+            return Directory.CreateDirectory(RootDirectory).GetDirectories().Select(d => d.Name);
         }
 
         /// <summary>

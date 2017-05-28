@@ -4,9 +4,10 @@
 // Comment  
 // **********************************************************************************************/
 // 
+
 using System;
 
-namespace AuNoteLib
+namespace FulltextStorageLib
 {
     public class FulltextException : Exception
     {
