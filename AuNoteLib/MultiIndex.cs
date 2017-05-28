@@ -60,7 +60,7 @@ namespace FulltextStorageLib
         {
             CheckNotDisposed();
 
-            Check.DoCheckArgument(GetIndex(name) != null, () => $"Index {name} already exists.");
+            Check.DoCheckArgument(GetIndex(name) == null, () => $"Index {name} already exists.");
             Check.DoRequireArgumentNotNull(index, nameof(index));
 
             Indexes.Add(name, index);

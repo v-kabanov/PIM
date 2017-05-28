@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace FulltextStorageLib
 {
-    public interface IDocumentStorage<TDoc, TKey> : IDisposable
+    public interface IDocumentStorage<TDoc, in TKey> : IDisposable
         where TDoc: class
     {
         /// <summary>

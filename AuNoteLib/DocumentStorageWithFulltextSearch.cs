@@ -251,6 +251,7 @@ namespace FulltextStorageLib
             var fulltextPath = Path.Combine(rootDirectoryPath, "ft");
 
             Directory.CreateDirectory(dbPath);
+            Directory.CreateDirectory(fulltextPath);
 
             var storage = new CouchbaseStorage<TDoc>(rootDirectoryPath, couchbaseAdapter);
             var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
