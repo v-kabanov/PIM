@@ -222,7 +222,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AuNoteLib\FulltextStorageLib.csproj">
+    <ProjectReference Include="..\FulltextStorageLib\FulltextStorageLib.csproj">
       <Project>{5f0c603e-f305-4d23-8d6f-cd8aec00cbc4}</Project>
       <Name>FulltextStorageLib</Name>
     </ProjectReference>

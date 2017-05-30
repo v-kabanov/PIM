@@ -261,7 +261,7 @@
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AuNoteLib\FulltextStorageLib.csproj">
+    <ProjectReference Include="..\FulltextStorageLib\FulltextStorageLib.csproj">
       <Project>{5f0c603e-f305-4d23-8d6f-cd8aec00cbc4}</Project>
       <Name>FulltextStorageLib</Name>
     </ProjectReference>
