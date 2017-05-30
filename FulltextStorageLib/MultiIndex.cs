@@ -109,7 +109,7 @@ namespace FulltextStorageLib
         {
             CheckNotDisposed();
 
-            Log.DebugFormat("Searching '{0}', {1} - {2}, fuzzy = {3}, maxResults = {4}", queryText, maxResults);
+            Log.DebugFormat("Searching '{0}', fuzzy = {1}, maxResults = {2}", queryText, UseFuzzySearch, maxResults);
 
             var results = new Dictionary<string, IList<LuceneSearchHit>>();
             foreach (var key in Indexes.Keys)

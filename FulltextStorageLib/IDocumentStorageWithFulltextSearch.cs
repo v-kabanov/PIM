@@ -22,7 +22,7 @@ namespace FulltextStorageLib
     /// <typeparam name="THeader">
     ///     Document summary type representing part of the document added contained in fulltext indexes.
     /// </typeparam>
-    public interface IDocumentStorageWithFulltextSearch<TDoc, TKey, THeader> : IDocumentStorage<TDoc, TKey>, IFulltextSearchEngine<TDoc, THeader>
+    public interface IDocumentStorageWithFulltextSearch<TDoc, in TKey, THeader> : IDocumentStorage<TDoc, TKey>, IFulltextSearchEngine<THeader>
         where THeader : IFulltextIndexEntry
         where TDoc : class
     {

@@ -36,7 +36,10 @@ namespace FulltextStorageLib
     /// <typeparam name="THeader">
     ///     Type representing part of <typeparamref name="TDoc"/> stored in fulltext search.
     /// </typeparam>
-    public interface IStandaloneFulltextSearchEngine<in TDoc, THeader, TStorageKey> : IFulltextSearchEngine<TDoc, THeader>, IDisposable
+    /// <typeparam name="TStorageKey">
+    ///     Type of key used in the document storage
+    /// </typeparam>
+    public interface IStandaloneFulltextSearchEngine<in TDoc, THeader, TStorageKey> : IFulltextSearchEngine<THeader>, IDisposable
         where THeader : IFulltextIndexEntry
         where TDoc : class
     {

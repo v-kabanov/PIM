@@ -172,13 +172,13 @@ namespace FulltextStorageLib
         {
             Check.DoRequireArgumentNotBlank(queryText, nameof(queryText));
 
-            //var terms = queryText.Trim()
-            //    .Replace("-", " ")
-            //    .Split(' ')
-            //    .Where(x => !string.IsNullOrEmpty(x))
-            //    .Select(x => x.Trim() + "*");
+            var terms = queryText.Trim()
+                .Replace("-", " ")
+                .Split(' ')
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x.Trim() + "*");
 
-            //var termsString = string.Join(" ", terms);
+            var termsString = string.Join(" ", terms);
 
             var parser = new QueryParser(Version.LUCENE_30, fieldName, Analyzer)
             {
@@ -191,9 +191,9 @@ namespace FulltextStorageLib
 
             var booleanQuery = new BooleanQuery {{parsedQuery, Occur.SHOULD}};
 
-            //var parsedTermsQuery = Parse(termsString, parser);
-            //parsedTermsQuery.Boost = 0.3f;
-            //booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
+            var parsedTermsQuery = Parse(termsString, parser);
+            parsedTermsQuery.Boost = 0.3f;
+            booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
 
             var term = new Term(fieldName, queryText);
 
