@@ -55,5 +55,7 @@ namespace FulltextStorageLib
         void RemoveIndex(string stemmerName);
 
         void Delete(params THeader[] docHeaders);
+
+        bool WaitForFulltextBackgroundWorkToComplete(int maxWaitMilliseconds);
     }
 }

@@ -63,7 +63,16 @@ namespace FulltextStorageLibTest
                 Assert.IsNotEmpty(note.Id);
                 Assert.AreEqual(1, note.Version);
             }
+
+            Assert.IsTrue(_indexedStorage.WaitForFulltextBackgroundWorkToComplete(1000));
         }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            _indexedStorage.Dispose();
+        }
+
 
         [Test]
         public void GetTopInPeriodSortsByLastUpdateTimeDescending()

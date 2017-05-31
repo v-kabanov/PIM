@@ -41,18 +41,29 @@ namespace FulltextStorageLib
 
         public IStandaloneFulltextSearchEngine<TDoc, THeader, TKey> SearchEngine { get; }
 
+        public double FulltextTaskCompletion { get; private set; }
+
+        public string FulltextStatusSummary { get; private set; }
+
+        private ITaskExecutor FulltextBackgroundTaskExecutor { get; }
+
         public DocumentStorageWithFulltextSearch(IDocumentStorage<TDoc, TKey> storage, IStandaloneFulltextSearchEngine<TDoc, THeader, TKey> searchEngine)
         {
             Storage = storage;
             SearchEngine = searchEngine;
+
+            FulltextBackgroundTaskExecutor = new TaskExecutor();
         }
 
         public void SaveOrUpdate(TDoc document)
         {
             Storage.SaveOrUpdate(document);
 
-            SearchEngine.Add(document);
-            SearchEngine.CommitFulltextIndex();
+            FulltextBackgroundTaskExecutor.Schedule(() =>
+            {
+                SearchEngine.Add(document);
+                SearchEngine.CommitFulltextIndex();
+            });
         }
 
         public void SaveOrUpdate(params TDoc[] docs)
@@ -60,8 +71,11 @@ namespace FulltextStorageLib
             foreach (var doc in docs)
                 Storage.SaveOrUpdate(doc);
 
-            SearchEngine.Add(docs);
-            SearchEngine.CommitFulltextIndex();
+            FulltextBackgroundTaskExecutor.Schedule(() =>
+            {
+                SearchEngine.Add(docs);
+                SearchEngine.CommitFulltextIndex();
+            });
         }
 
         public void Delete(params THeader[] docHeaders)
@@ -73,9 +87,11 @@ namespace FulltextStorageLib
                 Storage.Delete(storageKey);
             }
 
-            SearchEngine.Delete(docHeaders);
-
-            SearchEngine.CommitFulltextIndex();
+            FulltextBackgroundTaskExecutor.Schedule(() =>
+            {
+                SearchEngine.Delete(docHeaders);
+                SearchEngine.CommitFulltextIndex();
+            });
         }
 
         public TDoc GetExisting(TKey id)
@@ -87,13 +103,16 @@ namespace FulltextStorageLib
         {
             var result = Storage.Delete(id);
 
-            if (EntityAdapter.CanConvertStorageKey)
-                SearchEngine.Delete(EntityAdapter.GetFulltextFromStorageKey(id));
-            else if (result != null)
-                SearchEngine.Delete(EntityAdapter.GetFulltextKey(result));
+            FulltextBackgroundTaskExecutor.Schedule(() =>
+            {
+                if (EntityAdapter.CanConvertStorageKey)
+                    SearchEngine.Delete(EntityAdapter.GetFulltextFromStorageKey(id));
+                else if (result != null)
+                    SearchEngine.Delete(EntityAdapter.GetFulltextKey(result));
 
-            if (EntityAdapter.CanConvertStorageKey || result != null)
-                SearchEngine.CommitFulltextIndex();
+                if (EntityAdapter.CanConvertStorageKey || result != null)
+                    SearchEngine.CommitFulltextIndex();
+            });
 
             return result;
         }
@@ -180,11 +199,21 @@ namespace FulltextStorageLib
             RebuildIndexes(stemmerName.WrapInList(), progressReporter);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public void RebuildIndexes(IEnumerable<string> stemmerNames, Action<double> progressReporter = null)
         {
             Check.DoRequireArgumentNotNull(stemmerNames, nameof(stemmerNames));
 
-            SearchEngine.RebuildIndexes(stemmerNames, Storage.GetAll(), Storage.CountAll(), progressReporter);
+            FulltextBackgroundTaskExecutor.Schedule(() =>
+            {
+                FulltextStatusSummary = $"Rebuilding {string.Join(", ", stemmerNames)}.";
+                SearchEngine.RebuildIndexes(stemmerNames, Storage.GetAll(), Storage.CountAll(),
+                    (progress) =>
+                    {
+                        FulltextTaskCompletion = progress;
+                        progressReporter?.Invoke(progress);
+                    });
+            });
         }
 
         public void RebuildAllIndexes(Action<double> progressReporter = null)
@@ -215,10 +244,16 @@ namespace FulltextStorageLib
             SearchEngine.SetDefaultIndex(stemmerName);
         }
 
-        public void Dispose()
+        /// <summary>
+        ///     Block scheduling of new tasks and wait until already scheduled ones finish.
+        /// </summary>
+        /// <param name="maxWaitMilliseconds">
+        ///     Maximum wait time in milliseconds; must be 0, positive or -1 for infinite.
+        ///     When 0, method effectively checks if there are pending tasks.
+        /// </param>
+        public bool WaitForFulltextBackgroundWorkToComplete(int maxWaitMilliseconds)
         {
-            Storage?.Dispose();
-            SearchEngine?.Dispose();
+            return FulltextBackgroundTaskExecutor.WaitForAllCurrentTasksToFinish(maxWaitMilliseconds);
         }
 
         /// <summary>
@@ -260,6 +295,44 @@ namespace FulltextStorageLib
             var result = new DocumentStorageWithFulltextSearch<TDoc, string, THeader>(storage, searchEngine);
 
             return result;
+        }
+
+        private bool _disposedValue;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    // dispose managed state (managed objects).
+                    FulltextBackgroundTaskExecutor.WaitForAllCurrentTasksToFinish(5000);
+                    FulltextBackgroundTaskExecutor.Dispose();
+
+                    Storage?.Dispose();
+                    SearchEngine?.Dispose();
+                }
+
+                // free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // set large fields to null.
+
+                _disposedValue = true;
+            }
+        }
+
+        // override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~DocumentStorageWithFulltextSearch() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
         }
     }
 }

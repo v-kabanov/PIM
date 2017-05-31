@@ -282,7 +282,7 @@ namespace FulltextStorageLib
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public void RebuildIndexes(IEnumerable<string> names, IEnumerable<Document> documents, int docCount, Action<double> progressReporter = null)
         {
-            Util.Check.DoRequireArgumentNotNull(documents, nameof(documents));
+            Check.DoRequireArgumentNotNull(documents, nameof(documents));
 
             var firstBadName = names?.Select(name => new { Name = name, Index = GetIndex(name) })
                 .FirstOrDefault(x => x.Index == null);
