@@ -52,6 +52,8 @@ namespace FulltextStorageLib
             Storage = storage;
             SearchEngine = searchEngine;
 
+            SupportedStemmerNames = LuceneIndex.GetAvailableSnowballStemmers().ToList();
+
             FulltextBackgroundTaskExecutor = new TaskExecutor();
         }
 
@@ -139,6 +141,8 @@ namespace FulltextStorageLib
             return SearchEngine.GetTopInPeriod(periodStart, periodEnd, maxResults);
         }
 
+        public IList<string> SupportedStemmerNames { get; }
+
         /// <summary>
         ///     Opens existing indexes. Repeated calls result in exception if some indexes are already opened.
         /// </summary>
@@ -221,8 +225,10 @@ namespace FulltextStorageLib
             RebuildIndexes(SearchEngine.ActiveIndexNames.ToList(), progressReporter);
         }
 
-        public void AddIndex(string stemmerName)
+        public void AddOrOpenIndex(string stemmerName)
         {
+            Check.DoRequireArgumentNotNull(stemmerName, nameof(stemmerName));
+
             Log.InfoFormat($"Adding index {0}", stemmerName);
 
             Check.DoCheckArgument(MultiIndex.GetIndex(stemmerName) == null, () => $"Index {stemmerName} is already active");

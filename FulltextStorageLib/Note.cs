@@ -9,9 +9,6 @@ using System.Text.RegularExpressions;
 
 namespace FulltextStorageLib
 {
-    public interface INoteStorage : IDocumentStorage<Note, string>
-    { }
-
     public class Note : IPersistentNote
     {
         private static readonly Regex NameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);

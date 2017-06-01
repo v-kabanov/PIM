@@ -28,26 +28,22 @@ namespace AspNetPim
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            ConfigureBackend();
         }
 
-        public SearchEngine<INote, INoteHeader, string> SearchEngine { get; private set; }
+        public static INoteStorage Storage { get; private set; }
 
         private void ConfigureBackend()
         {
             var appDataPath = Server.MapPath("~/App_Data");
             var storageRootPath = Path.Combine(appDataPath, "UserData");
 
-            var fullTextFolder = Path.Combine(storageRootPath, "ft");
-            var dbFolder = Path.Combine(storageRootPath, "db");
-
-            var storage = new NoteStorage(dbFolder);
-            var adapter = new LuceneNoteAdapter();
-            SearchEngine = new SearchEngine<INote, INoteHeader, string>(fullTextFolder, adapter, new MultiIndex(adapter.DocumentKeyName));
+            Storage = NoteStorage.CreateStandard(storageRootPath);
 
             var builder = new ContainerBuilder();
 
-            builder.Register<INoteStorage>(context => storage).SingleInstance();
-            builder.Register(context => SearchEngine).SingleInstance();
+            builder.Register<INoteStorage>(context => Storage).SingleInstance();
 
             var container = builder.Build();
 

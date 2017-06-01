@@ -12,14 +12,6 @@ using FulltextStorageLib.Util;
 
 namespace FulltextStorageLib
 {
-    public class NoteStorage : CouchbaseStorage<Note>, INoteStorage
-    {
-        public NoteStorage(string path)
-            : base(path, new NoteCouchbaseAdapter())
-        {
-        }
-    }
-
     public class NoteCouchbaseAdapter : ICouchbaseDocumentAdapter<Note>
     {
         public string GetId(Note document)
