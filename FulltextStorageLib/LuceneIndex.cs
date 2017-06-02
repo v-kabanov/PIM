@@ -158,6 +158,19 @@ namespace FulltextStorageLib
             return hits.Select(h => new LuceneSearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fieldName">
+        ///     Datetime field to filter on.
+        /// </param>
+        /// <param name="from">
+        ///     Inclusive
+        /// </param>
+        /// <param name="to">
+        ///     Exclusive
+        /// </param>
+        /// <returns></returns>
         public Filter CreateTimeRangeFilter(string fieldName, DateTime? @from, DateTime? to)
         {
             Check.DoCheckArgument(from.HasValue || to.HasValue);

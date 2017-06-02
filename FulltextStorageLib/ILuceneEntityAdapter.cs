@@ -30,10 +30,16 @@ namespace FulltextStorageLib
         string DocumentKeyName { get; }
 
         /// <summary>
-        ///     Optional, name of the field containing default searchable time field.
+        ///     Optional, name of the field containing last document update time.
         ///     null or empty if no such field exists.
         /// </summary>
-        string TimeFieldName { get; }
+        string LastUpdateTimeFieldName { get; }
+
+        /// <summary>
+        ///     Optional, name of the field containing document creation time.
+        ///     null or empty if no such field exists.
+        /// </summary>
+        string CreationTimeFieldName { get; }
 
         /// <summary>
         ///     Name of the field in lucene <see cref="Document"/> which is analyzed and searched by full text queries.

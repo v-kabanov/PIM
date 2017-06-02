@@ -10,6 +10,15 @@ using System.Collections.Generic;
 namespace FulltextStorageLib
 {
     /// <summary>
+    ///     Identifies searchable time property
+    /// </summary>
+    public enum SearchableDocumentTime
+    {
+        Creation,
+        LastUpdate
+    }
+
+    /// <summary>
     ///     Object implementing full text searching on existing indexes with data for indexing provided by client.
     ///     Encapsulates multiple fulltext indexes for e.g. multiple languages.
     /// </summary>
@@ -27,7 +36,22 @@ namespace FulltextStorageLib
 
         IList<THeader> Search(string queryText, int maxResults);
 
-        IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults);
+        /// <summary>
+        ///     Get top <paramref name="maxResults"/> documents in the period filtered and sorted in descending order by <paramref name="searchableDocumentTime"/>.
+        /// </summary>
+        /// <param name="periodStart">
+        ///     Inclusive, truncated to seconds.
+        /// </param>
+        /// <param name="periodEnd">
+        ///     Exclusive, truncated to seconds.
+        /// </param>
+        /// <param name="maxResults">
+        ///     Max number of documents to return.
+        /// </param>
+        /// <param name="searchableDocumentTime">
+        ///     One of the supported document time properties to filter on.
+        /// </param>
+        IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate);
 
         void SetDefaultIndex(string name);
     }

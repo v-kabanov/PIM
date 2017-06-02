@@ -191,10 +191,30 @@ namespace FulltextStorageLib
             return EntityAdapter.GetHeaders(result);
         }
 
-        public IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults)
+        /// <summary>
+        ///     Get top <paramref name="maxResults"/> documents in the period filtered and sorted in descending order by <paramref name="searchableDocumentTime"/>.
+        /// </summary>
+        /// <param name="periodStart">
+        ///     Inclusive, truncated to seconds.
+        /// </param>
+        /// <param name="periodEnd">
+        ///     Exclusive, truncated to seconds.
+        /// </param>
+        /// <param name="maxResults">
+        ///     Max number of documents to return.
+        /// </param>
+        /// <param name="searchableDocumentTime">
+        ///     One of the supported document time properties to filter on.
+        /// </param>
+        public IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate)
         {
-            return EntityAdapter.GetHeaders(
-                MultiIndex.GetTopInPeriod(EntityAdapter.TimeFieldName, periodStart, periodEnd, maxResults));
+            var timeFieldName = searchableDocumentTime == SearchableDocumentTime.Creation
+                ? EntityAdapter.CreationTimeFieldName
+                : EntityAdapter.LastUpdateTimeFieldName;
+
+            Check.DoCheckArgument(!string.IsNullOrEmpty(timeFieldName), () => $"{searchableDocumentTime} time is not searchable");
+
+            return EntityAdapter.GetHeaders(MultiIndex.GetTopInPeriod(timeFieldName, periodStart, periodEnd, maxResults));
         }
 
         public IEnumerable<string> ActiveIndexNames { get; }

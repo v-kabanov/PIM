@@ -53,7 +53,7 @@ namespace FulltextStorageLibTest
             for (var n = 0; n < _testNotes.Length; ++n)
             {
                 _testNotes[n].LastUpdateTime = DateTime.Now.AddHours(n - _testNotes.Length);
-                _testNotes[n].CreateTime = _testNotes[n].LastUpdateTime;
+                _testNotes[n].CreateTime = _testNotes[n].LastUpdateTime.AddDays(-1);
             }
 
             _indexedStorage.SaveOrUpdate(_testNotes);
@@ -73,15 +73,67 @@ namespace FulltextStorageLibTest
             _indexedStorage.Dispose();
         }
 
-
         [Test]
-        public void GetTopInPeriodSortsByLastUpdateTimeDescending()
+        [TestCase(SearchableDocumentTime.Creation)]
+        [TestCase(SearchableDocumentTime.LastUpdate)]
+        public void GetExistingByTimePeriodEnd(SearchableDocumentTime documentTime)
         {
-            var searchResult = _indexedStorage.GetTopInPeriod(null, DateTime.Now, 5);
+            var lastDocTime = documentTime == SearchableDocumentTime.LastUpdate
+                ? _testNotes.Last().LastUpdateTime
+                : _testNotes.Last().CreateTime;
 
-            Assert.AreEqual(_testNotes.Last().Id, searchResult.First().Id);
+            var searchResult = _indexedStorage.GetTopInPeriod(null, lastDocTime, 5, documentTime);
+
+            // range end is exclusive
+            Assert.AreEqual(_testNotes.Reverse().Skip(1).First().Id, searchResult.First().Id);
 
             Assert.AreEqual(5, searchResult.Count);
+        }
+
+        [Test]
+        [TestCase(SearchableDocumentTime.Creation)]
+        [TestCase(SearchableDocumentTime.LastUpdate)]
+        public void GetExistingByTimePeriod(SearchableDocumentTime documentTime)
+        {
+            var firstIndex = new Random().Next(_testNotes.Length);
+            var lastIndex = firstIndex + 2;
+            if (lastIndex > _testNotes.Length - 1)
+                lastIndex = _testNotes.Length - 1;
+
+            var firstNote = _testNotes[firstIndex];
+            var lastNote = _testNotes[lastIndex];
+
+            var firstDocTime = firstNote.GetSeachableTime(documentTime);
+            var lastDocTime = lastNote.GetSeachableTime(documentTime).AddSeconds(1);
+
+            var searchResult = _indexedStorage.GetTopInPeriod(firstDocTime, lastDocTime, 50, documentTime);
+
+            Assert.AreEqual(lastIndex - firstIndex + 1, searchResult.Count);
+
+            // range end is exclusive
+            for (var i = firstIndex; i <= lastIndex; ++i)
+            {
+                var sourceNote = _testNotes[i];
+                var searchResultNote = searchResult[lastIndex - i];
+
+                Assert.AreEqual(sourceNote.Id, searchResultNote.Id);
+                Assert.AreEqual(sourceNote.CreateTime.TrimToSecondsPrecision(), searchResultNote.CreateTime);
+                Assert.AreEqual(sourceNote.LastUpdateTime.TrimToSecondsPrecision(), searchResultNote.LastUpdateTime);
+            }
+        }
+
+        [Test]
+        [TestCase(SearchableDocumentTime.Creation)]
+        [TestCase(SearchableDocumentTime.LastUpdate)]
+        public void GetNonExistentByLastUpdateTimePeriodEnd(SearchableDocumentTime documentTime)
+        {
+            var lastDocTime = documentTime == SearchableDocumentTime.LastUpdate
+                ? _testNotes.First().LastUpdateTime
+                : _testNotes.First().CreateTime;
+
+            var searchResult = _indexedStorage.GetTopInPeriod(null, lastDocTime, 5, documentTime);
+
+            Assert.AreEqual(0, searchResult.Count);
         }
 
         [Test]

@@ -19,10 +19,13 @@ namespace FulltextStorageLib
         ///     This will appear in search results.
         /// </summary>
         string Name { get; }
+
+        DateTime CreateTime { get; }
+
+        DateTime LastUpdateTime { get; }
     }
 
     public interface INoteHeader : IFulltextIndexEntry
     {
-        DateTime CreateTime { get; }
     }
 }

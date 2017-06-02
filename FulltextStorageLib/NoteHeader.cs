@@ -11,8 +11,11 @@ namespace FulltextStorageLib
     public class NoteHeader : INoteHeader
     {
         public string Id { get; set; }
+
         public DateTime CreateTime { get; set; }
+
         public DateTime LastUpdateTime { get; set; }
+
         public string Name { get; set; }
     }
 }

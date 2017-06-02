@@ -23,12 +23,18 @@ namespace FulltextStorageLib
         public const string FieldNameText = "Text";
         public const string FieldNameVersion = "Version";
 
+
         public string DocumentKeyName => FieldNameId;
+
+        /// <summary>
+        ///     Name (in the lucene <see cref="Document"/>) of the field containing last note update time.
+        /// </summary>
+        public string LastUpdateTimeFieldName => FieldNameLastUpdateTime;
 
         /// <summary>
         ///     Name (in the lucene <see cref="Document"/>) of the field containing note creation time.
         /// </summary>
-        public string TimeFieldName => FieldNameLastUpdateTime;
+        public string CreationTimeFieldName => FieldNameCreateTime;
 
         /// <summary>
         ///     Name of the field in lucene <see cref="Document"/> which is analyzed and searched by full text queries.
@@ -66,10 +72,12 @@ namespace FulltextStorageLib
         public Document GetIndexedDocument(INote note)
         {
             var doc = new Document();
-            var timeString = DateTools.DateToString(note.LastUpdateTime, DateTools.Resolution.SECOND);
+            var lastUpdateTimeString = DateTools.DateToString(note.LastUpdateTime, DateTools.Resolution.SECOND);
+            var creationTimeString = DateTools.DateToString(note.CreateTime, DateTools.Resolution.SECOND);
 
             doc.Add(new Field(FieldNameId, note.Id, Field.Store.YES, Field.Index.NOT_ANALYZED));
-            doc.Add(new Field(FieldNameLastUpdateTime, timeString, Field.Store.YES, Field.Index.ANALYZED));
+            doc.Add(new Field(FieldNameCreateTime, creationTimeString, Field.Store.YES, Field.Index.ANALYZED));
+            doc.Add(new Field(FieldNameLastUpdateTime, lastUpdateTimeString, Field.Store.YES, Field.Index.ANALYZED));
             doc.Add(new Field(FieldNameName, note.Name, Field.Store.YES, Field.Index.NOT_ANALYZED));
             doc.Add(new Field(FieldNameText, note.Text, Field.Store.NO, Field.Index.ANALYZED));
 
@@ -91,6 +99,7 @@ namespace FulltextStorageLib
             return new NoteHeader()
             {
                 Id = indexeDocument.Get(FieldNameId),
+                CreateTime = DateTools.StringToDate(indexeDocument.Get(FieldNameCreateTime)),
                 LastUpdateTime = DateTools.StringToDate(indexeDocument.Get(FieldNameLastUpdateTime)),
                 Name = indexeDocument.Get(FieldNameName)
             };
