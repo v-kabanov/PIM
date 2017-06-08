@@ -88,6 +88,17 @@ namespace FulltextStorageLibTest
             Assert.AreEqual(_testNotes.Reverse().Skip(1).First().Id, searchResult.First().Id);
 
             Assert.AreEqual(5, searchResult.Count);
+
+            foreach (var header in searchResult)
+            {
+                var note = _indexedStorage.GetExisting(header);
+
+                Assert.IsNotNull(note);
+                Assert.AreEqual(header.Id, note.Id);
+                Assert.AreEqual(header.CreateTime, note.CreateTime.TrimToSecondsPrecision());
+                Assert.AreEqual(header.LastUpdateTime, note.LastUpdateTime.TrimToSecondsPrecision());
+                Assert.AreEqual(header.Name, note.Name);
+            }
         }
 
         [Test]
@@ -144,12 +155,31 @@ namespace FulltextStorageLibTest
             Assert.AreEqual(2, result.Count);
         }
 
+        /// <summary>
+        ///     Find 'asserted' by 'assertion'
+        /// </summary>
         [Test]
-        public void SearchForSentence()
+        public void FindNounForExistingVerb()
+        {
+            // 'asserted'
+            var result = _indexedStorage.Search("assertion", 20);
+
+            Assert.AreEqual(1, result.Count);
+        }
+
+        /// <summary>
+        ///     Not all words in the search phrase exist in any note; still want to see best match
+        /// </summary>
+        [Test]
+        public void SearchWithSentenceContainingExtraWords()
         {
             var result = _indexedStorage.Search("free market competition", 10);
 
             Assert.AreEqual(1, result.Count);
+
+            var doc = _indexedStorage.GetExisting(result[0]);
+
+            Assert.IsNotNull(doc);
         }
 
         [Test]
@@ -159,5 +189,7 @@ namespace FulltextStorageLibTest
 
             Assert.AreEqual(1, result.Count);
         }
+
+
     }
 }

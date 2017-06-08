@@ -35,7 +35,7 @@ namespace FulltextStorageLib
     {
         public IMultiIndex MultiIndex => SearchEngine.MultiIndex;
 
-        public ILuceneEntityAdapter<TDoc, THeader, TKey> EntityAdapter { get; }
+        public ILuceneEntityAdapter<TDoc, THeader, TKey> EntityAdapter => SearchEngine.EntityAdapter;
 
         public IDocumentStorage<TDoc, TKey> Storage { get; }
 
@@ -94,6 +94,13 @@ namespace FulltextStorageLib
                 SearchEngine.Delete(docHeaders);
                 SearchEngine.CommitFulltextIndex();
             });
+        }
+
+        public TDoc GetExisting(THeader header)
+        {
+            Check.DoRequireArgumentNotNull(header, nameof(header));
+
+            return GetExisting(EntityAdapter.GetStorageKey(header));
         }
 
         public TDoc GetExisting(TKey id)

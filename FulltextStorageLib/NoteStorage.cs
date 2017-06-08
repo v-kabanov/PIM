@@ -13,6 +13,8 @@ namespace FulltextStorageLib
     /// </summary>
     public interface INoteStorage : IDocumentStorageWithFulltextSearch<Note, string, INoteHeader>
     {
+        bool UpdateLastUpdateTimeAutomatically { get; set; }
+
         /// <summary>
         ///     Root directory path.
         /// </summary>
@@ -29,6 +31,11 @@ namespace FulltextStorageLib
         {
         }
 
+        public bool UpdateLastUpdateTimeAutomatically
+        {
+            get { return }
+            set;
+        }
         public string RootPath { get; private set; }
 
         /// <summary>

@@ -13,8 +13,6 @@ namespace FulltextStorageLib
     /// </summary>
     public interface INote : INoteHeader
     {
-        DateTime LastUpdateTime { get; }
-
         string Text { get; set; }
 
         bool IsTransient { get; }

@@ -14,6 +14,8 @@ namespace FulltextStorageLib
 {
     public class NoteCouchbaseAdapter : ICouchbaseDocumentAdapter<Note>
     {
+        public bool SetLastUpdateTimeWithVersionIncrement { get; set; }
+
         public string GetId(Note document)
         {
             Check.DoRequireArgumentNotNull(document, nameof(document));
@@ -42,8 +44,8 @@ namespace FulltextStorageLib
             {
                 Id = document.Id,
                 CreateTime = document.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameCreateTime),
-                LastUpdateTime = document.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameLastUpdateTime),
                 Text = document.GetProperty<string>(LuceneNoteAdapter.FieldNameText),
+                LastUpdateTime = document.GetProperty<DateTime>(LuceneNoteAdapter.FieldNameLastUpdateTime),
                 Version = document.GetProperty<int>(LuceneNoteAdapter.FieldNameVersion)
             };
         }
@@ -66,7 +68,8 @@ namespace FulltextStorageLib
         public int IncrementVersion(Note document)
         {
             Check.DoRequireArgumentNotNull(document.Id, nameof(document.Id));
-
+            if (SetLastUpdateTimeWithVersionIncrement)
+                document.LastUpdateTime = DateTime.Now;
             return ++document.Version;
         }
     }

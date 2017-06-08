@@ -38,46 +38,22 @@ namespace PimTest
                 Note.Create("Испанская «Барселона» объявила о подписании контракта с новым главным тренером Эрнесто Вальверде. Об этом сообщается в клубном Twitter в понедельник, 29 мая."),
             };
 
-            var storage = new CouchbaseStorage<Note>(@"c:\temp\MyNotes", new NoteCouchbaseAdapter());
+            var storage = NoteStorage.CreateStandard(@"c:\temp\MyNotes");
+
+            storage.OpenOrCreateIndexes(new[] { "English", "Russian" });
+
+            storage.SearchEngine.UseFuzzySearch = true;
 
             if (storage.CountAll() > 0)
             {
-                notes = storage.GetAll().ToArray();
-            }
-            else
-            {
-                // filling database
-                foreach (var note in notes)
-                {
-                    storage.SaveOrUpdate(note);
-                }
+                storage.Delete(storage.GetAll().ToArray());
             }
 
-            var fullTextDir = new DirectoryInfo(@"c:\temp\AuNotes\ft");
-            if (fullTextDir.Exists)
-            {
-                fullTextDir.Delete(true);
-            }
-            fullTextDir.Create();
+            storage.SaveOrUpdate(notes);
 
-            var adapter = new LuceneNoteAdapter();
-            var searchEngine = new SearchEngine<INote, INoteHeader, string>(
-                fullTextDir.FullName, adapter, new MultiIndex(adapter.DocumentKeyName));
+            var result1 = storage.GetTopInPeriod(null, DateTime.Now.AddSeconds(-1), 4);
 
-            searchEngine.UseFuzzySearch = true;
-
-            var indexNameEnglish = "en";
-            var englishAnalyzer = LuceneIndex.CreateSnowballAnalyzer("English");
-            var russianAnalyzer = LuceneIndex.CreateSnowballAnalyzer("Russian");
-
-            searchEngine.AddOrOpenIndex(indexNameEnglish, englishAnalyzer);
-            searchEngine.AddOrOpenIndex("ru", russianAnalyzer);
-
-            searchEngine.Add(notes);
-
-            var result1 = searchEngine.GetTopInPeriod(null, DateTime.Now.AddSeconds(-1), 4);
-
-            var result2 = searchEngine.GetTopInPeriod(DateTime.Now.AddSeconds(-10), null, 4);
+            var result2 = storage.GetTopInPeriod(DateTime.Now.AddSeconds(-10), null, 4);
 
             // problem in the past: did not find 'erasing' by 'erase'; but 'erasure' works
 
@@ -90,12 +66,12 @@ namespace PimTest
                 finish = string.IsNullOrEmpty(queryText);
                 if (!finish)
                 {
-                    var result = searchEngine.Search(queryText, 100);
+                    var result = storage.Search(queryText, 100);
                     Console.WriteLine($"Found {result.Count} items");
                     foreach (var hit in result)
                     {
                         Console.WriteLine($"\t {hit.Id} - {hit.Name};");
-                        var loaded = storage.GetExisting(hit.Id);
+                        var loaded = storage.GetExisting(hit);
 
                         if (loaded == null)
                         {
@@ -105,6 +81,8 @@ namespace PimTest
                 }
             }
             while (!finish);
+
+            storage.Dispose();
         }
     }
 }

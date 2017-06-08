@@ -32,7 +32,8 @@ namespace FulltextStorageLib
         bool IsChanged(TDoc version1, TDoc version2);
 
         /// <summary>
-        ///     Optional, increments integrity version if supported.
+        ///     Optional, marks document as having been updated now,
+        ///     increments integrity version if supported and last update time.
         /// </summary>
         /// <param name="document">
         ///     Mandatory

@@ -102,6 +102,8 @@ namespace FulltextStorageLib
         /// <param name="docHeaders"></param>
         void Delete(params THeader[] docHeaders);
 
+        TDoc GetExisting(THeader header);
+
         /// <summary>
         ///     Block the addition of new tasks and wait for all currently scheduled tasks to finish. Ensures that e.g. all previously saved documents are searchable.
         /// </summary>

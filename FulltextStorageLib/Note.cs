@@ -18,6 +18,7 @@ namespace FulltextStorageLib
         public string Id { get; set; }
 
         public DateTime CreateTime { get; set; }
+
         public DateTime LastUpdateTime { get; set; }
 
         /// <summary>
@@ -47,8 +48,6 @@ namespace FulltextStorageLib
             set
             {
                 Name = ExtractFirstLine(value);
-                if (_text != value)
-                    LastUpdateTime = DateTime.Now;
                 _text = value;
             }
         }
@@ -80,6 +79,9 @@ namespace FulltextStorageLib
         /// </returns>
         private static string ExtractFirstLine(string text)
         {
+            if (text == null)
+                return null;
+
             var nameMatch = NameRegex.Match(text);
             return nameMatch.Success
                 ? nameMatch.Groups[1].Value

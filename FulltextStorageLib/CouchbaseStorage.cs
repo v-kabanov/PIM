@@ -156,6 +156,7 @@ namespace FulltextStorageLib
             if (save)
             {
                 doc = Database.CreateDocument();
+                doc.Id = DocumentAdapter.GetId(document);
             }
             else
             {

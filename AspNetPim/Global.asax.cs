@@ -43,7 +43,7 @@ namespace AspNetPim
 
             var builder = new ContainerBuilder();
 
-            builder.Register<INoteStorage>(context => Storage).SingleInstance();
+            builder.Register(context => Storage).SingleInstance();
 
             var container = builder.Build();
 
