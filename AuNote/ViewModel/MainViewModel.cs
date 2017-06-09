@@ -63,7 +63,7 @@ namespace AuNote.ViewModel
                 var fullTextFolder = Path.Combine(DataRootPath, "ft");
                 var dbFolder = Path.Combine(DataRootPath, "db");
 
-                Storage = new CouchbaseStorage<Note>(dbFolder, new NoteCouchbaseAdapter());
+                Storage = new CouchbaseStorage<Note>(dbFolder, new NoteCouchbaseAdapter(false));
                 var adapter = new LuceneNoteAdapter();
                 SearchEngine = new SearchEngine<INote, INoteHeader, string>(fullTextFolder, adapter, new MultiIndex(adapter.DocumentKeyName));
 

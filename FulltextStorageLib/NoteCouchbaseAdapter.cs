@@ -12,9 +12,15 @@ using FulltextStorageLib.Util;
 
 namespace FulltextStorageLib
 {
+
     public class NoteCouchbaseAdapter : ICouchbaseDocumentAdapter<Note>
     {
         public bool SetLastUpdateTimeWithVersionIncrement { get; set; }
+
+        public NoteCouchbaseAdapter(bool setLastUpdateTimeWithVersionIncrement)
+        {
+            SetLastUpdateTimeWithVersionIncrement = setLastUpdateTimeWithVersionIncrement;
+        }
 
         public string GetId(Note document)
         {

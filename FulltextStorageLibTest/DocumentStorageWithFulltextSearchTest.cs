@@ -30,7 +30,7 @@ namespace FulltextStorageLibTest
             if (Directory.Exists(_rootStorageDirectory))
                 Directory.Delete(_rootStorageDirectory, true);
 
-            _indexedStorage = DocumentStorageWithFulltextSearch<Note, string, INoteHeader>.CreateStandard(_rootStorageDirectory, new NoteCouchbaseAdapter(), new LuceneNoteAdapter());
+            _indexedStorage = NoteStorage.CreateStandard(_rootStorageDirectory);
             _indexedStorage.Open();
 
             _indexedStorage.OpenOrCreateIndexes(new [] { "English", "Russian" });

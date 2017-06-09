@@ -13,8 +13,6 @@ namespace FulltextStorageLib
     /// </summary>
     public interface INoteStorage : IDocumentStorageWithFulltextSearch<Note, string, INoteHeader>
     {
-        bool UpdateLastUpdateTimeAutomatically { get; set; }
-
         /// <summary>
         ///     Root directory path.
         /// </summary>
@@ -31,11 +29,9 @@ namespace FulltextStorageLib
         {
         }
 
-        public bool UpdateLastUpdateTimeAutomatically
-        {
-            get { return }
-            set;
-        }
+        /// <summary>
+        ///     Optional, may be null if storage does not have single root directory.
+        /// </summary>
         public string RootPath { get; private set; }
 
         /// <summary>
@@ -44,8 +40,11 @@ namespace FulltextStorageLib
         /// <param name="rootDirectoryPath">
         ///     Path to the root directory containing all storage and index files.
         /// </param>
+        /// <param name="updateLastUpdateAutomatically">
+        ///     Set <see cref="IFulltextIndexEntry.LastUpdateTime"/> to current time when saving. If false, last update time is maintained by the client.
+        /// </param>
         /// <returns></returns>
-        public static NoteStorage CreateStandard(string rootDirectoryPath)
+        public static NoteStorage CreateStandard(string rootDirectoryPath, bool updateLastUpdateAutomatically = false)
         {
             var dbPath = Path.Combine(rootDirectoryPath, "db");
             var fulltextPath = Path.Combine(rootDirectoryPath, "ft");
@@ -55,7 +54,7 @@ namespace FulltextStorageLib
 
             var luceneAdapter = new LuceneNoteAdapter();
 
-            var storage = new CouchbaseStorage<Note>(rootDirectoryPath, new NoteCouchbaseAdapter());
+            var storage = new CouchbaseStorage<Note>(rootDirectoryPath, new NoteCouchbaseAdapter(updateLastUpdateAutomatically));
             var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
             var searchEngine = new SearchEngine<Note, INoteHeader, string>(fulltextPath, luceneAdapter, multiIndex);
 
