@@ -5,12 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using FulltextStorageLib;
+using FulltextStorageLib.Util;
 
 namespace AspNetPim
 {
@@ -19,8 +21,6 @@ namespace AspNetPim
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private const string AppSettingKeyFulltextIndexLanguages = "FulltextIndexLanguages";
-
-        private ISet<string> _newIndexNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
         protected void Application_Start()
         {
@@ -39,7 +39,26 @@ namespace AspNetPim
             var appDataPath = Server.MapPath("~/App_Data");
             var storageRootPath = Path.Combine(appDataPath, "UserData");
 
-            Storage = NoteStorage.CreateStandard(storageRootPath);
+            var storage = NoteStorage.CreateStandard(storageRootPath, true);
+            storage.Open();
+
+            var languageSetting = ConfigurationManager.AppSettings[AppSettingKeyFulltextIndexLanguages];
+            if (string.IsNullOrWhiteSpace(languageSetting))
+                languageSetting = "English,Russian";
+
+            var stemmerNames = languageSetting.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries).ToCaseInsensitiveSet();
+            var redundantIndexes = Storage.ActiveIndexNames.Where(name => !stemmerNames.Contains(name));
+            foreach (var redundantIndexName in redundantIndexes)
+            {
+                Log.InfoFormat("Removing FT index {0}", redundantIndexName);
+                storage.RemoveIndex(redundantIndexName);
+            }
+
+            storage.OpenOrCreateIndexes(stemmerNames);
+
+            storage.MultiIndex.UseFuzzySearch = true;
+
+            Storage = storage;
 
             var builder = new ContainerBuilder();
 

@@ -13,6 +13,11 @@ namespace AspNetPim.Controllers
             return View();
         }
 
+        public ActionResult DeleteNote(string noteId)
+        {
+            var note = MvcApplication.Storage.Delete(noteId);
+        }
+
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
