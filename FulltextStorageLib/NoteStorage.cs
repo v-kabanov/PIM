@@ -54,7 +54,7 @@ namespace FulltextStorageLib
 
             var luceneAdapter = new LuceneNoteAdapter();
 
-            var storage = new CouchbaseStorage<Note>(rootDirectoryPath, new NoteCouchbaseAdapter(updateLastUpdateAutomatically));
+            var storage = new CouchbaseStorage<Note>(dbPath, new NoteCouchbaseAdapter(updateLastUpdateAutomatically));
             var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
             var searchEngine = new SearchEngine<Note, INoteHeader, string>(fulltextPath, luceneAdapter, multiIndex);
 

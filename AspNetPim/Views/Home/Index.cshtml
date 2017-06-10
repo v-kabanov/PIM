@@ -1,5 +1,7 @@
-﻿@{
-    ViewBag.Title = "Home Page";
+﻿@model AspNetPim.Models.HomeViewModel
+
+@{
+    ViewBag.Title = "Fulltext PIM";
 }
 
 <div class="jumbotron">
@@ -8,23 +10,30 @@
 </div>
 
 <div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-    </div>
+    @using (Html.BeginForm("Create", "Home", FormMethod.Post, new {@class = ""}))
+    {
+        <div class="col-md-offset-1 col-md-10">
+            @Html.TextAreaFor(m => m.NewNoteText, new {@class = "form-control", style = "width: 100%;" })
+        </div>
+        <div class="col-md-pull-11 pull-right">
+            <input type="submit" id="btnSubmit" class='btn btn-default' value="Create" />
+        </div>
+        
+    }
+
+    @foreach (var note in Model.LastUpdatedNotes)
+    {
+        <div class="row">
+            
+            @Html.Hidden("noteId", note.Id)
+            <a href="@Url.Action("OpenNote")">
+                @note.Name
+            </a>
+            <a href="@Url.Action("DeleteNote")">
+                Delete
+            </a>
+
+        </div>
+    }
+
 </div>

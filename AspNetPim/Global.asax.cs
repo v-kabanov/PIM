@@ -11,6 +11,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using AspNetPim.Models;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
 
@@ -47,7 +48,7 @@ namespace AspNetPim
                 languageSetting = "English,Russian";
 
             var stemmerNames = languageSetting.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries).ToCaseInsensitiveSet();
-            var redundantIndexes = Storage.ActiveIndexNames.Where(name => !stemmerNames.Contains(name));
+            var redundantIndexes = storage.ActiveIndexNames.Where(name => !stemmerNames.Contains(name));
             foreach (var redundantIndexName in redundantIndexes)
             {
                 Log.InfoFormat("Removing FT index {0}", redundantIndexName);
@@ -63,10 +64,16 @@ namespace AspNetPim
             var builder = new ContainerBuilder();
 
             builder.Register(context => Storage).SingleInstance();
+            builder.RegisterType<HomeViewModel>();
 
             var container = builder.Build();
 
             DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
+        }
+
+        protected void Application_End()
+        {
+            Storage?.Dispose();
         }
     }
 }

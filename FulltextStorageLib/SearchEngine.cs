@@ -217,7 +217,7 @@ namespace FulltextStorageLib
             return EntityAdapter.GetHeaders(MultiIndex.GetTopInPeriod(timeFieldName, periodStart, periodEnd, maxResults));
         }
 
-        public IEnumerable<string> ActiveIndexNames { get; }
+        public IEnumerable<string> ActiveIndexNames => MultiIndex.AllIndexNames;
 
         public void Delete(params THeader[] docHeaders)
         {

@@ -5,15 +5,19 @@
 // **********************************************************************************************/
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using FulltextStorageLib.Util;
 
 namespace FulltextStorageLib
 {
-    public class Note : IPersistentNote
+    public class Note : IPersistentNote, IEquatable<INote>
     {
         private static readonly Regex NameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
 
         private string _text;
+
+        private int _hashCode;
 
         public string Id { get; set; }
 
@@ -97,6 +101,43 @@ namespace FulltextStorageLib
               .Replace("+", "-");
 
             return encoded.Substring(0, 22);
+        }
+
+        public override string ToString()
+        {
+            return $"{Name}#{Id}";
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as INote);
+        }
+
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+        public override int GetHashCode()
+        {
+            if (_hashCode != 0)
+                return _hashCode;
+
+            _hashCode = HashHelper.GetHashCode(IsTransient ? Text : Id);
+
+            return _hashCode;
+        }
+
+        public bool Equals(INote other)
+        {
+            if (other == null)
+                return false;
+
+            if (!IsTransient && !other.IsTransient)
+            {
+                return Id == other.Id;
+            }
+
+            if (IsTransient && other.IsTransient)
+                return Text == other.Text;
+
+            return false;
         }
     }
 }
