@@ -1,0 +1,40 @@
+﻿@using AspNetPim.Models
+@model AspNetPim.Models.HomeViewModel
+
+    @using (Html.BeginForm("Create", "Home", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal"}))
+    {
+        <div class="form-group">
+            <div class="col-md-11">
+                @Html.TextAreaFor(m => m.NewNoteText, new {@class = "form-control", style = "height: 10em"})
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-11">
+                <input type="submit" id="btnSubmit" class='btn btn-primary btn-lg' value="Create" />
+            </div>
+        </div>
+
+        <h3>
+            Recent notes
+        </h3>
+
+        <div class="">
+            @foreach (var note in Model.LastUpdatedNotes)
+            {
+                <div class="row form-group">
+                    @Html.Hidden("noteId", note.Id)
+                    <div note-name class="col-md-10">
+                        <a note-name href="@Url.Action("OpenNote")">
+                            @note.Name
+                        </a>
+                        <br />
+                        @HomeViewModel.GetNoteTextSummary(note)
+                    </div>
+                    <div class="col-md-2">
+                        <button delete-note-by-id class="btn btn-warning pull-right">Delete</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }

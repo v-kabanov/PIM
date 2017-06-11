@@ -55,6 +55,8 @@ namespace AspNetPim
                 storage.RemoveIndex(redundantIndexName);
             }
 
+            stemmerNames.ExceptWith(storage.ActiveIndexNames);
+
             storage.OpenOrCreateIndexes(stemmerNames);
 
             storage.MultiIndex.UseFuzzySearch = true;

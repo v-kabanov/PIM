@@ -18,18 +18,25 @@ namespace AspNetPim.Controllers
             return View(model);
         }
 
+        [HttpPost]
         public ActionResult DeleteNote(string noteId)
         {
             var model = DependencyResolver.Current.GetService<HomeViewModel>();
 
-            var note = model.Delete(noteId);
+            if (!string.IsNullOrWhiteSpace(noteId))
+            {
+                var note = model.Delete(noteId);
 
-            ViewBag.Message = note == null
+                ViewBag.Message = note == null
                     ? $"Note {noteId} was not found"
                     : $"Note {noteId} successfully deleted";
+            }
 
-            return View("Index", model);
+            model.LoadLatest();
+
+            return PartialView("IndexPartial", model);
         }
+
         public ActionResult OpenNote(string noteId)
         {
             var model = DependencyResolver.Current.GetService<HomeViewModel>();
@@ -40,9 +47,12 @@ namespace AspNetPim.Controllers
                 ? $"Note {noteId} was not found"
                 : note.Text;
 
+            model.LoadLatest();
+
             return View("Index", model);
         }
 
+        [HttpPost]
         public ActionResult Create(HomeViewModel model)
         {
             if (!string.IsNullOrWhiteSpace(model.NewNoteText))
@@ -50,7 +60,7 @@ namespace AspNetPim.Controllers
 
             model.LoadLatest();
 
-            return View("Index", model);
+            return PartialView("IndexPartial", model);
         }
 
         public ActionResult About()

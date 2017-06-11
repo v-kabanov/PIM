@@ -1,39 +1,32 @@
-﻿@model AspNetPim.Models.HomeViewModel
+﻿@using AspNetPim.Models
+@model HomeViewModel
 
 @{
     ViewBag.Title = "Fulltext PIM";
 }
 
-<div class="jumbotron">
-    <h1>Fulltext PIM</h1>
-    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+<div class="caption">
+    <h2>
+        Create note
+    </h2>
 </div>
 
-<div class="row">
-    @using (Html.BeginForm("Create", "Home", FormMethod.Post, new {@class = ""}))
-    {
-        <div class="col-md-offset-1 col-md-10">
-            @Html.TextAreaFor(m => m.NewNoteText, new {@class = "form-control", style = "width: 100%;" })
-        </div>
-        <div class="col-md-pull-11 pull-right">
-            <input type="submit" id="btnSubmit" class='btn btn-default' value="Create" />
-        </div>
-        
-    }
+@Html.Partial("IndexPartial", Model)
 
-    @foreach (var note in Model.LastUpdatedNotes)
-    {
-        <div class="row">
-            
-            @Html.Hidden("noteId", note.Id)
-            <a href="@Url.Action("OpenNote")">
-                @note.Name
-            </a>
-            <a href="@Url.Action("DeleteNote")">
-                Delete
-            </a>
+@section Init
+{
+    var config = {
+        mainFormSelector: '#mainForm',
+        createNoteUrl: '@Url.Action("Create", "Home")',
+        deleteNoteUrl: '@Url.Action("DeleteNote", "Home")',
+        createNoteButtonSelector: '#btnSubmit',
+        newNoteTextSelector: '#@Html.IdFor(m => m.NewNoteText)',
+        deleteNoteButtonSelector: '[delete-note-by-id]',
+        openNoteLinkSelector: '#formMessages',
+        divInProgressSelector: '#progressIndicator',
+    };
 
-        </div>
-    }
-
-</div>
+    (pim.pages.latestAndCreate)
+    &&
+    (pim.pages.latestAndCreate.init(config));
+}

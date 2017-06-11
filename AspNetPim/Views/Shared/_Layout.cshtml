@@ -33,12 +33,36 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+            <p>&copy; @DateTime.Now.Year - Megapatam Inc</p>
         </footer>
     </div>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/pim")
     @RenderSection("scripts", required: false)
+    
+@if (IsSectionDefined("Init"))
+{
+    <script type="text/javascript">
+           
+        // init the root module
+        pim.init({
+            serverUrl: ('@Url.Content("~/")' === '/') ? '' : '@Url.Content("~/")'
+            ,$: jQuery
+        });
+
+
+        $(document).ready(function () {
+            //layout page init call
+            (pim.pages.layout) && pim.pages.layout.init();
+            //other child pages init call
+            @RenderSection("Init", required:false);
+
+        });
+
+    </script>
+}
+
 </body>
 </html>

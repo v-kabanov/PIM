@@ -130,9 +130,7 @@ namespace FulltextStorageLib
                 return false;
 
             if (!IsTransient && !other.IsTransient)
-            {
                 return Id == other.Id;
-            }
 
             if (IsTransient && other.IsTransient)
                 return Text == other.Text;

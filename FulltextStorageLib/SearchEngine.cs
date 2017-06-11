@@ -80,6 +80,8 @@ namespace FulltextStorageLib
         /// </returns>
         public IndexInformation AddOrOpenIndex(string name, Analyzer analyzer, bool dropExisting = false)
         {
+            Check.DoCheckArgument(MultiIndex.GetIndex(name) == null, () => "Index already open");
+
             Check.DoRequireArgumentNotBlank(name, nameof(name));
             Check.DoRequireArgumentNotNull(analyzer, nameof(analyzer));
 
