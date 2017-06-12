@@ -1,0 +1,60 @@
+﻿@model AspNetPim.Models.NoteViewModel
+
+@using (Html.BeginForm("Update", "Home", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal" }))
+{
+    @Html.AntiForgeryToken()
+
+    if (Model.NoteDeleted)
+    {
+        <p>
+            Note @(Model.Note?.Name) has been deleted!
+        </p>
+    }
+    else
+    {
+        <h4>
+            @(Model?.Note?.Name)
+        </h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+   
+        <div class="form-group">
+            @Html.HiddenFor(model => model.NoteId)
+            <div class="col-md-12">
+                @Html.TextAreaFor(model => model.NoteText, new { @class = "form-control", style = "height: 20em" })
+                @Html.ValidationMessageFor(model => model.NoteText, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.CreateTime, new { @class = "control-label col-md-2" })
+            <div class="col-md-10 form-control-static">
+                @Html.DisplayFor(m => m.CreateTime)
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.LastUpdateTime, new { @class = "control-label col-md-2" })
+            <div class="col-md-10 form-control-static">
+                @Html.DisplayFor(m => m.LastUpdateTime)
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.Version, new { @class = "control-label col-md-2" })
+            <div class="col-md-10 form-control-static">
+                @Html.DisplayFor(m => m.Version)
+            </div>
+        </div>
+    
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input id="btnUpdate" type="submit" value="Update" class="btn btn-default" />
+                &nbsp;
+                <button id="btnDelete" class="btn btn-warning">Delete</button>
+            </div>
+        </div>
+    }
+}

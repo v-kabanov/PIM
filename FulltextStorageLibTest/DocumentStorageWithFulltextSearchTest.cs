@@ -190,6 +190,27 @@ namespace FulltextStorageLibTest
             Assert.AreEqual(1, result.Count);
         }
 
+        [Test]
+        public void UpdateTest()
+        {
+            var note = _indexedStorage.GetExisting(_testNotes[1].Id);
 
+            Assert.IsNotNull(note);
+
+            var oldVersion = note.Version;
+
+            note.Text = note.Text + ". Updated.";
+
+            _indexedStorage.SaveOrUpdate(note);
+
+            Assert.AreEqual(oldVersion + 1, note.Version);
+
+            var reloadedNote = _indexedStorage.GetExisting(note.Id);
+
+            Assert.IsNotNull(reloadedNote);
+
+            Assert.AreEqual(note.Text, reloadedNote.Text);
+            Assert.AreEqual(note.Version, reloadedNote.Version);
+        }
     }
 }

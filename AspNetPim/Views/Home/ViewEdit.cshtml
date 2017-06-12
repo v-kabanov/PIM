@@ -1,0 +1,31 @@
+﻿@model AspNetPim.Models.NoteViewModel
+
+@{
+    ViewBag.Title = Model.Note?.Name ?? "Unsaved note";
+}
+
+
+@Html.Partial("ViewEditPartial", Model)
+
+@section Init
+{
+    var config = {
+    mainFormSelector: '#mainForm',
+    createNoteUrl: '@Url.Action("Create", "Home")',
+    deleteNoteUrl: '@Url.Action("DeleteNote", "Home")',
+    updateNoteUrl: '@Url.Action("Update", "Home")',
+    createNoteButtonSelector: '#btnSubmit',
+    newNoteTextSelector: '#@Html.IdFor(m => m.NoteText)',
+    deleteNoteButtonSelector: '#btnDelete',
+    updateNoteButtonSelector: '#btnUpdate',
+    divInProgressSelector: '#progressIndicator',
+    };
+
+    (pim.pages.viewEdit)
+    &&
+    (pim.pages.viewEdit.init(config));
+}
+    
+    <div>
+        @Html.ActionLink("Back to List", "Index")
+    </div>

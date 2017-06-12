@@ -35,7 +35,6 @@ namespace AspNetPim.Models
 
         public HomeViewModel()
         {
-            Initialize();
         }
 
         public HomeViewModel(INoteStorage noteStorage)
@@ -45,9 +44,9 @@ namespace AspNetPim.Models
             NoteStorage = noteStorage;
         }
 
-        public void Initialize()
+        public void Initialize(INoteStorage noteStorage)
         {
-            NoteStorage = DependencyResolver.Current.GetService<INoteStorage>();
+            NoteStorage = noteStorage ?? DependencyResolver.Current.GetService<INoteStorage>();
         }
 
         [AllowHtml]

@@ -11,6 +11,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using AspNetPim.Controllers;
 using AspNetPim.Models;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
@@ -67,6 +68,7 @@ namespace AspNetPim
 
             builder.Register(context => Storage).SingleInstance();
             builder.RegisterType<HomeViewModel>();
+            builder.RegisterType<HomeController>();
 
             var container = builder.Build();
 

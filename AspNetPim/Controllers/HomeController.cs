@@ -1,17 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿// /**********************************************************************************************
+// Author:  Vasily Kabanov
+// Created  2017-05-26
+// Comment  
+// **********************************************************************************************/
+// 
+
 using System.Web.Mvc;
 using AspNetPim.Models;
+using FulltextStorageLib;
 
 namespace AspNetPim.Controllers
 {
     public class HomeController : Controller
     {
+        public HomeController(INoteStorage noteStorage)
+        {
+            NoteStorage = noteStorage;
+        }
+
+        // ReSharper disable once MemberCanBePrivate.Global
+        public INoteStorage NoteStorage { get; }
+
+        private HomeViewModel CreateViewModel()
+        {
+            return new HomeViewModel(NoteStorage);
+        }
+
         public ActionResult Index()
         {
-            var model = DependencyResolver.Current.GetService<HomeViewModel>();
+            var model = CreateViewModel();
 
             model.LoadLatest();
 
@@ -21,7 +38,7 @@ namespace AspNetPim.Controllers
         [HttpPost]
         public ActionResult DeleteNote(string noteId)
         {
-            var model = DependencyResolver.Current.GetService<HomeViewModel>();
+            var model = CreateViewModel();
 
             if (!string.IsNullOrWhiteSpace(noteId))
             {
@@ -39,7 +56,7 @@ namespace AspNetPim.Controllers
 
         public ActionResult OpenNote(string noteId)
         {
-            var model = DependencyResolver.Current.GetService<HomeViewModel>();
+            var model = CreateViewModel();
 
             var note = model.NoteStorage.GetExisting(noteId);
 
@@ -55,6 +72,8 @@ namespace AspNetPim.Controllers
         [HttpPost]
         public ActionResult Create(HomeViewModel model)
         {
+            model.Initialize(NoteStorage);
+
             if (!string.IsNullOrWhiteSpace(model.NewNoteText))
                 model.CreateNew();
 
@@ -75,6 +94,26 @@ namespace AspNetPim.Controllers
             ViewBag.Message = "Your contact page.";
 
             return View();
+        }
+
+        [HttpGet]
+        public ActionResult ViewEdit(string id)
+        {
+            var model = new NoteViewModel(NoteStorage) {NoteId = id};
+
+            model.Load();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public ActionResult Update(NoteViewModel model)
+        {
+            model.Initialize(NoteStorage);
+
+            model.Update();
+
+            return PartialView("ViewEditPartial", model);
         }
     }
 }

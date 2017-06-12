@@ -67,8 +67,15 @@ namespace FulltextStorageLib
 
         public void SaveOrUpdate(params TDoc[] docs)
         {
-            foreach(var document in docs)
-                SaveOrUpdateImpl(document);
+            RunInTransactionDelegate task = () =>
+            {
+                foreach (var document in docs)
+                    SaveOrUpdateImpl(document);
+
+                return true;
+            };
+
+            Database.RunInTransaction(task);
         }
 
         /// <summary>
@@ -152,6 +159,7 @@ namespace FulltextStorageLib
             Document doc;
 
             var save = DocumentAdapter.IsTransient(document);
+            var update = false;
 
             if (save)
             {
@@ -167,7 +175,7 @@ namespace FulltextStorageLib
                 if (doc != null)
                 {
                     var existingNote = DocumentAdapter.Read(doc);
-                    save = DocumentAdapter.IsChanged(existingNote, document);
+                    save = update = DocumentAdapter.IsChanged(existingNote, document);
                 }
                 else
                 {
@@ -181,7 +189,15 @@ namespace FulltextStorageLib
             if (save)
             {
                 DocumentAdapter.IncrementVersion(document);
-                result = doc.PutProperties(DocumentAdapter.ToDictionary(document));
+                var propertyDictionary = DocumentAdapter.ToDictionary(document);
+
+                if (update)
+                    result = doc.Update(newRevision => {
+                            newRevision.SetUserProperties(propertyDictionary);
+                            return true;
+                        });
+                else
+                    result = doc.PutProperties(propertyDictionary);
             }
 
             return result;
