@@ -1,6 +1,6 @@
 ﻿@model AspNetPim.Models.NoteViewModel
 
-@using (Html.BeginForm("Update", "Home", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal" }))
+@using (Html.BeginForm("Delete", "ViewEdit", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal" }))
 {
     @Html.AntiForgeryToken()
 
@@ -53,7 +53,7 @@
             <div class="col-md-offset-2 col-md-10">
                 <input id="btnUpdate" type="submit" value="Update" class="btn btn-default" />
                 &nbsp;
-                <button id="btnDelete" class="btn btn-warning">Delete</button>
+                <input type="submit" id="btnDelete" class="btn btn-warning" value="Delete" />
             </div>
         </div>
     }

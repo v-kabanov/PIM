@@ -19,15 +19,8 @@
         }
 
         function deleteNote(e) {
-            e.preventDefault();
-
-            if (confirm("Delete this note ?")) {
-                var noteId = $(this).parent().siblings("[name='noteId']").val();
-
-                pim.features.waitingDialog.showPleaseWait();
-                ajaxPost(conf.deleteNoteUrl, { noteId: noteId })
-                    .always(function () { pim.features.waitingDialog.hidePleaseWait(); });
-            }
+            if (!confirm("Delete this note ?"))
+                e.preventDefault();
         }
 
         // modal

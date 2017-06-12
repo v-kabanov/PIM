@@ -25,7 +25,7 @@
                 <div class="row form-group">
                     @Html.Hidden("noteId", note.Id)
                     <div note-name class="col-md-10">
-                        <a note-name href="@Url.Action("ViewEdit", new {id = note.Id})">
+                        <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">
                             @note.Name
                         </a>
                         <br />

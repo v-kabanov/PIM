@@ -19,6 +19,7 @@ namespace AspNetPim.Models
 
         [DisplayName("Text")]
         [Required(AllowEmptyStrings = false)]
+        [AllowHtml]
         public string NoteText { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:f}")]

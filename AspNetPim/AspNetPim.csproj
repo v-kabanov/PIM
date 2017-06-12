@@ -227,6 +227,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\ViewEditController.cs" />
     <Compile Include="FulltextIndexWorker.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -300,8 +301,8 @@
     <Content Include="Views\Shared\Lockout.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Home\IndexPartial.cshtml" />
-    <Content Include="Views\Home\ViewEdit.cshtml" />
-    <Content Include="Views\Home\ViewEditPartial.cshtml" />
+    <Content Include="Views\ViewEdit\ViewEdit.cshtml" />
+    <Content Include="Views\ViewEdit\ViewEditPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

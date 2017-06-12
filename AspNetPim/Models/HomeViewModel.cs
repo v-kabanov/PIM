@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -26,8 +27,6 @@ namespace AspNetPim.Models
         public IList<Note> LastUpdatedNotes { get; private set; }
 
         public INoteStorage NoteStorage { get; private set; }
-
-        private static readonly Regex WhiteSpaceRegex = new Regex("\\s");
 
         private Note _changedNote;
 
@@ -50,6 +49,7 @@ namespace AspNetPim.Models
         }
 
         [AllowHtml]
+        [Required(AllowEmptyStrings = false)]
         public string NewNoteText { get; set; }
 
         public void LoadLatest()
@@ -108,32 +108,7 @@ namespace AspNetPim.Models
 
             var bodyStartIndex = note.Text.IndexOf(note.Name) + note.Name.Length;
 
-            return GetTextWithLimit(note.Text, bodyStartIndex, TargetNoteTextSummaryLength);
-        }
-
-        public static string GetTextWithLimit(string text, int startIndex, int maxLength)
-        {
-            Check.DoRequireArgumentNotNull(text, nameof(text));
-            Check.DoCheckArgument(startIndex > 0, nameof(startIndex));
-            Check.DoCheckArgument(maxLength > 0, nameof(maxLength));
-
-            var length = text.Length - startIndex;
-
-            if (length > maxLength)
-            {
-                // need to truncate
-                var firstWhiteSpace = WhiteSpaceRegex.Match(text, (int)(startIndex + 0.9 * maxLength));
-
-                var summaryLength = maxLength - 3;
-
-                if (firstWhiteSpace.Success && firstWhiteSpace.Index - (startIndex + TargetNoteTextSummaryLength) < 50)
-                {
-                    summaryLength = firstWhiteSpace.Index - startIndex;
-                }
-                return text.Substring(startIndex, summaryLength) + "...";
-            }
-
-            return text.Substring(startIndex);
+            return StringHelper.GetTextWithLimit(note.Text, bodyStartIndex, TargetNoteTextSummaryLength);
         }
     }
 }

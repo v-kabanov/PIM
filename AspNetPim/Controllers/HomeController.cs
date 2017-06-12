@@ -95,25 +95,5 @@ namespace AspNetPim.Controllers
 
             return View();
         }
-
-        [HttpGet]
-        public ActionResult ViewEdit(string id)
-        {
-            var model = new NoteViewModel(NoteStorage) {NoteId = id};
-
-            model.Load();
-
-            return View(model);
-        }
-
-        [HttpPost]
-        public ActionResult Update(NoteViewModel model)
-        {
-            model.Initialize(NoteStorage);
-
-            model.Update();
-
-            return PartialView("ViewEditPartial", model);
-        }
     }
 }

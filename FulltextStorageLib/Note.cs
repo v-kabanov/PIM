@@ -51,7 +51,7 @@ namespace FulltextStorageLib
             get { return _text; }
             set
             {
-                Name = ExtractFirstLine(value);
+                Name = ExtractName(value);
                 _text = value;
             }
         }
@@ -81,15 +81,17 @@ namespace FulltextStorageLib
         /// <returns>
         ///     null if text contains any valid text (non-blank-space)
         /// </returns>
-        private static string ExtractFirstLine(string text)
+        private static string ExtractName(string text)
         {
             if (text == null)
                 return null;
 
-            var nameMatch = NameRegex.Match(text);
-            return nameMatch.Success
-                ? nameMatch.Groups[1].Value
-                : null;
+            var firstLine = StringHelper.ExtractFirstLine(text);
+
+            if (firstLine?.Length > 150)
+                return StringHelper.GetTextWithLimit(firstLine, 0, 100);
+
+            return firstLine;
         }
 
         public static string CreateShortGuid()

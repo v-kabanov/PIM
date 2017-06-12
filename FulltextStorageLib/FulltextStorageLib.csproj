@@ -212,6 +212,7 @@
     <Compile Include="Util\SingletonFactory.cs" />
     <Compile Include="Util\StatefulTask.cs" />
     <Compile Include="Util\StatisticalFunctions.cs" />
+    <Compile Include="Util\StringHelper.cs" />
     <Compile Include="Util\TaskExecutedEventArgs.cs" />
     <Compile Include="Util\TaskExecutor.cs" />
     <Compile Include="Util\TaskExtensions.cs" />
