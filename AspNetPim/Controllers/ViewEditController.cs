@@ -10,7 +10,7 @@ using FulltextStorageLib;
 
 namespace AspNetPim.Controllers
 {
-    [Route("~/ViewEdit/{id}/{action}")]
+    [Route("~/ViewEdit/{id}/{action=Index}")]
     public class ViewEditController : Controller
     {
         private const string PartialViewName = "ViewEditPartial";
@@ -50,7 +50,7 @@ namespace AspNetPim.Controllers
 
             model.Delete();
 
-            return RedirectToAction("Index", "Home"); //PartialView(PartialViewName, model);
+            return RedirectToAction("Index", "Home");
         }
     }
 }
