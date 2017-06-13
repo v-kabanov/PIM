@@ -26,7 +26,8 @@ namespace AspNetPim
             bundles.Add(new ScriptBundle("~/bundles/pim").Include(
                 "~/js/pim.js",
                 "~/js/SeeLatestAndCreate.js",
-                "~/js/ViewEdit.js"
+                "~/js/ViewEdit.js",
+                "~/js/Search.js"
                 ));
 
             bundles.Add(new StyleBundle("~/Content/css").Include(

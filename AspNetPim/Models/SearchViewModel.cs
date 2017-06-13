@@ -34,6 +34,8 @@ namespace AspNetPim.Models
         [Required(AllowEmptyStrings = false)]
         public string Query { get; set; }
 
+        public string NoteId { get; set; }
+
         /// <summary>
         ///     1 - based
         /// </summary>
@@ -43,9 +45,10 @@ namespace AspNetPim.Models
 
         public IList<Note> SearchResultPage { get; private set; }
 
-        public void Delete(string noteId)
+        public void Delete()
         {
-            _deletedNote = NoteStorage.Delete(noteId);
+            if (!string.IsNullOrWhiteSpace(NoteId))
+                _deletedNote = NoteStorage.Delete(NoteId);
         }
 
         public void ExecuteSearch()

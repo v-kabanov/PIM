@@ -7,31 +7,24 @@
     <h2>Search</h2>
 </div>
 
-@using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm", @class = "form-inline"}))
+@Html.Partial("SearchPartial", Model)
+
+@section Init
 {
-    <div class="input-group">
-        @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"})
-        <div class="input-group-btn">
-            <button type="submit" class="btn">
-                <i class="glyphicon glyphicon-search"></i>
-            </button>
-        </div>
-    </div>
+    var config = {
+    mainFormSelector: '#mainForm',
+    deleteNoteUrl: '@Url.Action("Delete")',
+    deleteNoteButtonSelector: '[delete-note-by-id]',
+    divInProgressSelector: '#progressIndicator',
+    };
 
-    <hr/>
-
-    if (Model.SearchResultPage?.Count > 0)
-    {
-        @Html.Partial("NoteList", Model.SearchResultPage)
-
-        if (Model.TotalPageCount > 1)
-        {
-            for (var i = 0; i <= Model.TotalPageCount; ++i)
-            {
-                @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i})
-                ;
-                @:&nbsp;
-            }
-        }
-    }
+    (pim.pages.search)
+    &&
+    (pim.pages.search.init(config));
 }
+ 
+<hr/>
+   
+<div>
+    @Html.ActionLink("Back to home page", "Index", "Home")
+</div>

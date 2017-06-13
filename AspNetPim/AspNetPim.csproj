@@ -251,6 +251,7 @@
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="js\Search.js" />
     <Content Include="js\ViewEdit.js" />
     <Content Include="js\SeeLatestAndCreate.js" />
     <Content Include="js\pim.js" />
@@ -307,6 +308,7 @@
     <Content Include="Views\ViewEdit\ViewEditPartial.cshtml" />
     <Content Include="Views\Shared\NoteList.cshtml" />
     <Content Include="Views\Search\Search.cshtml" />
+    <Content Include="Views\Search\SearchPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

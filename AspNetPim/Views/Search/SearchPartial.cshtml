@@ -1,0 +1,40 @@
+﻿@model AspNetPim.Models.SearchViewModel
+
+@using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm", @class = "form-horizontal"}))
+{
+    <div class="input-group">
+        @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"})
+        <div class="input-group-btn">
+            <button type="submit" class="btn">
+                <i class="glyphicon glyphicon-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <hr/>
+
+    if (Model.SearchResultPage?.Count > 0)
+    {
+        @Html.Partial("NoteList", Model.SearchResultPage)
+
+        if (Model.TotalPageCount > 1)
+        {
+            for (var i = 1; i <= Model.TotalPageCount; ++i)
+            {
+                if (i == Model.PageNumber)
+                {
+                    @: @i
+                }
+                else
+                {
+                    @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
+                }
+                @:&nbsp;
+            }
+        }
+    }
+    else
+    {
+        @: No results to display
+    }
+}

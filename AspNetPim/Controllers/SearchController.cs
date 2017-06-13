@@ -32,17 +32,16 @@ namespace AspNetPim.Controllers
         }
 
         [HttpPost]
-        public ActionResult Delete(SearchViewModel model, string noteId)
+        public ActionResult Delete(SearchViewModel model)
         {
             model.Initialize(NoteStorage);
 
-            if (!string.IsNullOrWhiteSpace(noteId))
-                model.Delete(noteId);
+            model.Delete();
 
             if (ModelState.IsValid)
                 model.ExecuteSearch();
 
-            return View("Search", model);
+            return PartialView("SearchPartial", model);
         }
     }
 }
