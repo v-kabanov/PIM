@@ -1,0 +1,20 @@
+﻿@using AspNetPim.Models
+@model ICollection<FulltextStorageLib.Note>
+
+@foreach (var note in Model)
+{
+    <div class="row form-group">
+        @Html.Hidden("noteId", note.Id)
+        <div note-name class="col-md-10">
+            <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">
+                @note.Name
+            </a>
+            <br />
+            @HomeViewModel.GetNoteTextSummary(note)
+        </div>
+        <div class="col-md-2">
+            <input delete-note-by-id type="submit" class="btn btn-warning pull-right" value="Delete"/>
+        </div>
+    </div>
+}
+

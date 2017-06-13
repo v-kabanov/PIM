@@ -69,6 +69,7 @@ namespace AspNetPim
             builder.Register(context => Storage).SingleInstance();
             builder.RegisterType<HomeController>();
             builder.RegisterType<ViewEditController>();
+            builder.RegisterType<SearchController>();
 
             var container = builder.Build();
 

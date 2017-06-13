@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
@@ -54,11 +53,12 @@ namespace AspNetPim.Models
 
         public void LoadLatest()
         {
-            int resultCount = MaxNumberOfNotesInRecentList;
+            var resultCount = MaxNumberOfNotesInRecentList;
 
             if (_changedNote != null && _changeIsDeletion)
                 ++resultCount;
 
+            // ReSharper disable once RedundantArgumentDefaultValue
             var lastHeaders = NoteStorage.GetTopInPeriod(null, DateTime.Now, resultCount, SearchableDocumentTime.LastUpdate);
             LastUpdatedNotes = lastHeaders.Select(h => NoteStorage.GetExisting(h.Id)).Where(x => x != null).ToList();
 
@@ -106,7 +106,7 @@ namespace AspNetPim.Models
             if (note.Text == null)
                 return null;
 
-            var bodyStartIndex = note.Text.IndexOf(note.Name) + note.Name.Length;
+            var bodyStartIndex = note.Text.IndexOf(note.Name, StringComparison.Ordinal) + note.Name.Length;
 
             return StringHelper.GetTextWithLimit(note.Text, bodyStartIndex, TargetNoteTextSummaryLength);
         }
