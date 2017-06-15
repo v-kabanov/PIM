@@ -99,12 +99,12 @@
                 return {
                     showPleaseWait: function () {
                         try {
-                            pleaseWaitDiv.modal();
+                            //pleaseWaitDiv.modal();
                         } catch (exception) {
                         }
                     },
                     hidePleaseWait: function () {
-                        pleaseWaitDiv.modal("hide");
+                        //pleaseWaitDiv.modal("hide");
                     }
                 };
 
