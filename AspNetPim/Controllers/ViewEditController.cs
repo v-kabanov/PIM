@@ -11,6 +11,7 @@ using FulltextStorageLib;
 namespace AspNetPim.Controllers
 {
     [Route("~/ViewEdit/{id}/{action=Index}")]
+    [Authorize(Roles = "Admin,Writer,Reader")]
     public class ViewEditController : Controller
     {
         private const string PartialViewName = "ViewEditPartial";
@@ -34,6 +35,7 @@ namespace AspNetPim.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Writer")]
         public ActionResult Update(NoteViewModel model)
         {
             model.Initialize(NoteStorage);
@@ -44,6 +46,7 @@ namespace AspNetPim.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Writer")]
         public ActionResult Delete(NoteViewModel model)
         {
             model.Initialize(NoteStorage);

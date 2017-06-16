@@ -1,5 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Web;
+using FulltextStorageLib.Util;
+using Microsoft.AspNet.Identity.EntityFramework;
+using Microsoft.AspNet.Identity.Owin;
 
 namespace AspNetPim.Models
 {
@@ -50,7 +55,6 @@ namespace AspNetPim.Models
     {
         [Required]
         [Display(Name = "Email")]
-        [EmailAddress]
         public string Email { get; set; }
 
         [Required]
@@ -102,11 +106,98 @@ namespace AspNetPim.Models
         public string Code { get; set; }
     }
 
+    public class ManageUserViewModel
+    {
+        [Required]
+        [DataType(DataType.Password)]
+        [Display(Name = "Current password")]
+        public string OldPassword { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage =
+            "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "New password")]
+        public string NewPassword { get; set; }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm new password")]
+        [Compare("NewPassword", ErrorMessage =
+            "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
+    }
+
     public class ForgotPasswordViewModel
     {
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
+    }
+
+    public class EditUserViewModel
+    {
+        public EditUserViewModel() { }
+
+        // Allow Initialization with an instance of ApplicationUser:
+        public EditUserViewModel(ApplicationUser user)
+        {
+            this.Name = user.UserName;
+            this.Email = user.Email;
+        }
+
+        [Required]
+        [Display(Name = "User Name")]
+        public string Name { get; set; }
+
+        [Required]
+        public string Email { get; set; }
+    }
+
+
+    public class SelectUserRolesViewModel
+    {
+        public SelectUserRolesViewModel()
+        {
+            this.Roles = new List<SelectRoleEditorViewModel>();
+        }
+
+
+        // Enable initialization with an instance of ApplicationUser:
+        public SelectUserRolesViewModel(ApplicationUser user)
+            : this()
+        {
+            UserName = user.UserName;
+            Email = user.Email;
+
+            var userRolesByRoleId = user.Roles.ToDictionary(ur => ur.RoleId);
+
+            // Add all available roles to the list of EditorViewModels:
+            var roleManager = HttpContext.Current.GetOwinContext().Get<ApplicationRoleManager>();
+
+            Roles = roleManager.Roles.Select(r => new SelectRoleEditorViewModel(r) {Selected = userRolesByRoleId.ContainsKey(r.Id)})
+                .ToList();
+        }
+
+        public string UserName { get; set; }
+        public string Email { get; set; }
+
+        public List<SelectRoleEditorViewModel> Roles { get; set; }
+    }
+
+    // Used to display a single role with a checkbox, within a list structure:
+    public class SelectRoleEditorViewModel
+    {
+        public SelectRoleEditorViewModel() { }
+
+        public SelectRoleEditorViewModel(IdentityRole role)
+        {
+            this.RoleName = role.Name;
+        }
+
+        public bool Selected { get; set; }
+
+        [Required]
+        public string RoleName { get; set; }
     }
 }

@@ -11,6 +11,8 @@ using FulltextStorageLib;
 
 namespace AspNetPim.Controllers
 {
+    [Authorize]
+    [Authorize(Roles = "Admin,Reader,Writer")]
     public class HomeController : Controller
     {
         public HomeController(INoteStorage noteStorage)
@@ -26,6 +28,7 @@ namespace AspNetPim.Controllers
             return new HomeViewModel(NoteStorage);
         }
 
+        [Authorize(Roles = "Admin,Reader")]
         public ActionResult Index()
         {
             var model = CreateViewModel();
@@ -36,6 +39,7 @@ namespace AspNetPim.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Writer")]
         public ActionResult DeleteNote(string noteId)
         {
             var model = CreateViewModel();
@@ -54,22 +58,8 @@ namespace AspNetPim.Controllers
             return PartialView("IndexPartial", model);
         }
 
-        public ActionResult OpenNote(string noteId)
-        {
-            var model = CreateViewModel();
-
-            var note = model.NoteStorage.GetExisting(noteId);
-
-            ViewBag.Message = note == null
-                ? $"Note {noteId} was not found"
-                : note.Text;
-
-            model.LoadLatest();
-
-            return View("Index", model);
-        }
-
         [HttpPost]
+        [Authorize(Roles = "Admin,Writer")]
         public ActionResult Create(HomeViewModel model)
         {
             model.Initialize(NoteStorage);

@@ -11,6 +11,7 @@ using FulltextStorageLib;
 namespace AspNetPim.Controllers
 {
     [Route("~/Search/{action=Search}")]
+    [Authorize(Roles = "Admin,Reader,Writer")]
     public class SearchController : Controller
     {
         public INoteStorage NoteStorage { get; }
@@ -21,6 +22,7 @@ namespace AspNetPim.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,Reader")]
         public ActionResult Search(SearchViewModel model)
         {
             model.Initialize(NoteStorage);
@@ -32,6 +34,7 @@ namespace AspNetPim.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Writer")]
         public ActionResult Delete(SearchViewModel model)
         {
             model.Initialize(NoteStorage);

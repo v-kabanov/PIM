@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
@@ -17,39 +18,35 @@ namespace AspNetPim.Controllers
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
+        private ApplicationRoleManager _roleManager;
 
         public AccountController()
         {
         }
 
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager, ApplicationRoleManager roleManager)
         {
             UserManager = userManager;
             SignInManager = signInManager;
+            RoleManager = roleManager;
         }
 
         public ApplicationSignInManager SignInManager
         {
-            get
-            {
-                return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
-            }
-            private set 
-            { 
-                _signInManager = value; 
-            }
+            get => _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
+            private set => _signInManager = value;
         }
 
         public ApplicationUserManager UserManager
         {
-            get
-            {
-                return _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
+            get => _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+            private set => _userManager = value;
+        }
+
+        public ApplicationRoleManager RoleManager
+        {
+            get => _roleManager ?? HttpContext.GetOwinContext().Get<ApplicationRoleManager>();
+            private set => _roleManager = value;
         }
 
         //
@@ -395,6 +392,124 @@ namespace AspNetPim.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [Authorize(Roles = "Admin")]
+        public ActionResult Manage(ManageController.ManageMessageId? message)
+        {
+            ViewBag.StatusMessage =
+                message == ManageController.ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
+                    : message == ManageController.ManageMessageId.SetPasswordSuccess ? "Your password has been set."
+                        : message == ManageController.ManageMessageId.RemoveLoginSuccess ? "The external login was removed."
+                            : message == ManageController.ManageMessageId.Error ? "An error has occurred."
+                                : "";
+            ViewBag.HasLocalPassword = HasPassword();
+            ViewBag.ReturnUrl = Url.Action("Manage");
+            return View();
+        }
+
+        [Authorize(Roles = "Admin")]
+        public ActionResult Index()
+        {
+            var Db = new ApplicationDbContext();
+            var users = Db.Users;
+            var model = new List<EditUserViewModel>();
+            foreach (var user in users)
+            {
+                var u = new EditUserViewModel(user);
+                model.Add(u);
+            }
+            return View(model);
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        public ActionResult Edit(string id, ManageController.ManageMessageId? Message = null)
+        {
+            var Db = new ApplicationDbContext();
+            var user = Db.Users.First(u => u.UserName == id);
+            var model = new EditUserViewModel(user);
+            ViewBag.MessageId = Message;
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Edit(EditUserViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var Db = new ApplicationDbContext();
+                var user = Db.Users.First(u => u.UserName == model.UserName);
+                user.FirstName = model.FirstName;
+                user.LastName = model.LastName;
+                user.Email = model.Email;
+                Db.Entry(user).State = System.Data.Entity.EntityState.Modified;
+                await Db.SaveChangesAsync();
+                return RedirectToAction("Index");
+            }
+
+            // If we got this far, something failed, redisplay form
+            return View(model);
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        public ActionResult Delete(string id = null)
+        {
+            var Db = new ApplicationDbContext();
+            var user = Db.Users.First(u => u.UserName == id);
+            var model = new EditUserViewModel(user);
+            if (user == null)
+            {
+                return HttpNotFound();
+            }
+            return View(model);
+        }
+
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public ActionResult DeleteConfirmed(string id)
+        {
+            var Db = new ApplicationDbContext();
+            var user = Db.Users.First(u => u.UserName == id);
+            Db.Users.Remove(user);
+            Db.SaveChanges();
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Roles = "Admin")]
+        public ActionResult UserRoles(string id)
+        {
+            var Db = new ApplicationDbContext();
+            var user = Db.Users.First(u => u.UserName == id);
+            var model = new SelectUserRolesViewModel(user);
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [ValidateAntiForgeryToken]
+        public ActionResult UserRoles(SelectUserRolesViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = UserManager.FindByName(model.Email);
+
+                var roleIdToRole = RoleManager.Roles.ToDictionary(r => r.Id);
+                var currentUserRoleNames = user.Roles.Select(ur => roleIdToRole[ur.RoleId].Name).ToArray();
+                UserManager.RemoveFromRoles(user.Id, currentUserRoleNames);
+
+                UserManager.AddToRoles(user.Id, model.Roles.Where(mr => mr.Selected).Select(mr => mr.RoleName).ToArray());
+
+                return RedirectToAction("Index");
+            }
+            return View();
+        }
+
         //
         // GET: /Account/ExternalLoginFailure
         [AllowAnonymous]
@@ -407,17 +522,10 @@ namespace AspNetPim.Controllers
         {
             if (disposing)
             {
-                if (_userManager != null)
-                {
-                    _userManager.Dispose();
-                    _userManager = null;
-                }
-
-                if (_signInManager != null)
-                {
-                    _signInManager.Dispose();
-                    _signInManager = null;
-                }
+                _roleManager?.Dispose();
+                _roleManager = null;
+                _userManager?.Dispose();
+                _userManager = null;
             }
 
             base.Dispose(disposing);

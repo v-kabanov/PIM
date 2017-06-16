@@ -21,11 +21,9 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
-                    <li>@Html.ActionLink("About", "About", "Home")</li>
                 </ul>
 
-                @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {@class = "", style= "display: inline-block; margin-left: 15%; margin-top: 10px; width: 30%" }))
+                @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {@class = "", style= "display: inline-block; margin-left: 15%; margin-top: 10px; width: 40%" }))
                 {
                     <div class="input-group" style="width: 95%">
                         @Html.TextBox("query", null, new {id = "tbQuery", @class = "form-control input-sm", style = "background-color: lightgray;" })

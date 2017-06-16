@@ -10,7 +10,7 @@ using AspNetPim.Models;
 
 namespace AspNetPim.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class ManageController : Controller
     {
         private ApplicationSignInManager _signInManager;

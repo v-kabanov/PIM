@@ -40,9 +40,19 @@ namespace AspNetPim
         {
         }
 
+        public static UserStore<ApplicationUser> CreateUserStore(ApplicationDbContext dbContext) =>
+            new UserStore<ApplicationUser>(dbContext ?? ApplicationDbContext.Create());
+
+        /// <param name="options">
+        ///     Optional
+        /// </param>
+        /// <param name="context">
+        ///     Optional
+        /// </param>
+        /// <returns></returns>
         public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context) 
         {
-            var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<ApplicationDbContext>()));
+            var manager = new ApplicationUserManager(CreateUserStore(context?.Get<ApplicationDbContext>()));
             // Configure validation logic for usernames
             manager.UserValidator = new UserValidator<ApplicationUser>(manager)
             {
@@ -78,13 +88,19 @@ namespace AspNetPim
             });
             manager.EmailService = new EmailService();
             manager.SmsService = new SmsService();
-            var dataProtectionProvider = options.DataProtectionProvider;
+            var dataProtectionProvider = options?.DataProtectionProvider;
+
             if (dataProtectionProvider != null)
             {
                 manager.UserTokenProvider = 
                     new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
             }
             return manager;
+        }
+
+        public static ApplicationUserManager CreateOutOfContext()
+        {
+            return Create(null, null);
         }
     }
 
@@ -105,5 +121,29 @@ namespace AspNetPim
         {
             return new ApplicationSignInManager(context.GetUserManager<ApplicationUserManager>(), context.Authentication);
         }
+    }
+
+    public class ApplicationRoleManager : RoleManager<IdentityRole>
+    {
+        public ApplicationRoleManager(IRoleStore<IdentityRole, string> store) : base(store)
+        {
+        }
+
+        /// <param name="options">
+        ///     Optional
+        /// </param>
+        /// <param name="context">
+        ///     Optional
+        /// </param>
+        /// <returns></returns>
+        public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
+        {
+            var dbContext = context?.Get<IdentityDbContext>() ?? (DbContext)ApplicationDbContext.Create();
+            var roleStore = new RoleStore<IdentityRole>(dbContext);
+            return new ApplicationRoleManager(roleStore);
+        }
+
+        public static ApplicationRoleManager CreateOutOfContext() => new ApplicationRoleManager(
+            new RoleStore<IdentityRole>(ApplicationDbContext.Create()));
     }
 }
