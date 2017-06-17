@@ -269,17 +269,6 @@ namespace AspNetPim.Controllers
         }
 
         //
-        // POST: /Account/ExternalLogin
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public ActionResult ExternalLogin(string provider, string returnUrl)
-        {
-            // Request a redirect to the external login provider
-            return new ChallengeResult(provider, Url.Action("ExternalLoginCallback", "Account", new { ReturnUrl = returnUrl }));
-        }
-
-        //
         // GET: /Account/SendCode
         [AllowAnonymous]
         public async Task<ActionResult> SendCode(string returnUrl, bool rememberMe)
@@ -315,74 +304,6 @@ namespace AspNetPim.Controllers
         }
 
         //
-        // GET: /Account/ExternalLoginCallback
-        [AllowAnonymous]
-        public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
-        {
-            var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync();
-            if (loginInfo == null)
-            {
-                return RedirectToAction("Login");
-            }
-
-            // Sign in the user with this external login provider if the user already has a login
-            var result = await SignInManager.ExternalSignInAsync(loginInfo, isPersistent: false);
-            switch (result)
-            {
-                case SignInStatus.Success:
-                    return RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
-                    return View("Lockout");
-                case SignInStatus.RequiresVerification:
-                    return RedirectToAction("SendCode", new { ReturnUrl = returnUrl, RememberMe = false });
-                case SignInStatus.Failure:
-                default:
-                    // If the user does not have an account, then prompt the user to create an account
-                    ViewBag.ReturnUrl = returnUrl;
-                    ViewBag.LoginProvider = loginInfo.Login.LoginProvider;
-                    return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = loginInfo.Email });
-            }
-        }
-
-        //
-        // POST: /Account/ExternalLoginConfirmation
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> ExternalLoginConfirmation(ExternalLoginConfirmationViewModel model, string returnUrl)
-        {
-            if (User.Identity.IsAuthenticated)
-            {
-                return RedirectToAction("Index", "Manage");
-            }
-
-            if (ModelState.IsValid)
-            {
-                // Get the information about the user from the external login provider
-                var info = await AuthenticationManager.GetExternalLoginInfoAsync();
-                if (info == null)
-                {
-                    return View("ExternalLoginFailure");
-                }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-                var result = await UserManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
-                    result = await UserManager.AddLoginAsync(user.Id, info.Login);
-                    if (result.Succeeded)
-                    {
-                        await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
-                        return RedirectToLocal(returnUrl);
-                    }
-                }
-                AddErrors(result);
-            }
-
-            ViewBag.ReturnUrl = returnUrl;
-            return View(model);
-        }
-
-        //
         // POST: /Account/LogOff
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -406,67 +327,57 @@ namespace AspNetPim.Controllers
             return View();
         }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult> Manage(ManageUserViewModel model)
-    {
-        bool hasPassword = HasPassword();
-        ViewBag.HasLocalPassword = hasPassword;
-        ViewBag.ReturnUrl = Url.Action("Manage");
-        if (hasPassword)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> Manage(ManageUserViewModel model)
         {
-            if (ModelState.IsValid)
+            bool hasPassword = HasPassword();
+            ViewBag.HasLocalPassword = hasPassword;
+            ViewBag.ReturnUrl = Url.Action("Manage");
+            if (hasPassword)
             {
-                IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
-                if (result.Succeeded)
+                if (ModelState.IsValid)
                 {
-                    return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.ChangePasswordSuccess });
-                }
-                else
-                {
-                    AddErrors(result);
+                    IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+                    if (result.Succeeded)
+                    {
+                        return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.ChangePasswordSuccess });
+                    }
+                    else
+                    {
+                        AddErrors(result);
+                    }
                 }
             }
+            else
+            {
+                // User does not have a password so remove any validation errors caused by a missing OldPassword field
+                ModelState state = ModelState["OldPassword"];
+                state?.Errors.Clear();
+
+                if (ModelState.IsValid)
+                {
+                    IdentityResult result = await UserManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
+                    if (result.Succeeded)
+                    {
+                        return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.SetPasswordSuccess });
+                    }
+                    else
+                    {
+                        AddErrors(result);
+                    }
+                }
+            }
+
+            // If we got this far, something failed, redisplay form
+            return View(model);
         }
-        else
-        {
-            // User does not have a password so remove any validation errors caused by a missing OldPassword field
-            ModelState state = ModelState["OldPassword"];
-            if (state != null)
-            {
-                state.Errors.Clear();
-            }
 
-            if (ModelState.IsValid)
-            {
-                IdentityResult result = await UserManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.SetPasswordSuccess });
-                }
-                else
-                {
-                    AddErrors(result);
-                }
-            }
-        }
-
-        // If we got this far, something failed, redisplay form
-        return View(model);
-    }
-
-    [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public ActionResult Index()
         {
-            var Db = new ApplicationDbContext();
-            var users = Db.Users;
-            var model = new List<EditUserViewModel>();
-            foreach (var user in users)
-            {
-                var u = new EditUserViewModel(user);
-                model.Add(u);
-            }
+            var model = UserManager.Users.ToList().Select(u => new EditUserViewModel(u)).ToList();
             return View(model);
         }
 
@@ -474,8 +385,7 @@ namespace AspNetPim.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult Edit(string id, ManageController.ManageMessageId? Message = null)
         {
-            var Db = new ApplicationDbContext();
-            var user = Db.Users.First(u => u.UserName == id);
+            var user = UserManager.FindById(id);
             var model = new EditUserViewModel(user);
             ViewBag.MessageId = Message;
             return View(model);
@@ -489,11 +399,9 @@ namespace AspNetPim.Controllers
         {
             if (ModelState.IsValid)
             {
-                var db = new ApplicationDbContext();
-                var user = db.Users.First(u => u.UserName == model.Name);
+                var user = UserManager.FindById(model.Id);
                 user.Email = model.Email;
-                db.Entry(user).State = System.Data.Entity.EntityState.Modified;
-                await db.SaveChangesAsync();
+                UserManager.Update(user);
                 return RedirectToAction("Index");
             }
 
@@ -503,10 +411,9 @@ namespace AspNetPim.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        public ActionResult Delete(string id = null)
+        public ActionResult Delete(string id = null, string name = null)
         {
-            var Db = new ApplicationDbContext();
-            var user = Db.Users.First(u => u.UserName == id);
+            var user = UserManager.FindById(id);
             var model = new EditUserViewModel(user);
             if (user == null)
             {
@@ -521,18 +428,15 @@ namespace AspNetPim.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult DeleteConfirmed(string id)
         {
-            var Db = new ApplicationDbContext();
-            var user = Db.Users.First(u => u.UserName == id);
-            Db.Users.Remove(user);
-            Db.SaveChanges();
+            var user = UserManager.FindById(id);
+            UserManager.Delete(user);
             return RedirectToAction("Index");
         }
 
         [Authorize(Roles = "Admin")]
-        public ActionResult UserRoles(string id)
+        public ActionResult UserRoles(string id, string name = null)
         {
-            var Db = new ApplicationDbContext();
-            var user = Db.Users.First(u => u.UserName == id);
+            var user = UserManager.FindById(id);
             var model = new SelectUserRolesViewModel(user);
             return View(model);
         }
@@ -545,7 +449,7 @@ namespace AspNetPim.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = UserManager.FindByName(model.Email);
+                var user = UserManager.FindById(model.UserId);
 
                 var roleIdToRole = RoleManager.Roles.ToDictionary(r => r.Id);
                 var currentUserRoleNames = user.Roles.Select(ur => roleIdToRole[ur.RoleId].Name).ToArray();
@@ -555,14 +459,6 @@ namespace AspNetPim.Controllers
 
                 return RedirectToAction("Index");
             }
-            return View();
-        }
-
-        //
-        // GET: /Account/ExternalLoginFailure
-        [AllowAnonymous]
-        public ActionResult ExternalLoginFailure()
-        {
             return View();
         }
 
@@ -579,7 +475,8 @@ namespace AspNetPim.Controllers
             base.Dispose(disposing);
         }
 
-        #region Helpers
+        // -------------- Helpers
+
         // Used for XSRF protection when adding external logins
         private const string XsrfKey = "XsrfId";
 
@@ -634,13 +531,8 @@ namespace AspNetPim.Controllers
         private bool HasPassword()
         {
             var user = UserManager.FindById(User.Identity.GetUserId());
-            if (user != null)
-            {
-                return user.PasswordHash != null;
-            }
-            return false;
+            return user?.PasswordHash != null;
         }
 
-    #endregion
-}
+    }
 }

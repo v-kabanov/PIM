@@ -28,7 +28,7 @@ namespace AspNetPim.Controllers
             return new HomeViewModel(NoteStorage);
         }
 
-        [Authorize(Roles = "Admin,Reader")]
+        [Authorize(Roles = "Admin,Reader,Writer")]
         public ActionResult Index()
         {
             var model = CreateViewModel();
@@ -75,13 +75,6 @@ namespace AspNetPim.Controllers
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
-
-            return View();
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
 
             return View();
         }

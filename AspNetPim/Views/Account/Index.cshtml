@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<AspNetPim.Models.EditUserViewModel>
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Manage users";
 }
 
 <h2>Index</h2>
@@ -29,9 +29,9 @@
                 @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>
-                @Html.ActionLink("Edit", "Edit", new { id = item.Name }) |
-                @Html.ActionLink("Roles", "UserRoles", new { id = item.Name }) |
-                @Html.ActionLink("Delete", "Delete", new { id = item.Name })
+                @Html.ActionLink("Edit", "Edit", new { id = item.Id, name = item.Name }) |
+                @Html.ActionLink("Roles", "UserRoles", new { id = item.Id, name = item.Name }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.Id, name = item.Name })
             </td>
         </tr>
     }

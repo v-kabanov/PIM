@@ -144,7 +144,10 @@ namespace AspNetPim.Models
         {
             this.Name = user.UserName;
             this.Email = user.Email;
+            Id = user.Id;
         }
+
+        public string Id { get; set; }
 
         [Required]
         [Display(Name = "User Name")]
@@ -169,17 +172,22 @@ namespace AspNetPim.Models
         {
             UserName = user.UserName;
             Email = user.Email;
+            UserId = user.Id;
 
             var userRolesByRoleId = user.Roles.ToDictionary(ur => ur.RoleId);
 
             // Add all available roles to the list of EditorViewModels:
             var roleManager = HttpContext.Current.GetOwinContext().Get<ApplicationRoleManager>();
 
-            Roles = roleManager.Roles.Select(r => new SelectRoleEditorViewModel(r) {Selected = userRolesByRoleId.ContainsKey(r.Id)})
+            Roles = roleManager.Roles.ToList()
+                .Select(r => new SelectRoleEditorViewModel(r) {Selected = userRolesByRoleId.ContainsKey(r.Id)})
                 .ToList();
         }
 
+        public string UserId { get; set; }
+
         public string UserName { get; set; }
+
         public string Email { get; set; }
 
         public List<SelectRoleEditorViewModel> Roles { get; set; }
