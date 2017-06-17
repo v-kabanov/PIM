@@ -406,7 +406,57 @@ namespace AspNetPim.Controllers
             return View();
         }
 
-        [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> Manage(ManageUserViewModel model)
+    {
+        bool hasPassword = HasPassword();
+        ViewBag.HasLocalPassword = hasPassword;
+        ViewBag.ReturnUrl = Url.Action("Manage");
+        if (hasPassword)
+        {
+            if (ModelState.IsValid)
+            {
+                IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.ChangePasswordSuccess });
+                }
+                else
+                {
+                    AddErrors(result);
+                }
+            }
+        }
+        else
+        {
+            // User does not have a password so remove any validation errors caused by a missing OldPassword field
+            ModelState state = ModelState["OldPassword"];
+            if (state != null)
+            {
+                state.Errors.Clear();
+            }
+
+            if (ModelState.IsValid)
+            {
+                IdentityResult result = await UserManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.SetPasswordSuccess });
+                }
+                else
+                {
+                    AddErrors(result);
+                }
+            }
+        }
+
+        // If we got this far, something failed, redisplay form
+        return View(model);
+    }
+
+    [Authorize(Roles = "Admin")]
         public ActionResult Index()
         {
             var Db = new ApplicationDbContext();
@@ -439,13 +489,11 @@ namespace AspNetPim.Controllers
         {
             if (ModelState.IsValid)
             {
-                var Db = new ApplicationDbContext();
-                var user = Db.Users.First(u => u.UserName == model.UserName);
-                user.FirstName = model.FirstName;
-                user.LastName = model.LastName;
+                var db = new ApplicationDbContext();
+                var user = db.Users.First(u => u.UserName == model.Name);
                 user.Email = model.Email;
-                Db.Entry(user).State = System.Data.Entity.EntityState.Modified;
-                await Db.SaveChangesAsync();
+                db.Entry(user).State = System.Data.Entity.EntityState.Modified;
+                await db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
@@ -582,6 +630,17 @@ namespace AspNetPim.Controllers
                 context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
             }
         }
-        #endregion
-    }
+
+        private bool HasPassword()
+        {
+            var user = UserManager.FindById(User.Identity.GetUserId());
+            if (user != null)
+            {
+                return user.PasswordHash != null;
+            }
+            return false;
+        }
+
+    #endregion
+}
 }
