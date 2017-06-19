@@ -22,7 +22,7 @@ namespace AspNetPim.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Reader")]
+        [Authorize(Roles = "Admin,Reader,Writer")]
         public ActionResult Search(SearchViewModel model)
         {
             model.Initialize(NoteStorage);

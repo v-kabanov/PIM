@@ -2,7 +2,7 @@
 
 @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm", @class = "form-horizontal"}))
 {
-    <div class="input-group">
+    <div class="input-group col-md-offset-1 col-md-10">
         @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"})
         <div class="input-group-btn">
             <button type="submit" class="btn">
@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <hr/>
+    <br/>
 
     if (Model.SearchResultPage?.Count > 0)
     {

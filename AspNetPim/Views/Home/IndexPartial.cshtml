@@ -1,25 +1,24 @@
-﻿@using AspNetPim.Models
-@model AspNetPim.Models.HomeViewModel
+﻿@model AspNetPim.Models.HomeViewModel
 
-    @using (Html.BeginForm("Create", "Home", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal"}))
-    {
-        <div class="form-group">
-            <div class="col-md-11">
-                @Html.TextAreaFor(m => m.NewNoteText, new {@class = "form-control", style = "height: 10em"})
-            </div>
+@using (Html.BeginForm("Create", "Home", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal"}))
+{
+    <div class="form-group">
+        <div class="col-md-11">
+            @Html.TextAreaFor(m => m.NewNoteText, new {@class = "form-control", style = "height: 10em"})
         </div>
+    </div>
 
-        <div class="form-group">
-            <div class="col-md-11">
-                <input type="submit" id="btnSubmit" class='btn btn-primary btn-lg' value="Create" />
-            </div>
+    <div class="form-group">
+        <div class="col-md-11">
+            <input type="submit" id="btnSubmit" class='btn btn-primary btn-lg' value="Create" />
         </div>
+    </div>
 
-        <h3>
-            Recent notes
-        </h3>
+    <h3>
+        Recent notes
+    </h3>
 
-        <div class="">
-            @Html.Partial("NoteList", Model.LastUpdatedNotes)
-        </div>
-    }
+    <div class="">
+        @Html.Partial("NoteList", Model.LastUpdatedNotes)
+    </div>
+}

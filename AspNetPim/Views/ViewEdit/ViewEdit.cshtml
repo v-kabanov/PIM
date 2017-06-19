@@ -2,6 +2,7 @@
 
 @{
     ViewBag.Title = Model.Note?.Name ?? "Unsaved note";
+    ViewBag.ShowPageCaption = false;
 }
 
 @Html.Partial("ViewEditPartial", Model)

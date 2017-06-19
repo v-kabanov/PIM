@@ -313,28 +313,29 @@ namespace AspNetPim.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [Authorize(Roles = "Admin")]
-        public ActionResult Manage(ManageController.ManageMessageId? message)
+        // client is redirected here after successful password change
+        [Authorize]
+        public ActionResult ChangePassword(ManageMessageId? message)
         {
             ViewBag.StatusMessage =
-                message == ManageController.ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
-                    : message == ManageController.ManageMessageId.SetPasswordSuccess ? "Your password has been set."
-                        : message == ManageController.ManageMessageId.RemoveLoginSuccess ? "The external login was removed."
-                            : message == ManageController.ManageMessageId.Error ? "An error has occurred."
+                message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
+                    : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
+                        : message == ManageMessageId.RemoveLoginSuccess ? "The external login was removed."
+                            : message == ManageMessageId.Error ? "An error has occurred."
                                 : "";
-            ViewBag.HasLocalPassword = HasPassword();
-            ViewBag.ReturnUrl = Url.Action("Manage");
+            ViewBag.ReturnUrl = Url.Action("ChangePassword");
             return View();
         }
 
+        // change password page submits here
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> Manage(ManageUserViewModel model)
+        [Authorize]
+        public async Task<ActionResult> ChangePassword(ManageUserViewModel model)
         {
             bool hasPassword = HasPassword();
             ViewBag.HasLocalPassword = hasPassword;
-            ViewBag.ReturnUrl = Url.Action("Manage");
+            ViewBag.ReturnUrl = Url.Action("ChangePassword");
             if (hasPassword)
             {
                 if (ModelState.IsValid)
@@ -342,12 +343,9 @@ namespace AspNetPim.Controllers
                     IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
                     if (result.Succeeded)
                     {
-                        return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.ChangePasswordSuccess });
+                        return RedirectToAction("ChangePassword", new { Message = ManageMessageId.ChangePasswordSuccess });
                     }
-                    else
-                    {
-                        AddErrors(result);
-                    }
+                    AddErrors(result);
                 }
             }
             else
@@ -361,12 +359,9 @@ namespace AspNetPim.Controllers
                     IdentityResult result = await UserManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
                     if (result.Succeeded)
                     {
-                        return RedirectToAction("Manage", new { Message = ManageController.ManageMessageId.SetPasswordSuccess });
+                        return RedirectToAction("ChangePassword", new { Message = ManageMessageId.SetPasswordSuccess });
                     }
-                    else
-                    {
-                        AddErrors(result);
-                    }
+                    AddErrors(result);
                 }
             }
 
@@ -375,7 +370,7 @@ namespace AspNetPim.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        public ActionResult Index()
+        public ActionResult Manage()
         {
             var model = UserManager.Users.ToList().Select(u => new EditUserViewModel(u)).ToList();
             return View(model);
@@ -383,11 +378,11 @@ namespace AspNetPim.Controllers
 
 
         [Authorize(Roles = "Admin")]
-        public ActionResult Edit(string id, ManageController.ManageMessageId? Message = null)
+        public ActionResult Edit(string id, ManageMessageId? message = null)
         {
             var user = UserManager.FindById(id);
             var model = new EditUserViewModel(user);
-            ViewBag.MessageId = Message;
+            ViewBag.MessageId = message;
             return View(model);
         }
 
@@ -401,8 +396,8 @@ namespace AspNetPim.Controllers
             {
                 var user = UserManager.FindById(model.Id);
                 user.Email = model.Email;
-                UserManager.Update(user);
-                return RedirectToAction("Index");
+                await UserManager.UpdateAsync(user);
+                return RedirectToAction("Manage");
             }
 
             // If we got this far, something failed, redisplay form
@@ -430,7 +425,7 @@ namespace AspNetPim.Controllers
         {
             var user = UserManager.FindById(id);
             UserManager.Delete(user);
-            return RedirectToAction("Index");
+            return RedirectToAction("Manage");
         }
 
         [Authorize(Roles = "Admin")]
@@ -457,10 +452,11 @@ namespace AspNetPim.Controllers
 
                 UserManager.AddToRoles(user.Id, model.Roles.Where(mr => mr.Selected).Select(mr => mr.RoleName).ToArray());
 
-                return RedirectToAction("Index");
+                return RedirectToAction("Manage");
             }
-            return View();
+            return View(model);
         }
+
 
         protected override void Dispose(bool disposing)
         {
@@ -533,6 +529,16 @@ namespace AspNetPim.Controllers
             var user = UserManager.FindById(User.Identity.GetUserId());
             return user?.PasswordHash != null;
         }
+        public enum ManageMessageId
+        {
+            AddPhoneSuccess,
+            ChangePasswordSuccess,
+            SetTwoFactorSuccess,
+            SetPasswordSuccess,
+            RemoveLoginSuccess,
+            RemovePhoneSuccess,
+            Error
+        }
 
-    }
+}
 }

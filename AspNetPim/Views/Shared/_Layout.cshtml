@@ -3,53 +3,64 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <title>Fulltext PIM - @ViewBag.Title</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
+        <div class="container-fluid">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                @Html.ActionLink("MegaPatam PIM", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+                @Html.ActionLink("MegaPatam PIM", "Index", "Home", null, new { @class = "navbar-brand" })
             </div>
             <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                </ul>
+                    <ul class="nav navbar-nav">
+                        <li>@Html.ActionLink("About", "About", "Home")</li>
+                    </ul>
 
-                @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {@class = "", style= "display: inline-block; margin-left: 15%; margin-top: 10px; width: 40%" }))
-                {
-                    <div class="input-group" style="width: 95%">
-                        @Html.TextBox("query", null, new {id = "tbQuery", @class = "form-control input-sm", style = "background-color: lightgray;" })
-                        <div class="input-group-btn">
-                            <button type="submit" class="btn input-sm">
-                                <i class="glyphicon glyphicon-search"></i>
-                            </button>
+                    @Html.Partial("_LoginPartial")
+
+                    @using (Html.BeginForm("Search", "Search", FormMethod.Get, new { @class = "navbar-form navbar-right", role = "search", style = "" }))
+                    {
+                        <div class="input-group" style="">
+                            @Html.TextBox("query", null, new { id = "tbQuery", @class = "form-control", style = "background-color: lightgray;", title="Search your notes" })
+                            <div class="input-group-btn">
+                                <button type="submit" class="btn">
+                                    <i class="glyphicon glyphicon-search"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                }
-
-                @Html.Partial("_LoginPartial")
+                    }
             </div>
         </div>
     </div>
-    <div class="container body-content">
-        @RenderBody()
-        <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - Megapatam Inc</p>
-        </footer>
-    </div>
+<div class="container-fluid body-content">
+    @if (ViewBag.ShowPageCaption != false && !string.IsNullOrWhiteSpace(ViewBag.Title))
+    {
+        <div class="caption">
+            <h2>
+                @ViewBag.Title
+            </h2>
+            <hr/>
+        </div>
+    }
+    @RenderBody()
+    <hr/>
+    <footer>
+        <p>&copy; @DateTime.Now.Year - MegaPatam Inc</p>
+    </footer>
+</div>
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @Scripts.Render("~/bundles/pim")
+
     @RenderSection("scripts", required: false)
     
 @if (IsSectionDefined("Init"))

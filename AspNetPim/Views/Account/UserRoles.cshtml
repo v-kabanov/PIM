@@ -1,11 +1,8 @@
 ﻿@model AspNetPim.Models.SelectUserRolesViewModel
 
 @{
-    ViewBag.Title = "User Roles";
+    ViewBag.Title = $"Roles for {Model.UserName}";
 }
-
-<h2>Roles for user @Html.DisplayFor(model => model.UserName)</h2>
-<hr />
 
 @using (Html.BeginForm("UserRoles", "Account", FormMethod.Post, new { encType = "multipart/form-data", name = "myform" }))
 {
@@ -13,40 +10,22 @@
 
     <div class="form-horizontal">
         @Html.ValidationSummary(true)
+        @Html.HiddenFor(m => m.UserId)
+
         <div class="form-group">
-            <div class="col-md-10">
-                @*Html.HiddenFor(model => model.UserName)*@
-                @Html.HiddenFor(m => m.UserId)
+            <div class="col-md-12">
+                @Html.EditorFor(model => model.Roles)
             </div>
         </div>
 
-        <h4>Select Role Assignments</h4>
-        <br />
-        <hr />
-
-        <table>
-            <tr>
-                <th>
-                    Select
-                </th>
-                <th>
-                    Role
-                </th>
-            </tr>
-
-            @Html.EditorFor(model => model.Roles)
-        </table>
-        <br />
         <hr />
 
         <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
+            <div class="col-md-12">
                 <input type="submit" value="Save" class="btn btn-default" />
             </div>
         </div>
     </div>
 }
 
-<div>
-    @Html.ActionLink("Back to List", "Index")
-</div>
+@Html.ActionLink("Back to List", "Manage")

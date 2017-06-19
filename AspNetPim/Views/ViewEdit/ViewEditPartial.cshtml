@@ -6,16 +6,16 @@
 
     if (Model.NoteDeleted)
     {
-        <p>
+        <h2>
             Note @(Model.Note?.Name) has been deleted!
-        </p>
+        </h2>
     }
     else
     {
-        <h4>
+        <h2>
             @(Model?.Note?.Name)
-        </h4>
-        <hr />
+        </h2>
+        <br />
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
    
         <div class="form-group">
