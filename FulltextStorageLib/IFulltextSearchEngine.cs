@@ -53,6 +53,9 @@ namespace FulltextStorageLib
         /// </param>
         IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate);
 
+        //TODO: implement for advanced search
+        //IList<LuceneSearchHit> SearchInPeriod(DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate);
+
         void SetDefaultIndex(string name);
     }
 }

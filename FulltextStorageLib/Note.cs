@@ -13,8 +13,6 @@ namespace FulltextStorageLib
 {
     public class Note : IPersistentNote, IEquatable<INote>
     {
-        private static readonly Regex NameRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
-
         private string _text;
 
         private int _hashCode;
@@ -89,7 +87,7 @@ namespace FulltextStorageLib
             var firstLine = StringHelper.ExtractFirstLine(text);
 
             if (firstLine?.Length > 150)
-                return StringHelper.GetTextWithLimit(firstLine, 0, 100);
+                return StringHelper.GetTextWithLimit(firstLine, 0, 100, false);
 
             return firstLine;
         }

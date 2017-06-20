@@ -142,8 +142,8 @@ namespace AspNetPim.Models
         // Allow Initialization with an instance of ApplicationUser:
         public EditUserViewModel(ApplicationUser user)
         {
-            this.Name = user.UserName;
-            this.Email = user.Email;
+            Name = user.UserName;
+            Email = user.Email;
             Id = user.Id;
         }
 
@@ -154,6 +154,7 @@ namespace AspNetPim.Models
         public string Name { get; set; }
 
         [Required]
+        [EmailAddress]
         public string Email { get; set; }
     }
 

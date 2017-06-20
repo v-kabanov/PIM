@@ -22,3 +22,8 @@ select,
 textarea {
     max-width: 100%;
 }
+
+#progressIndicator {
+    display: inline;
+    margin-left: 10px;
+}

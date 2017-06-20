@@ -92,6 +92,9 @@ namespace FulltextStorageLib
         /// </returns>
         IList<LuceneSearchHit> GetTopInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, int maxResults);
 
+        //TODO: implement for advanced search
+        //IList<LuceneSearchHit> SearchInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults);
+
         void Add(Document doc);
 
         void Add(params Document[] docs);

@@ -13,7 +13,22 @@ namespace FulltextStorageLib.Util
         private static readonly Regex WhiteSpaceRegex = new Regex("\\s");
         private static readonly Regex FirstNonEmptyLineRegex = new Regex(@"([\S]+.*[\S]+)\s*$", RegexOptions.Multiline);
 
-        public static string GetTextWithLimit(string text, int startIndex, int maxLength)
+        /// <summary>
+        ///     Extract fragment at word boundaries.
+        /// </summary>
+        /// <param name="text">
+        ///     Source text.
+        /// </param>
+        /// <param name="startIndex">
+        ///     0-based, inclusive.
+        /// </param>
+        /// <param name="maxLength">
+        ///     Limits result length
+        /// </param>
+        /// <param name="addTrailingEllipsis">
+        ///     Append '...' if truncating.
+        /// </param>
+        public static string GetTextWithLimit(string text, int startIndex, int maxLength, bool addTrailingEllipsis = true)
         {
             Check.DoRequireArgumentNotNull(text, nameof(text));
             Check.DoCheckArgument(startIndex >= 0, nameof(startIndex));
@@ -32,7 +47,11 @@ namespace FulltextStorageLib.Util
                 {
                     summaryLength = firstWhiteSpace.Index - startIndex;
                 }
-                return text.Substring(startIndex, summaryLength) + "...";
+                var result = text.Substring(startIndex, summaryLength);
+                if (addTrailingEllipsis)
+                    result = result + "...";
+
+                return result;
             }
 
             return text.Substring(startIndex);

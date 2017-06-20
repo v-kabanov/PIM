@@ -2,7 +2,6 @@
     window.pim = {
         config: {
             serverUrl: "",
-
         },
         features: {},
         pages: {},
@@ -28,19 +27,27 @@
                     // url that form is posted to
                     url: "",
                     // elements which cause postback
-                    selector: "[data-cause-postback=True]",
+                    selector: "[data-cause-postback]",
                     //event causes the ajax call
                     event: "change",
                     // element contains in progress message
-                    inProgressSelector: "",
+                    inProgressSelector: "#divInProgress",
+                    // block user actions while ajax post is in progress
+                    modal: false,
                     // form to postback
-                    formSelector: "",
+                    formSelector: "#mainForm",
                     // element to show messages of postback
-                    messageSelector: "",
+                    messageSelector: "#formMessages",
                     // always on ajax call (in addition to default behavior)
                     always: function () { },
                     // fail on ajax call (in addition to default behavior)
-                    fail: function () { }
+                    fail: function () { },
+                    success: function () { },
+                    // function to call before posting; accepts event if returns false, cancel posting
+                    confirmFunction: function(e) { return true; },
+                    getPostData: function() { return $(this.formSelector).serialize(); },
+                    // function grabbing additional data to post
+                    getAdditionalPostData: function() { return {}; }
                 };
                 return {
                     config: [],
@@ -53,27 +60,36 @@
                         });
 
                         var postback = function (event) {
+                            event.preventDefault();
                             var postbackConf = event.data.conf;
-                            $(postbackConf.inProgressSelector).show();
+                            if (postbackConf.confirmFunction && !postbackConf.confirmFunction(event)) {
+                                return false;
+                            }
                             return postbackFunction(postbackConf).always(postbackConf.always).fail(postbackConf.fail);
                         };
                         function postbackFunction(postbackConf) {
-                            return $.post(postbackConf.url, $(postbackConf.formSelector).serialize(), function (result) {
+                            pim.features.waitingDialog.showPleaseWait(postbackConf.modal === true);
+                            var postData = postbackConf.getPostData();
+                            if (postbackConf.getAdditionalPostData)
+                                $.extend(postData, postbackConf.getAdditionalPostData());
+                            return $.post(postbackConf.url, postData, function (result) {
                                 var $result = $(result);
                                 ///having <script> in html result interferes with jquery validation. 
                                 /// need to run manually (not using browser default behavior)
-                                $result.filter("script").each(function (ind, val) {
+                                $result.filter("script").add($result.find("script")).each(function (ind, val) {
                                     eval($(val).html());
                                 });
-                                var form = $result.filter("form");
+                                var form = $result.filter(postbackConf.formSelector).add($result.find(postbackConf.formSelector));
                                 $(postbackConf.formSelector).html(form.html());
-
+                                if (postbackConf.success) {
+                                    postbackConf.success();
+                                }
                             }).fail(function (data) {
                                 var formMessageElem = $(postbackConf.messageSelector);
                                 formMessageElem.append($("<p>").addClass("field-validation-error").text("Error: " + data));
                             }).always(function (data) {
-                                MESMODULE.features.elementHelper.loadTooltipWithValidation();
-                                $(postbackConf.inProgressSelector).hide();
+                                pim.features.waitingDialog.hidePleaseWait(postbackConf.modal === true);
+                                pim.features.elementHelper.loadTooltipWithValidation();
                             });
                         };
                         $(document).ready(function () {
@@ -97,14 +113,20 @@
                     conf.serverUrl +
                     '/Content/Images/progress.gif" alt="img progress" /> </div></div>');
                 return {
-                    showPleaseWait: function () {
+                    showPleaseWait: function (modal) {
                         try {
-                            //pleaseWaitDiv.modal();
+                            if (modal)
+                                pleaseWaitDiv.modal();
+                            else
+                                $(conf.inProgressSelector).show();
                         } catch (exception) {
                         }
                     },
-                    hidePleaseWait: function () {
-                        //pleaseWaitDiv.modal("hide");
+                    hidePleaseWait: function (modal) {
+                        if (modal)
+                            pleaseWaitDiv.modal("hide");
+                        else
+                            $(conf.inProgressSelector).hide();
                     }
                 };
 

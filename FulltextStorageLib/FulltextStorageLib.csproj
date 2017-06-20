@@ -217,8 +217,6 @@
     <Compile Include="Util\TaskExecutor.cs" />
     <Compile Include="Util\TaskExtensions.cs" />
     <Compile Include="Util\TryTask.cs" />
-    <Compile Include="ViewModel\MainViewModel.cs" />
-    <Compile Include="ViewModel\ViewModelLocator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

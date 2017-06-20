@@ -52,6 +52,15 @@
     }
     @RenderBody()
     <hr/>
+
+    <div id="formMessages">
+        @Html.ValidationSummary(true)
+    </div>
+
+    <div id="divInProgress" hidden="hidden">
+        <img src="~/Content/Images/bigrotation2.gif" />&nbsp;Work in progress
+    </div>
+    
     <footer>
         <p>&copy; @DateTime.Now.Year - MegaPatam Inc</p>
     </footer>

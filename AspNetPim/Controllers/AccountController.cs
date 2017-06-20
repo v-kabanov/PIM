@@ -395,6 +395,7 @@ namespace AspNetPim.Controllers
             if (ModelState.IsValid)
             {
                 var user = UserManager.FindById(model.Id);
+                user.UserName = model.Name;
                 user.Email = model.Email;
                 await UserManager.UpdateAsync(user);
                 return RedirectToAction("Manage");
