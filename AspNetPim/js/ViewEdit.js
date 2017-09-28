@@ -16,7 +16,7 @@
                 {
                     url: conf.updateNoteUrl,
                     selector: conf.updateNoteButtonSelector,
-                    event: "click",
+                    eventName: "click",
                     always: setupComponents
                 }
             ]);

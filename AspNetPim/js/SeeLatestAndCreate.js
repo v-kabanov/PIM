@@ -7,22 +7,35 @@
         $.extend($pim.config, configData);
 
         $(document).ready(function () {
-            $(document).on("change", ":text", trimInputCallback);
-            pim.features.elementHelper.focusPreserver.init();
-
             pim.features.autoAjax.init([
                 {
                     url: conf.deleteNoteUrl,
-                    selector: conf.deleteNoteButtonSelector,
-                    event: "click",
+                    triggers: [
+                        {
+                            selector: conf.deleteNoteButtonSelector,
+                            eventName: "click"
+                        }],
+                    replacementSourceSelector: conf.divNoteListSelector,
+                    replacementTargetSelector: conf.divNoteListSelector,
                     confirmFunction: confirmDelete,
-                    always: setupComponents
+                    always: setupComponents,
+                    getPostData: function(event) {
+                        var target = $(event.target || event.srcElement);
+                        var data = [{ name: conf.buttonAttributeNameNoteId, value: target.attr(conf.buttonAttributeNameNoteId) }];
+                        var postData = $.param(data);
+                        return postData;
+                    },
                 }
                 , {
                     url: conf.createNoteUrl,
-                    selector: conf.createNoteButtonSelector,
-                    event: "click",
-                    success: function() { $(conf.newNoteTextSelector).val(""); },
+                    triggers: [
+                        {
+                            selector: conf.createNoteButtonSelector,
+                            eventName: "click"
+                        }],
+                    replacementSourceSelector: conf.divNoteListSelector,
+                    replacementTargetSelector: conf.divNoteListSelector,
+                    success: function () { $(conf.newNoteTextSelector).val(""); },
                     always: setupComponents
                 }
             ]);

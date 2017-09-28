@@ -15,8 +15,11 @@
             pim.features.autoAjax.init([
                 {
                     url: conf.deleteNoteUrl,
-                    selector: conf.deleteNoteButtonSelector,
-                    event: "click",
+                    triggers: [
+                        {
+                            selector: conf.deleteNoteButtonSelector,
+                            eventName: "click"
+                        }],
                     confirmFunction: confirmDelete,
                     always: setupComponents
                 }
