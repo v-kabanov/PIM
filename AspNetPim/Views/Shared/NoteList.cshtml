@@ -5,11 +5,16 @@
 {
     <div class="row form-group">
         <div note-name class="col-md-10">
+            <span class="text-muted small">@($"{note.LastUpdateTime:ddd dd MMM, HH:mm} ")</span>
             <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">
                 @note.Name
             </a>
-            <br />
+            <br/>
             @HomeViewModel.GetNoteTextSummary(note)
+            @if (note.LastUpdateTime != note.CreateTime)
+            {
+                @:&nbsp; <span class="text-muted small">@($"(Created {note.CreateTime:ddd dd MMM, HH:mm})")</span>
+            }
         </div>
         <div class="col-md-2">
             <input delete-note-by-id type="submit" class="btn btn-warning pull-right" noteId="@note.Id" value="Delete"/>
