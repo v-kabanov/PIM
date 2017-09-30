@@ -227,15 +227,10 @@
                         };
                         $(document).ready(function () {
                             var $doc = $(document);
-                            // massaging form text inputs - trimming all and uppercasing barcodes;
-                            // not messing with plugin controls
+                            // massaging form text inputs
                             // NOTE if change event is handled, focusout does not fire
-                            $doc.on("change", "input:text.form-control:not([tt-input]):not(.select2-hidden)"
+                            $doc.on("change", ".form-control.auto-trim:not([tt-input]):not(.select2-hidden)"
                                 , pim.features.elementHelper.onTextInputChange(true, false));
-                            $doc.on("change", "textarea.form-control"
-                                , pim.features.elementHelper.onTextInputChange(true, false));
-
-                            $doc.on("focusout", "input.form-control[tt-input],input.form-control[tt-hint]", pim.features.elementHelper.onTextInputChange(true, false));
 
                             if (that.config.length)
                                 pim.features.elementHelper.focusPreserver.init();
