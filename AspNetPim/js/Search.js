@@ -7,11 +7,6 @@
         $.extend($pim.config, configData);
 
         $(document).ready(function () {
-            $(document).on("change", ":text", trimInputCallback);
-            $(document).on("change", "[data-cause-postback]", validateForm);
-            //$(document).on("click", conf.deleteNoteButtonSelector, deleteNote);
-            pim.features.elementHelper.focusPreserver.init();
-
             pim.features.autoAjax.init([
                 {
                     url: conf.deleteNoteUrl,
@@ -20,8 +15,17 @@
                             selector: conf.deleteNoteButtonSelector,
                             eventName: "click"
                         }],
+                    replacementSourceSelector: conf.divNoteListSelector,
+                    replacementTargetSelector: conf.divNoteListSelector,
                     confirmFunction: confirmDelete,
-                    always: setupComponents
+                    always: setupComponents,
+                    getPostData: function (event) {
+                        var target = $(event.target || event.srcElement);
+                        var data = $(this.formSelector).serializeArray();
+                        data.push({ name: conf.buttonAttributeNameNoteId, value: target.attr(conf.buttonAttributeNameNoteId) });
+                        var postData = $.param(data);
+                        return postData;
+                    },
                 }
             ]);
 
@@ -34,10 +38,6 @@
         function confirmDelete(event) {
             var noteName = $(event.target).parent().siblings("div[note-name]").find("a[note-name]").text();
             return confirm("Delete " + $.trim(noteName) + "?");
-        }
-
-        function trimInputCallback() {
-            pim.features.elementHelper.trimInput(this);
         }
     };
 })(pim, window, jQuery);

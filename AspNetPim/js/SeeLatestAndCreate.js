@@ -50,9 +50,5 @@
             var noteName = $(event.target).parent().siblings("div[note-name]").find("a[note-name]").text();
             return confirm("Delete " + $.trim(noteName) + "?");
         }
-
-        function trimInputCallback() {
-            pim.features.elementHelper.trimInput(this);
-        }
     };
 })(pim, window, jQuery);

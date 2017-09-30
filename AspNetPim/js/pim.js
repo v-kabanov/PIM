@@ -84,27 +84,28 @@
             // all text inputs with 'barcode' class; also sets up focus preserver if any form submission is configured.
             // If you don't want submitting form but only to update text inputs, pass empty array to init().
             this.features.autoAjax = (function ($) {
+                var defaultPostbackPredicate = function (event) {
+                    var target = $(event.target || event.srcElement);
+
+                    // previous value will be undefined before first ajax post - after GET
+                    var previousValue = target.attr("previous-value") || "";
+                    var currentValue = pim.features.elementHelper.getInputValue(target);
+
+                    return previousValue !== currentValue;
+                }
                 var defaultConf = {
                     // url that form is posted to
                     url: "",
                     triggers: [{
-                        selector: ":not(input)[data-cause-postback=True]",
+                        selector: "[data-cause-postback=True]:not([tt-hint]):not([tt-input]):not(.select2-hidden):not([type=number])",
                         eventName: "change"
                     }, {
-                        // elements which cause postback
-                        selector: "input[data-cause-postback=True]",
-                        // event causes the ajax call; not using change event as it is not triggered in IE when typeahead suggestion is accepted
+                        // accepting twitter typeahead suggestion does not cause change event in IE
+                        // input:number raises change event without focusout with every increment
+                        selector: "input[data-cause-postback=True][tt-input],input[data-cause-postback=True][type=number]",
                         eventName: "focusout",
                         // optional function returning falsy value to cancel postback
-                        predicate: function (event) {
-                            var target = $(event.target || event.srcElement);
-
-                            // previous value will be undefined before first ajax post - after GET
-                            var previousValue = target.attr("previous-value") || "";
-                            var currentValue = target.val();
-
-                            return previousValue !== currentValue;
-                        }
+                        predicate: defaultPostbackPredicate
                     }
                     ],
                     // element contains in progress message
@@ -141,9 +142,22 @@
                             that.config.push(confElem);
                         });
 
+                        var normalizeInputs = function () {
+                            var updateFunction =
+                                pim.features.elementHelper.createTextInputNormalizationFunction(true, false);
+                            $.each($("input:text.form-control:not(.barcode),textarea.form-control"),
+                                function (int, element) {
+                                    updateFunction(element);
+                                });
+                        };
+
                         var postback = function (event) {
                             event.preventDefault();
                             var postbackConf = event.data.conf;
+
+                            if (postbackConf.confirmFunction && !postbackConf.confirmFunction(event))
+                                return null;
+
                             var runtimeData = event.data.runtimeData;
 
                             if (!postbackConf.validateBeforePosting || $(postbackConf.formSelector).valid()) {
@@ -158,11 +172,16 @@
                                     // hence restoring focus after client handler invocation
                                     if (that.config.length)
                                         pim.features.elementHelper.focusPreserver.preserve();
+
+                                    if (runtimeData.triggerHasBeenDisabled)
+                                        $(postbackConf.selector).prop("disabled", false);
                                 })
                                 .fail(postbackConf.fail);
                             }
                         };
                         function postbackFunction(event) {
+                            normalizeInputs();
+
                             var eventData = event.data;
                             var postbackConf = eventData.conf;
                             var runtimeData = eventData.runtimeData;
@@ -180,8 +199,18 @@
                                 var source = $result.find(sourceSelector).add($result.filter(sourceSelector));
                                 $(targetSelector).html(source.html());
 
-                                ///having <script> in html result interferes with jquery validation. 
-                                /// need to run manually (not using browser default behavior)
+                                $.each($("[data-cause-postback=True]:not([tt-hint]):not(.select2-hidden)"),
+                                    // to manually track changes where change event does not work (in IE with twitter typeahead)
+                                    function (ind, element) {
+                                        var $element = $(element);
+                                        var value = pim.features.elementHelper.getInputValue($element);
+                                        // validated value
+                                        $element.attr("previous-value", value);
+                                    });
+
+
+                                // having <script> in html result interferes with jquery validation. 
+                                // need to run manually (not using browser default behavior)
                                 $result.filter("script").each(function (ind, val) {
                                     eval($(val).html());
                                 });
@@ -192,18 +221,8 @@
                                 var formMessageElem = $(postbackConf.messageSelector);
                                 formMessageElem.append($("<p>").addClass("field-validation-error").text("Error: " + data));
                             }).always(function (data) {
-                                if (runtimeData.triggerHasBeenDisabled)
-                                    $(postbackConf.selector).prop("disabled", false);
-
                                 pim.features.elementHelper.loadTooltipWithValidation();
                                 $(postbackConf.inProgressSelector).hide();
-
-                                $.each($("input[data-cause-postback=True]"),
-                                    function (ind, element) {
-                                        var $element = $(element);
-                                        // validated value
-                                        $element.attr("previous-value", $element.val());
-                                    });
                             });
                         };
                         $(document).ready(function () {
@@ -211,8 +230,12 @@
                             // massaging form text inputs - trimming all and uppercasing barcodes;
                             // not messing with plugin controls
                             // NOTE if change event is handled, focusout does not fire
-                            $doc.on("focusout", "input:text.form-control:not(.barcode),textarea.form-control", pim.features.elementHelper.onTextInputChange(true, false));
-                            $doc.on("focusout", "input.barcode", pim.features.elementHelper.onTextInputChange(true, true));
+                            $doc.on("change", "input:text.form-control:not([tt-input]):not(.select2-hidden)"
+                                , pim.features.elementHelper.onTextInputChange(true, false));
+                            $doc.on("change", "textarea.form-control"
+                                , pim.features.elementHelper.onTextInputChange(true, false));
+
+                            $doc.on("focusout", "input.form-control[tt-input],input.form-control[tt-hint]", pim.features.elementHelper.onTextInputChange(true, false));
 
                             if (that.config.length)
                                 pim.features.elementHelper.focusPreserver.init();
@@ -265,9 +288,9 @@
 
             })(this.config, $);
 
-            ////////////////////////element Helper
-            /// functionalities related to http elements
-            ///
+            ///////////////////////element Helper
+            // functionalities related to http elements
+            //
             this.features.elementHelper = (function (conf, $) {
 
                 return {
@@ -275,17 +298,34 @@
                         var elem = $(input);
                         elem.val(elem.val().trim());
                     },
-                    onTextInputChange: function (trim, upper) {
-                        return function (event) {
-                            event = event || window.event;
-                            var source = event.target || event.srcElement;
-                            var $source = $(source);
-                            var value = $source.val();
+                    createTextNormalizationFunction: function (trim, upper) {
+                        return function (value) {
+                            value = value || "";
                             if (trim)
                                 value = value.trim();
                             if (upper)
                                 value = value.toUpperCase();
-                            $source.val(value);
+                            return value;
+                        };
+                    },
+                    createTextInputNormalizationFunction: function (trim, upper) {
+                        var valueFunction = this.createTextNormalizationFunction(trim, upper);
+                        return function (input) {
+                            var $input = $(input);
+                            var value = $input.val();
+                            value = valueFunction(value);
+                            $input.val(value);
+                            $input.attr("value", value);
+                            $input.attr("defaultValue", value);
+                        };
+                    },
+                    onTextInputChange: function (trim, upper) {
+                        var inputValueFunction = this.createTextInputNormalizationFunction(trim, upper);
+                        return function (event) {
+                            event = event || window.event;
+                            var source = event.target || event.srcElement;
+                            var $source = $(source);
+                            inputValueFunction($source);
                         }
                     },
                     //target element (element with tooltip) must have data-toggle="tooltip"
@@ -323,6 +363,15 @@
                                 value: item.Code
                             }
                         });
+                    },
+                    // get value of an input element, supporting those whose val() method is not working well
+                    getInputValue: function (elem) {
+                        var $elem = $(elem);
+                        var inputType = $elem.attr("type");
+                        if (inputType === "radio" || inputType === "checkbox")
+                            return $elem.is(":checked");
+
+                        return $elem.val();
                     },
                     // After whole form ajax call, works as the default browser behavior. 
                     // In case of error: * it focuses on the first element with error otherwise next element (circular) 

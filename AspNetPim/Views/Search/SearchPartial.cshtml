@@ -15,23 +15,25 @@
 
     if (Model.SearchResultPage?.Count > 0)
     {
-        @Html.Partial("NoteList", Model.SearchResultPage)
+        <div id="divNoteList" class="">
+            @Html.Partial("NoteList", Model.SearchResultPage)
 
-        if (Model.TotalPageCount > 1)
-        {
-            for (var i = 1; i <= Model.TotalPageCount; ++i)
+            @if (Model.TotalPageCount > 1)
             {
-                if (i == Model.PageNumber)
+                for (var i = 1; i <= Model.TotalPageCount; ++i)
                 {
-                    @: @i
+                    if (i == Model.PageNumber)
+                    {
+                        @: @i
+                    }
+                    else
+                    {
+                        @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
+                    }
+                    @:&nbsp;
                 }
-                else
-                {
-                    @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
-                }
-                @:&nbsp;
             }
-        }
+        </div>
     }
     else
     {
