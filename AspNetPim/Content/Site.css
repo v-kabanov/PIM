@@ -39,3 +39,13 @@ div.validation-summary-errors {
 .field-validation-error {
     color: red;
 }
+
+input.datepicker {
+    width: 9em !important;
+}
+
+div.width-center-80pc {
+    display: block !important;
+    width: 80%;
+    margin: 0 auto;
+}

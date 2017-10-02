@@ -10,7 +10,8 @@ namespace AspNetPim
         {
             bundles.Add(new ScriptBundle("~/bundles/jquery")
                 .Include("~/Scripts/jquery-{version}.js")
-                .Include("~/Scripts/jquery.validate*"));
+                .Include("~/Scripts/jquery.validate*")
+                .Include("~/Scripts/jquery-ui-{version}.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
                         "~/Scripts/jquery.validate*"));
@@ -33,7 +34,9 @@ namespace AspNetPim
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
-                      "~/Content/Site.css"));
+                      "~/Content/Site.css",
+                      "~/Content/themes/base/jquery-ui.css"
+                      ));
         }
     }
 }

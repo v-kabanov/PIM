@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
@@ -34,8 +35,12 @@ namespace AspNetPim.Models
         [Required(AllowEmptyStrings = false)]
         public string Query { get; set; }
 
+        [DisplayName("Period start (inclusive):")]
+        [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
         public DateTime? PeriodStart { get; set; }
 
+        [DisplayName("Period end (exclusive):")]
+        [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
         public DateTime? PeriodEnd { get; set; }
 
         public string NoteId { get; set; }
@@ -61,9 +66,6 @@ namespace AspNetPim.Models
                 PageNumber = 1;
             else if (PageNumber > MaxPageCount)
                 PageNumber = MaxPageCount;
-
-            if (PeriodStart <= PeriodEnd)
-                throw new ArgumentException();
 
             var maxResults = MaxPageCount * DefaultResultsPerPage;
 

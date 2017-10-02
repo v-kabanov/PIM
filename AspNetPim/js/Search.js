@@ -33,6 +33,7 @@
         });
 
         function setupComponents() {
+            $(".datepicker").datepicker({dateFormat: "dd M yy"});
         }
 
         function confirmDelete(event) {
