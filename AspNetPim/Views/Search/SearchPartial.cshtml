@@ -10,6 +10,19 @@
             </button>
         </div>
     </div>
+    <br />
+    <div class="form-group">
+        @Html.Label("Period", new {@class = "col-md-1 control-label"})
+        <div class="col-md-2">
+            @Html.TextBoxFor(m => m.PeriodStart, new {@class = "form-control", type = "date"})
+        </div>
+        <div class="col-md-2">
+            @Html.TextBoxFor(m => m.PeriodEnd, new { @class = "form-control", type = "date" })
+        </div>
+        <div class="col-md-7 form-control-static">
+            @Html.ValidationMessageFor(m => m.PeriodEnd)
+        </div>
+    </div>
 
     <br/>
 

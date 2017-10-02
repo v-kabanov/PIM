@@ -174,6 +174,7 @@
     <Compile Include="IStandaloneFulltextSearchEngine.cs" />
     <Compile Include="LuceneIndex.cs" />
     <Compile Include="LuceneNoteAdapter.cs" />
+    <Compile Include="LuceneQueryExtensions.cs" />
     <Compile Include="MultiIndex.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="NoteCouchbaseAdapter.cs" />

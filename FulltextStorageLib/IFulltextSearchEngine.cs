@@ -53,8 +53,28 @@ namespace FulltextStorageLib
         /// </param>
         IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate);
 
-        //TODO: implement for advanced search
-        //IList<LuceneSearchHit> SearchInPeriod(DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate);
+        /// <summary>
+        ///     Search documents in the period for <paramref name="queryText"/>.
+        /// </summary>
+        /// <param name="periodStart">
+        ///     Optional, no restriction if unspecified, inclusive, truncated to seconds precision
+        /// </param>
+        /// <param name="periodEnd">
+        ///     Optional, no restriction if unspecified, exclusive, truncated to seconds precision.
+        /// </param>
+        /// <param name="queryText">
+        ///     Optional, results sorted by time in ascending order if not specified
+        /// </param>
+        /// <param name="maxResults">
+        ///     Max number of documents to return.
+        /// </param>
+        /// <param name="searchableDocumentTime">
+        ///     One of the supported document time properties to filter on.
+        /// </param>
+        /// <returns>
+        ///     If <paramref name="queryText"/> is specified, result is ordered by relevance, otherwise by time in ascending order.
+        /// </returns>
+        IList<THeader> SearchInPeriod(DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate);
 
         void SetDefaultIndex(string name);
     }

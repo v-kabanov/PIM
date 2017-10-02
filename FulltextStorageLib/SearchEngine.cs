@@ -219,6 +219,18 @@ namespace FulltextStorageLib
             return EntityAdapter.GetHeaders(MultiIndex.GetTopInPeriod(timeFieldName, periodStart, periodEnd, maxResults));
         }
 
+        public IList<THeader> SearchInPeriod(DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults,
+            SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate)
+        {
+            var timeFieldName = searchableDocumentTime == SearchableDocumentTime.Creation
+                ? EntityAdapter.CreationTimeFieldName
+                : EntityAdapter.LastUpdateTimeFieldName;
+
+            Check.DoCheckArgument(!string.IsNullOrEmpty(timeFieldName), () => $"{searchableDocumentTime} time is not searchable");
+
+            return EntityAdapter.GetHeaders(MultiIndex.SearchInPeriod(timeFieldName, periodStart, periodEnd, EntityAdapter.SearchFieldName, queryText, maxResults));
+        }
+
         public IEnumerable<string> ActiveIndexNames => MultiIndex.AllIndexNames;
 
         public void Delete(params THeader[] docHeaders)

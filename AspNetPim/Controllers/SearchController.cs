@@ -27,7 +27,12 @@ namespace AspNetPim.Controllers
         {
             model.Initialize(NoteStorage);
 
-            if (ModelState.IsValid)
+            if (model.PeriodStart >= model.PeriodEnd)
+            {
+                ModelState.AddModelError(nameof(model.PeriodEnd), "Period end date must be greater than start.");
+                //ModelState.AddModelError("", "Period end date must be greater than start.");
+            }
+            else if (ModelState.IsValid)
                 model.ExecuteSearch();
 
             return View("Search", model);

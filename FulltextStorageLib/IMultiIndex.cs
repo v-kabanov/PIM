@@ -80,10 +80,10 @@ namespace FulltextStorageLib
         ///     Name of the field containing time, see <see cref="Document.Get"/>'s parameter
         /// </param>
         /// <param name="periodStart">
-        ///     null means no restriction
+        ///     Optional, null means no restriction, inclusive, truncated to seconds precision.
         /// </param>
         /// <param name="periodEnd">
-        ///     null means no restriction
+        ///     Optional, null means no restriction, exclusive, truncated to seconds precision.
         /// </param>
         /// <param name="maxResults">
         ///     must be positive
@@ -92,8 +92,55 @@ namespace FulltextStorageLib
         /// </returns>
         IList<LuceneSearchHit> GetTopInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, int maxResults);
 
-        //TODO: implement for advanced search
-        //IList<LuceneSearchHit> SearchInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults);
+        /// <summary>
+        ///     Get last <paramref name="maxResults"/> documents with time field (identified by <paramref name="timeFieldName"/>) value
+        ///     within the specified time range.
+        /// </summary>
+        /// <param name="timeFieldName">
+        ///     Name of the field containing time, see <see cref="Document.Get"/>'s parameter
+        /// </param>
+        /// <param name="periodStart">
+        ///     Optional, null means no restriction, inclusive, truncated to seconds precision.
+        /// </param>
+        /// <param name="periodEnd">
+        ///     Optional, null means no restriction, exclusive, truncated to seconds precision.
+        /// </param>
+        /// <param name="reverseChronologicalOrder">
+        ///     Whether to sort if reverse (if true) or straight chronological order.
+        /// </param>
+        /// <param name="maxResults">
+        ///     must be positive
+        /// </param>
+        /// <returns>
+        ///     List ordered in reverse chronological order.
+        /// </returns>
+        IList<LuceneSearchHit> GetTopInPeriod(
+            string timeFieldName, DateTime? periodStart, DateTime? periodEnd, bool reverseChronologicalOrder, int maxResults);
+
+        /// <summary>
+        ///     Combine fulltext search with date-time filter - search within specified period.
+        /// </summary>
+        /// <param name="timeFieldName">
+        ///     Name of the field containing time, see <see cref="Document.Get"/>'s parameter
+        /// </param>
+        /// <param name="periodStart">
+        ///     Optional, null means no restriction, inclusive, truncated to seconds precision.
+        /// </param>
+        /// <param name="periodEnd">
+        ///     Optional, null means no restriction, exclusive, truncated to seconds precision.
+        /// </param>
+        /// <param name="searchFieldName">
+        ///     Document (header) text field name to perform fulltext search on.
+        /// </param>
+        /// <param name="queryText">
+        ///     Optional; if omitted behavior is same as <see cref="GetTopInPeriod(string, DateTime?, DateTime?, bool, int)"/>
+        ///     with results returned in straight chronological order
+        /// </param>
+        /// <param name="maxResults"></param>
+        /// <returns>
+        ///     Ordered by relevance if <paramref name="queryText"/> is specified, otherwise by time field
+        /// </returns>
+        IList<LuceneSearchHit> SearchInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, string searchFieldName, string queryText, int maxResults);
 
         void Add(Document doc);
 

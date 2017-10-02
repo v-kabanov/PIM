@@ -34,6 +34,10 @@ namespace AspNetPim.Models
         [Required(AllowEmptyStrings = false)]
         public string Query { get; set; }
 
+        public DateTime? PeriodStart { get; set; }
+
+        public DateTime? PeriodEnd { get; set; }
+
         public string NoteId { get; set; }
 
         /// <summary>
@@ -58,9 +62,15 @@ namespace AspNetPim.Models
             else if (PageNumber > MaxPageCount)
                 PageNumber = MaxPageCount;
 
+            if (PeriodStart <= PeriodEnd)
+                throw new ArgumentException();
+
             var maxResults = MaxPageCount * DefaultResultsPerPage;
 
-            var headers = NoteStorage.Search(Query, maxResults + 1);
+            var headers = NoteStorage.SearchInPeriod(
+                // ReSharper disable once RedundantArgumentDefaultValue
+                PeriodStart, PeriodEnd, Query, maxResults + 1, SearchableDocumentTime.LastUpdate);
+
             if (_deletedNote != null)
                 headers.Remove(_deletedNote);
             else if (headers.Any() && headers.Count > maxResults)

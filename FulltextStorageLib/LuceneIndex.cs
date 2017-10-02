@@ -202,16 +202,17 @@ namespace FulltextStorageLib
 
             var parsedQuery = Parse(queryText, parser);
 
-            var booleanQuery = new BooleanQuery {{parsedQuery, Occur.SHOULD}};
+            var booleanQuery = new BooleanQuery().Or(parsedQuery);
 
             var parsedTermsQuery = Parse(termsString, parser);
             parsedTermsQuery.Boost = 0.3f;
-            booleanQuery.Add(parsedTermsQuery, Occur.SHOULD);
+
+            booleanQuery.Or(parsedTermsQuery);
 
             var term = new Term(fieldName, queryText);
 
             if (fuzzy)
-                booleanQuery.Add(new FuzzyQuery(term), Occur.SHOULD);
+                booleanQuery.Or(new FuzzyQuery(term));
 
             var phraseQuery = new PhraseQuery
             {
@@ -220,7 +221,7 @@ namespace FulltextStorageLib
             };
             phraseQuery.Add(term);
 
-            booleanQuery.Add(phraseQuery, Occur.SHOULD);
+            booleanQuery.Or(phraseQuery);
 
             //booleanQuery.Add(new WildcardQuery(term), Occur.SHOULD);
 

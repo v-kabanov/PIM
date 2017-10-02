@@ -19,6 +19,11 @@ namespace AspNetPim
 
         public void Configuration(IAppBuilder app)
         {
+            using (var context = ApplicationDbContext.Create())
+            {
+                context.Database.CreateIfNotExists();
+            }
+
             ConfigureAuth(app);
 
             _roleManager = ApplicationRoleManager.CreateOutOfContext();

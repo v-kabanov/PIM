@@ -143,24 +143,17 @@ namespace FulltextStorageLib
             return SearchEngine.Search(queryText, maxResults);
         }
 
-        /// <summary>
-        ///     Get top <paramref name="maxResults"/> documents in the period filtered and sorted in descending order by <paramref name="searchableDocumentTime"/>.
-        /// </summary>
-        /// <param name="periodStart">
-        ///     Inclusive, truncated to seconds.
-        /// </param>
-        /// <param name="periodEnd">
-        ///     Exclusive, truncated to seconds.
-        /// </param>
-        /// <param name="maxResults">
-        ///     Max number of documents to return.
-        /// </param>
-        /// <param name="searchableDocumentTime">
-        ///     One of the supported document time properties to filter on.
-        /// </param>
+        /// <inheritdoc />
         public IList<THeader> GetTopInPeriod(DateTime? periodStart, DateTime? periodEnd, int maxResults, SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate)
         {
             return SearchEngine.GetTopInPeriod(periodStart, periodEnd, maxResults, searchableDocumentTime);
+        }
+
+        /// <inheritdoc />
+        public IList<THeader> SearchInPeriod(DateTime? periodStart, DateTime? periodEnd, string queryText, int maxResults,
+            SearchableDocumentTime searchableDocumentTime = SearchableDocumentTime.LastUpdate)
+        {
+            return SearchEngine.SearchInPeriod(periodStart, periodEnd, queryText, maxResults, searchableDocumentTime);
         }
 
         public IList<string> SupportedStemmerNames { get; }

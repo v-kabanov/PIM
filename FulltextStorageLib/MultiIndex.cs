@@ -133,25 +133,15 @@ namespace FulltextStorageLib
             return combinedResult;
         }
 
-        /// <summary>
-        ///     Get last <paramref name="maxResults"/> documents with time field (identified by <paramref name="timeFieldName"/>) value
-        ///     within the specified time range in reverse chronological order.
-        /// </summary>
-        /// <param name="timeFieldName">
-        ///     Name of the field containing time, see <see cref="Document.Get"/>
-        /// </param>
-        /// <param name="periodStart">
-        ///     null means no restriction
-        /// </param>
-        /// <param name="periodEnd">
-        ///     null means no restriction
-        /// </param>
-        /// <param name="maxResults">
-        ///     must be positive
-        /// </param>
-        /// <returns>
-        /// </returns>
+        /// <inheritdoc />
         public IList<LuceneSearchHit> GetTopInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, int maxResults)
+        {
+            return GetTopInPeriod(timeFieldName, periodStart, periodEnd, true, maxResults);
+        }
+
+        /// <inheritdoc />
+        public IList<LuceneSearchHit> GetTopInPeriod(
+            string timeFieldName, DateTime? periodStart, DateTime? periodEnd, bool reverseChronologicalOrder, int maxResults)
         {
             CheckNotDisposed();
 
@@ -164,7 +154,7 @@ namespace FulltextStorageLib
                 index = Indexes.Values.First();
 
             var searcher = index.NonScoringSearcher;
-            var sort = new Sort(new SortField(timeFieldName, CultureInfo.InvariantCulture, true));
+            var sort = new Sort(new SortField(timeFieldName, CultureInfo.InvariantCulture, reverseChronologicalOrder));
             var query = index.CreateQueryFromFilter(index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd));
 
             var result = searcher.Search(query, null, maxResults, sort)
@@ -172,6 +162,56 @@ namespace FulltextStorageLib
                 .ToList();
 
             return result;
+        }
+
+        public IList<LuceneSearchHit> SearchInPeriod(string timeFieldName, DateTime? periodStart, DateTime? periodEnd, string searchFieldName, string queryText, int maxResults)
+        {
+            CheckNotDisposed();
+
+            var haveTextQuery = !string.IsNullOrWhiteSpace(queryText);
+            if (!haveTextQuery)
+                return GetTopInPeriod(timeFieldName, periodStart, periodEnd, false, maxResults);
+
+            var haveTimeFilter = periodStart != null || periodEnd != null;
+
+            Check.DoRequireArgumentNotBlank(timeFieldName, nameof(timeFieldName));
+            Check.DoRequireArgumentNotBlank(searchFieldName, nameof(searchFieldName));
+
+            Log.DebugFormat("Searching '{0}', fuzzy = {1}, maxResults = {2}, period = [{3} - {4})"
+                , queryText, UseFuzzySearch, maxResults, periodStart, periodEnd);
+
+            var results = new Dictionary<string, IList<LuceneSearchHit>>();
+            foreach (var key in Indexes.Keys)
+            {
+                var index = Indexes[key];
+
+                var timeQuery = haveTimeFilter
+                    ? index.CreateQueryFromFilter(index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd))
+                    : null;
+
+                var textQuery = haveTextQuery
+                    ? index.CreateQuery(searchFieldName, queryText, UseFuzzySearch)
+                    : null;
+
+                var combinedQuery = new BooleanQuery()
+                    .And(timeQuery)
+                    .And(textQuery);
+
+                var result = index.Search(combinedQuery, maxResults);
+
+                Log.DebugFormat("Index {0} matched {1} items", key, result.Count);
+
+                results.Add(key, result);
+            }
+
+            var allHits = results.SelectMany(p => p.Value);
+
+            var combinedResult = allHits.GroupBy(h => h.EntityId, (key, g) => new LuceneSearchHit(g.Select(h => h.Document).First(), g.Sum(h => h.Score), KeyFieldName))
+                .OrderByDescending(i => i.Score)
+                .Take(maxResults)
+                .ToList();
+
+            return combinedResult;
         }
 
         public void Add(Document doc)
@@ -378,16 +418,8 @@ namespace FulltextStorageLib
             }
         }
 
-        // override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~MultiIndex() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
-        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
             // uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
