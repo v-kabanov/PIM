@@ -34,9 +34,10 @@ namespace AspNetPim
 
             bundles.Add(new StyleBundle("~/Content/css").Include(
                       "~/Content/bootstrap.css",
-                      "~/Content/Site.css",
-                      "~/Content/themes/base/jquery-ui.css"
+                      "~/Content/Site.css"
                       ));
+
+            bundles.Add(new StyleBundle("~/Content/themes/base/css").Include("~/Content/themes/base/*.css"));
         }
     }
 }
