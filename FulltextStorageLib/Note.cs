@@ -8,6 +8,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using FulltextStorageLib.Util;
+using LiteDB;
 
 namespace FulltextStorageLib
 {
@@ -16,6 +17,8 @@ namespace FulltextStorageLib
         private string _text;
 
         private int _hashCode;
+
+        //public ObjectId LightDbId { get; set; }
 
         public string Id { get; set; }
 
@@ -63,7 +66,7 @@ namespace FulltextStorageLib
         {
             var result = new Note()
             {
-                Id = CreateShortGuid(),
+                //Id = CreateShortGuid(),
                 Text = text,
                 CreateTime = DateTime.Now,
                 LastUpdateTime = DateTime.Now,
