@@ -447,8 +447,7 @@ namespace AspNetPim.Controllers
             {
                 var user = UserManager.FindById(model.UserId);
 
-                var roleIdToRole = RoleManager.Roles.ToDictionary(r => r.Id);
-                var currentUserRoleNames = user.Roles.Select(ur => roleIdToRole[ur.RoleId].Name).ToArray();
+                var currentUserRoleNames = user.Roles.ToArray();
                 UserManager.RemoveFromRoles(user.Id, currentUserRoleNames);
 
                 UserManager.AddToRoles(user.Id, model.Roles.Where(mr => mr.Selected).Select(mr => mr.RoleName).ToArray());

@@ -2,8 +2,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
+using AspNet.Identity.LiteDB;
 using FulltextStorageLib.Util;
-using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 
 namespace AspNetPim.Models
@@ -163,7 +163,7 @@ namespace AspNetPim.Models
     {
         public SelectUserRolesViewModel()
         {
-            this.Roles = new List<SelectRoleEditorViewModel>();
+            Roles = new List<SelectRoleEditorViewModel>();
         }
 
 
@@ -175,13 +175,11 @@ namespace AspNetPim.Models
             Email = user.Email;
             UserId = user.Id;
 
-            var userRolesByRoleId = user.Roles.ToDictionary(ur => ur.RoleId);
-
             // Add all available roles to the list of EditorViewModels:
             var roleManager = HttpContext.Current.GetOwinContext().Get<ApplicationRoleManager>();
 
             Roles = roleManager.Roles.ToList()
-                .Select(r => new SelectRoleEditorViewModel(r) {Selected = userRolesByRoleId.ContainsKey(r.Id)})
+                .Select(r => new SelectRoleEditorViewModel(r) {Selected = user.Roles.Contains(r.Name)})
                 .ToList();
         }
 

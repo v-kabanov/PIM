@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web;
+using AspNet.Identity.LiteDB;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security;
@@ -40,8 +36,8 @@ namespace AspNetPim
         {
         }
 
-        public static UserStore<ApplicationUser> CreateUserStore(ApplicationDbContext dbContext) =>
-            new UserStore<ApplicationUser>(dbContext ?? ApplicationDbContext.Create());
+        public static UserStore<ApplicationUser> CreateUserStore(DbContext dbContext) =>
+            new UserStore<ApplicationUser>((dbContext ?? DbContext.Create()).Users);
 
         /// <param name="options">
         ///     Optional
@@ -52,7 +48,7 @@ namespace AspNetPim
         /// <returns></returns>
         public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context) 
         {
-            var manager = new ApplicationUserManager(CreateUserStore(context?.Get<ApplicationDbContext>()));
+            var manager = new ApplicationUserManager(CreateUserStore(context?.Get<DbContext>()));
             // Configure validation logic for usernames
             manager.UserValidator = new UserValidator<ApplicationUser>(manager)
             {
@@ -138,12 +134,12 @@ namespace AspNetPim
         /// <returns></returns>
         public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
         {
-            var dbContext = context?.Get<IdentityDbContext>() ?? (DbContext)ApplicationDbContext.Create();
-            var roleStore = new RoleStore<IdentityRole>(dbContext);
+            var dbContext = context?.Get<DbContext>() ?? DbContext.Create();
+            var roleStore = new RoleStore<IdentityRole>(dbContext.Roles);
             return new ApplicationRoleManager(roleStore);
         }
 
         public static ApplicationRoleManager CreateOutOfContext() => new ApplicationRoleManager(
-            new RoleStore<IdentityRole>(ApplicationDbContext.Create()));
+            new RoleStore<IdentityRole>(DbContext.Create().Roles));
     }
 }
