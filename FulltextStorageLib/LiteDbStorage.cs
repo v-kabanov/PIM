@@ -10,67 +10,65 @@ using LiteDB;
 
 namespace FulltextStorageLib
 {
-    public class LiteDbManager
-    {
-        public void Map(BsonMapper mapper)
-        {
-            Check.DoRequireArgumentNotNull(mapper, nameof(mapper));
-
-            mapper.Entity<Note>()
-                .Ignore(n => n.Name)
-                .Ignore(n => n.IsTransient);
-
-            var id = new ObjectId("");
-        }
-    }
-
     public class LiteDbStorage<TDoc> : IDocumentStorage<TDoc, string>
-        where TDoc : class
+        where TDoc: class
     {
-        public string DataFilePath { get; }
-        
-        private LiteDB.LiteDatabase _database;
+        private LiteDatabase _database;
+
+        private readonly LiteCollection<TDoc> _documents;
+
+        public LiteDbStorage(LiteDatabase database)
+        {
+            Check.DoRequireArgumentNotNull(database, nameof(database));
+            
+            _database = database;
+            _documents = database.GetCollection<TDoc>();
+        }
 
         /// <inheritdoc />
         public void SaveOrUpdate(TDoc document)
         {
-            _database.GetCollection<TDoc>().Upsert(document);
+            _documents.Upsert(document);
         }
 
         /// <inheritdoc />
         public void SaveOrUpdate(params TDoc[] docs)
         {
-            throw new System.NotImplementedException();
+            using (var tran = _database.BeginTrans())
+            {
+                foreach (var doc in docs)
+                    SaveOrUpdate(doc);
+
+                tran.Commit();
+            }
         }
 
         /// <inheritdoc />
         public TDoc GetExisting(string id)
         {
-            throw new System.NotImplementedException();
+            return _documents.FindById(id);
         }
 
         /// <inheritdoc />
         public TDoc Delete(string id)
         {
-            throw new System.NotImplementedException();
+            var result = GetExisting(id);
+            _documents.Delete(id);
+            return result;
         }
 
         /// <inheritdoc />
         public IEnumerable<TDoc> GetAll()
         {
-            throw new System.NotImplementedException();
+            return _documents.FindAll();
         }
 
         /// <inheritdoc />
         public int CountAll()
         {
-            throw new System.NotImplementedException();
+            return _documents.Count();
         }
 
-        private void SaveOrUpdateImpl()
-        {
-            
-        }
 
         private bool _disposedValue;
 

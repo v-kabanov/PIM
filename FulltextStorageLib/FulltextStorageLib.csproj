@@ -185,6 +185,7 @@
     <Compile Include="NoteCouchbaseAdapter.cs" />
     <Compile Include="NoteHeader.cs" />
     <Compile Include="CouchbaseStorage.cs" />
+    <Compile Include="NoteLiteDb.cs" />
     <Compile Include="NoteStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryBuilding\BooleanOperation.cs" />

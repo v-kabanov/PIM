@@ -18,8 +18,6 @@ namespace FulltextStorageLib
 
         private int _hashCode;
 
-        //public ObjectId LightDbId { get; set; }
-
         public string Id { get; set; }
 
         public DateTime CreateTime { get; set; }

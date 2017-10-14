@@ -130,13 +130,11 @@ namespace PimTest
             var mapper = new BsonMapper();
             var adapter = new NoteLightDbAdapter();
 
-            /*
             mapper.Entity<Note>()
                 .Ignore(n => n.Name)
-                .Ignore(n => n.IsTransient)
-                .Id(n => n.LightDbId)
-                .Ignore(n => n.Id);
-                */
+                .Ignore(n => n.IsTransient);
+                //.Id(n => n.Id)
+                //.Ignore(n => n.Id);
 
             //https://github.com/mbdavid/LiteDB/wiki/Connection-String
             var connectionString = "Filename=..\\MyLitedb.dat; Password=posvord; Initial Size=5MB; Upgrade=true";
@@ -148,18 +146,18 @@ namespace PimTest
                 note.Id = ObjectId.NewObjectId().ToString();
 
                 repo.Upsert(note);
-                var bsonDocument = adapter.ToBson(note);
-                repo.Database.Engine.Upsert(nameof(Note), bsonDocument);
+                //var bsonDocument = adapter.ToBson(note);
+                //repo.Database.Engine.Upsert(nameof(Note), bsonDocument);
                 id = note.Id;
             }
 
             using (var repo = new LiteRepository(connectionString, mapper))
             {
-                var bson = repo.Engine.FindById(nameof(Note), new ObjectId(id));
-                var note = adapter.Read(bson);
-                    //repo.SingleById<Note>(new ObjectId(id));
+                //var bson = repo.Engine.FindById(nameof(Note), id);
+                //var note = adapter.Read(bson);
+                var note = repo.SingleById<Note>(id);
 
-                Console.WriteLine(note.Name);
+                Console.WriteLine($"{note.Name} - {note.CreateTime} - {note.LastUpdateTime}");
             }
         }
 
