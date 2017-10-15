@@ -243,5 +243,5 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
-/AspNetPim/App_Data/UserData
 /AspNetPim/App_Data/*.db
+/AspNetPim/App_Data/ft

@@ -7,16 +7,16 @@
         $.extend($pim.config, configData);
 
         $(document).ready(function () {
-            $(document).on("change", ":text", trimInputCallback);
             $(document).on("click", conf.deleteNoteButtonSelector, deleteNote);
-
-            pim.features.elementHelper.focusPreserver.init();
 
             pim.features.autoAjax.init([
                 {
                     url: conf.updateNoteUrl,
-                    selector: conf.updateNoteButtonSelector,
-                    eventName: "click",
+                    triggers: [
+                        {
+                            selector: conf.updateNoteButtonSelector,
+                            eventName: "click"
+                        }],
                     always: setupComponents
                 }
             ]);
@@ -28,12 +28,8 @@
         }
 
         function deleteNote(e) {
-            if (!confirm("Delete this note ?"))
+            if (!confirm("Delete this note?"))
                 e.preventDefault();
-        }
-
-        function trimInputCallback() {
-            pim.features.elementHelper.trimInput(this);
         }
     };
 })(pim, window, jQuery);

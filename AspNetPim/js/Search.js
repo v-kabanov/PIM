@@ -25,7 +25,7 @@
                         data.push({ name: conf.buttonAttributeNameNoteId, value: target.attr(conf.buttonAttributeNameNoteId) });
                         var postData = $.param(data);
                         return postData;
-                    },
+                    }
                 }
             ]);
 
