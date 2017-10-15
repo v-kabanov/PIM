@@ -1,8 +1,8 @@
 ﻿using System.Web;
+using AspNet.Identity.LiteDB;
 using AspNetPim.Models;
 using FulltextStorageLib.Util;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin;
 using Owin;
 using Microsoft.AspNet.Identity.Owin;
@@ -19,11 +19,6 @@ namespace AspNetPim
 
         public void Configuration(IAppBuilder app)
         {
-            using (var context = ApplicationDbContext.Create())
-            {
-                context.Database.CreateIfNotExists();
-            }
-
             ConfigureAuth(app);
 
             _roleManager = ApplicationRoleManager.CreateOutOfContext();

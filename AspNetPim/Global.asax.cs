@@ -13,8 +13,10 @@ using System.Web.Optimization;
 using System.Web.Routing;
 using AspNetPim.Controllers;
 using AspNetPim.Models;
+using Autofac.Core;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
+using LiteDB;
 
 namespace AspNetPim
 {
@@ -36,12 +38,18 @@ namespace AspNetPim
 
         public static INoteStorage Storage { get; private set; }
 
+        public static LiteDatabase AuthDatabase { get; private set; }
+
         private void ConfigureBackend()
         {
             var appDataPath = Server.MapPath("~/App_Data");
-            var storageRootPath = Path.Combine(appDataPath, "UserData");
 
-            var storage = NoteStorage.CreateStandard(storageRootPath, true);
+            var dbPath = Path.Combine(appDataPath, "Pim.db");
+            var database = NoteLiteDb.GetNoteDatabase($"Filename={dbPath}; Upgrade=true; Initial Size=5MB; Password=;");
+
+            AuthDatabase = database;
+
+            var storage = NoteStorage.CreateStandard(database, appDataPath, true);
             storage.Open();
 
             var languageSetting = ConfigurationManager.AppSettings[AppSettingKeyFulltextIndexLanguages];
@@ -70,7 +78,6 @@ namespace AspNetPim
             builder.RegisterType<HomeController>();
             builder.RegisterType<ViewEditController>();
             builder.RegisterType<SearchController>();
-
             var container = builder.Build();
 
             DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
@@ -79,6 +86,7 @@ namespace AspNetPim
         protected void Application_End()
         {
             Storage?.Dispose();
+            AuthDatabase?.Dispose();
         }
     }
 }

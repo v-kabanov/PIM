@@ -65,6 +65,10 @@
       <HintPath>..\packages\JetBrains.Annotations.10.4.0\lib\net\JetBrains.Annotations.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="LiteDB, Version=3.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27, processorArchitecture=MSIL">
+      <HintPath>..\packages\LiteDB.3.1.4\lib\net35\LiteDB.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
@@ -163,6 +167,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="FulltextException.cs" />
     <Compile Include="ICouchbaseDocumentAdapter.cs" />
+    <Compile Include="IDocumentAdapter.cs" />
     <Compile Include="IDocumentStorage.cs" />
     <Compile Include="IDocumentStorageWithFulltextSearch.cs" />
     <Compile Include="IFulltextSearchEngine.cs" />
@@ -172,14 +177,17 @@
     <Compile Include="INote.cs" />
     <Compile Include="INoteHeader.cs" />
     <Compile Include="IStandaloneFulltextSearchEngine.cs" />
+    <Compile Include="LiteDbStorage.cs" />
     <Compile Include="LuceneIndex.cs" />
     <Compile Include="LuceneNoteAdapter.cs" />
     <Compile Include="LuceneQueryExtensions.cs" />
     <Compile Include="MultiIndex.cs" />
     <Compile Include="Note.cs" />
+    <Compile Include="NoteAdapter.cs" />
     <Compile Include="NoteCouchbaseAdapter.cs" />
     <Compile Include="NoteHeader.cs" />
     <Compile Include="CouchbaseStorage.cs" />
+    <Compile Include="NoteLiteDb.cs" />
     <Compile Include="NoteStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryBuilding\BooleanOperation.cs" />

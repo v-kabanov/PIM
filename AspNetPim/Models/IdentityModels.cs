@@ -1,8 +1,11 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data.Entity;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Web.Hosting;
 using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
+using AspNet.Identity.LiteDB;
+using LiteDB;
 
 namespace AspNetPim.Models
 {
@@ -18,16 +21,24 @@ namespace AspNetPim.Models
         }
     }
 
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class DbContext : IDisposable
     {
-        public ApplicationDbContext()
-            : base("DefaultConnection", throwIfV1Schema: false)
+        private readonly LiteDatabase _database;
+
+        public DbContext()
         {
+            _database = MvcApplication.AuthDatabase;
         }
 
-        public static ApplicationDbContext Create()
+        public static DbContext Create()
         {
-            return new ApplicationDbContext();
+            return new DbContext();
         }
+
+        public LiteCollection<ApplicationUser> Users => _database.GetCollection<ApplicationUser>("users");
+
+        public LiteCollection<IdentityRole> Roles => _database.GetCollection<IdentityRole>("roles");
+
+        public void Dispose() { }
     }
 }
