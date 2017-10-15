@@ -43,11 +43,13 @@ namespace AspNetPim
         private void ConfigureBackend()
         {
             var appDataPath = Server.MapPath("~/App_Data");
-            var storageRootPath = Path.Combine(appDataPath, "UserData");
 
-            AuthDatabase = new LiteDatabase(Path.Combine(appDataPath, "auth.db"));
+            var dbPath = Path.Combine(appDataPath, "Pim.db");
+            var database = NoteLiteDb.GetNoteDatabase($"Filename={dbPath}; Upgrade=true; Initial Size=5MB; Password=;");
 
-            var storage = NoteStorage.CreateStandard(storageRootPath, true);
+            AuthDatabase = database;
+
+            var storage = NoteStorage.CreateStandard(database, appDataPath, true);
             storage.Open();
 
             var languageSetting = ConfigurationManager.AppSettings[AppSettingKeyFulltextIndexLanguages];

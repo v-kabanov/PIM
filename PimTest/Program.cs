@@ -165,13 +165,30 @@ namespace PimTest
         {
             try
             {
-                TestLitedb();
+                ConvertCouchbaseToLiteDb(@"C:\inetpub\wwwroot\Pim\App_Data\UserData");
             }
             catch (Exception exception)
             {
                 Console.Error.WriteLine(exception);
             }
             Console.ReadLine();
+        }
+
+        static void ConvertCouchbaseToLiteDb(string rootDirectoryPath)
+        {
+            var couchbaseDbPath = Path.Combine(rootDirectoryPath, "db");
+            var liteDbPath = Path.Combine(rootDirectoryPath, "Pim.db");
+
+            var couchbaseStorage = new CouchbaseStorage<Note>(couchbaseDbPath, new NoteCouchbaseAdapter(false));
+
+            var database = NoteLiteDb.GetNoteDatabase($"Filename={liteDbPath}; Upgrade=true; Initial Size=5MB; Password=;");
+            var liteDbStorage = new LiteDbStorage<Note>(database, new NoteAdapter(false));
+
+            foreach (var note in couchbaseStorage.GetAll())
+            {
+                note.Id = ObjectId.NewObjectId().ToString();
+                liteDbStorage.SaveOrUpdate(note);
+            }
         }
 
         void RunIntegrated()
