@@ -11,7 +11,7 @@ namespace FulltextStorageLib
 {
     public class NoteLiteDb
     {
-        public void Map(BsonMapper mapper)
+        public static void Map(BsonMapper mapper)
         {
             Check.DoRequireArgumentNotNull(mapper, nameof(mapper));
 
@@ -20,10 +20,16 @@ namespace FulltextStorageLib
                 .Ignore(n => n.IsTransient);
         }
 
-        public LiteDatabase GetNoteDatabase(string connectionString)
+        public static LiteDatabase GetNoteDatabase(string connectionString)
         {
+            return GetNoteDatabase(new ConnectionString(connectionString));
+        }
+
+        public static LiteDatabase GetNoteDatabase(ConnectionString connectionProperties)
+        {
+            Check.DoRequireArgumentNotNull(connectionProperties, nameof(connectionProperties));
             var mapper = new BsonMapper();
-            var result = new LiteDatabase(connectionString, mapper);
+            var result = new LiteDatabase(connectionProperties, mapper);
             Map(mapper);
             return result;
         }

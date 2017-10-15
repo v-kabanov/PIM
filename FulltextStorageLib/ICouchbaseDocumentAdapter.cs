@@ -5,42 +5,12 @@
 // **********************************************************************************************/
 // 
 
-using System.Collections.Generic;
 using Couchbase.Lite;
 
 namespace FulltextStorageLib
 {
-    public interface ICouchbaseDocumentAdapter<TDoc>
+    public interface ICouchbaseDocumentAdapter<TDoc> : IDocumentAdapter<TDoc>
     {
-        string GetId(TDoc document);
-
-        IDictionary<string, object> ToDictionary(TDoc document);
-
         TDoc Read(Document document);
-
-        bool IsTransient(TDoc document);
-
-        /// <summary>
-        ///     Check if 2 versions of the same document are logically different from the point of view of needing to update in the database.
-        /// </summary>
-        /// <param name="version1">
-        ///     Mandatory
-        /// </param>
-        /// <param name="version2">
-        ///     Mandatory
-        /// </param>
-        bool IsChanged(TDoc version1, TDoc version2);
-
-        /// <summary>
-        ///     Optional, marks document as having been updated now,
-        ///     increments integrity version if supported and last update time.
-        /// </summary>
-        /// <param name="document">
-        ///     Mandatory
-        /// </param>
-        /// <returns>
-        ///     New version; 0 if not supported.
-        /// </returns>
-        int IncrementVersion(TDoc document);
     }
 }

@@ -17,18 +17,41 @@ namespace FulltextStorageLib
 
         private readonly LiteCollection<TDoc> _documents;
 
-        public LiteDbStorage(LiteDatabase database)
+        public IDocumentAdapter<TDoc> DocumentAdapter { get; }
+
+        public LiteDbStorage(LiteDatabase database, IDocumentAdapter<TDoc> documentAdapter)
         {
             Check.DoRequireArgumentNotNull(database, nameof(database));
+            Check.DoRequireArgumentNotNull(documentAdapter, nameof(documentAdapter));
             
             _database = database;
             _documents = database.GetCollection<TDoc>();
+            DocumentAdapter = documentAdapter;
         }
 
         /// <inheritdoc />
         public void SaveOrUpdate(TDoc document)
         {
-            _documents.Upsert(document);
+            var save = DocumentAdapter.IsTransient(document);
+            var incrementVersion = save;
+
+            if (!save)
+            {
+                var id = DocumentAdapter.GetId(document);
+                var existingDoc = _documents.FindById(id);
+                save = existingDoc == null;
+                if (!save)
+                {
+                    incrementVersion = save = DocumentAdapter.IsChanged(existingDoc, document);
+                }
+            }
+
+            if (save)
+            {
+                if (incrementVersion)
+                    DocumentAdapter.IncrementVersion(document);
+                _documents.Upsert(document);
+            }
         }
 
         /// <inheritdoc />

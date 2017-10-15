@@ -167,6 +167,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="FulltextException.cs" />
     <Compile Include="ICouchbaseDocumentAdapter.cs" />
+    <Compile Include="IDocumentAdapter.cs" />
     <Compile Include="IDocumentStorage.cs" />
     <Compile Include="IDocumentStorageWithFulltextSearch.cs" />
     <Compile Include="IFulltextSearchEngine.cs" />
@@ -182,6 +183,7 @@
     <Compile Include="LuceneQueryExtensions.cs" />
     <Compile Include="MultiIndex.cs" />
     <Compile Include="Note.cs" />
+    <Compile Include="NoteAdapter.cs" />
     <Compile Include="NoteCouchbaseAdapter.cs" />
     <Compile Include="NoteHeader.cs" />
     <Compile Include="CouchbaseStorage.cs" />

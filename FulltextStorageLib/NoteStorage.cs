@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 // 
 using System.IO;
+using LiteDB;
 
 namespace FulltextStorageLib
 {
@@ -46,15 +47,14 @@ namespace FulltextStorageLib
         /// <returns></returns>
         public static NoteStorage CreateStandard(string rootDirectoryPath, bool updateLastUpdateAutomatically = false)
         {
-            var dbPath = Path.Combine(rootDirectoryPath, "db");
+            var dbPath = Path.Combine(rootDirectoryPath, "Pim.db");
             var fulltextPath = Path.Combine(rootDirectoryPath, "ft");
-
-            Directory.CreateDirectory(dbPath);
             Directory.CreateDirectory(fulltextPath);
 
             var luceneAdapter = new LuceneNoteAdapter();
 
-            var storage = new CouchbaseStorage<Note>(dbPath, new NoteCouchbaseAdapter(updateLastUpdateAutomatically));
+            var database = NoteLiteDb.GetNoteDatabase($"Filename={dbPath}; Upgrade=true; Initial Size=5MB; Password=;");
+            var storage = new LiteDbStorage<Note>(database, new NoteAdapter(updateLastUpdateAutomatically));
             var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
             var searchEngine = new SearchEngine<Note, INoteHeader, string>(fulltextPath, luceneAdapter, multiIndex);
 

@@ -64,7 +64,7 @@ namespace FulltextStorageLib
         {
             var result = new Note()
             {
-                //Id = CreateShortGuid(),
+                Id = ObjectId.NewObjectId().ToString(),
                 Text = text,
                 CreateTime = DateTime.Now,
                 LastUpdateTime = DateTime.Now,
