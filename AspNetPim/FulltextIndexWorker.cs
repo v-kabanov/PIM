@@ -21,9 +21,9 @@ namespace AspNetPim
 
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private object _syncRoot = new object();
+        private readonly object _syncRoot = new object();
 
-        private TaskExecutor _backgroundTaskExecutor = new TaskExecutor();
+        private readonly TaskExecutor _backgroundTaskExecutor = new TaskExecutor();
 
         public IList<string> ConfiguredLanguages { get; }
 

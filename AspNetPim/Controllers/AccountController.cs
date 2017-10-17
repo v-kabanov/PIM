@@ -10,6 +10,8 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using AspNetPim.Models;
+using PimIdentity;
+using PimIdentity.Models;
 
 namespace AspNetPim.Controllers
 {

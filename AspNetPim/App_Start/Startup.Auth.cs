@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
 using Owin;
-using AspNetPim.Models;
+using PimIdentity;
+using PimIdentity.Models;
 
 namespace AspNetPim
 {
@@ -14,7 +16,9 @@ namespace AspNetPim
         public void ConfigureAuth(IAppBuilder app)
         {
             // Configure the db context, user manager and signin manager to use a single instance per request
-            app.CreatePerOwinContext(DbContext.Create);
+            var databaseContextFactory = DependencyResolver.Current.GetService<IdentityDatabaseContextFactory>();
+
+            app.CreatePerOwinContext(databaseContextFactory.Create);
             app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
             app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
             app.CreatePerOwinContext<ApplicationRoleManager>(ApplicationRoleManager.Create);

@@ -1,11 +1,11 @@
-﻿using System.Web;
+﻿using System.Web.Mvc;
 using AspNet.Identity.LiteDB;
-using AspNetPim.Models;
 using FulltextStorageLib.Util;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin;
 using Owin;
-using Microsoft.AspNet.Identity.Owin;
+using PimIdentity;
+using PimIdentity.Models;
 
 [assembly: OwinStartup(typeof(AspNetPim.Startup))]
 namespace AspNetPim
@@ -21,8 +21,10 @@ namespace AspNetPim
         {
             ConfigureAuth(app);
 
-            _roleManager = ApplicationRoleManager.CreateOutOfContext();
-            _userManager = ApplicationUserManager.CreateOutOfContext();
+            var databaseContextFactory = DependencyResolver.Current.GetService<IdentityDatabaseContextFactory>();
+
+            _roleManager = ApplicationRoleManager.CreateOutOfContext(databaseContextFactory);
+            _userManager = ApplicationUserManager.CreateOutOfContext(databaseContextFactory);
 
             CreateRolesAndUsers();
         }

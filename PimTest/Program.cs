@@ -10,125 +10,14 @@ using System.Linq;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
 using LiteDB;
-using Newtonsoft.Json.Serialization;
 
 namespace PimTest
 {
-    public interface ILiteDbDocumentAdapter<TDoc>
-    {
-        ObjectId GetId(string idAsString);
-
-        ObjectId GetId(TDoc document);
-
-        BsonDocument ToBson(TDoc document);
-
-        TDoc Read(BsonDocument document);
-
-        bool IsTransient(TDoc document);
-
-        /// <summary>
-        ///     Check if 2 versions of the same document are logically different from the point of view of needing to update in the database.
-        /// </summary>
-        /// <param name="version1">
-        ///     Mandatory
-        /// </param>
-        /// <param name="version2">
-        ///     Mandatory
-        /// </param>
-        bool IsChanged(TDoc version1, TDoc version2);
-
-        /// <summary>
-        ///     Optional, marks document as having been updated now,
-        ///     increments integrity version if supported and last update time.
-        /// </summary>
-        /// <param name="document">
-        ///     Mandatory
-        /// </param>
-        /// <returns>
-        ///     New version; 0 if not supported.
-        /// </returns>
-        int IncrementVersion(TDoc document);
-    }
-
-    public class NoteLightDbAdapter : ILiteDbDocumentAdapter<Note>
-    {
-        private const string BsonFieldNameId = "_id";
-
-        public bool SetLastUpdateTimeWithVersionIncrement { get; set; }
-
-        /// <inheritdoc />
-        public ObjectId GetId(string idAsString)
-        {
-            return string.IsNullOrEmpty(idAsString) ? null : new ObjectId(idAsString);
-        }
-
-        /// <inheritdoc />
-        public ObjectId GetId(Note document)
-        {
-            return GetId(document?.Id);
-        }
-
-        /// <inheritdoc />
-        public BsonDocument ToBson(Note document)
-        {
-            var result = new BsonDocument()
-            {
-                { nameof(Note.LastUpdateTime), document.LastUpdateTime },
-                { nameof(Note.Text), document.Text },
-                { nameof(Note.Version), document.Version }
-            };
-            if (!string.IsNullOrEmpty(document.Id))
-                result.Add(BsonFieldNameId, new ObjectId(document.Id));
-
-            return result;
-        }
-
-        /// <inheritdoc />
-        public Note Read(BsonDocument document)
-        {
-            return new Note()
-            {
-                Id = document[BsonFieldNameId].AsString,
-                LastUpdateTime = document[nameof(Note.LastUpdateTime)].AsDateTime,
-                CreateTime = document[BsonFieldNameId].AsObjectId.CreationTime,
-                Text = document[nameof(Note.Text)].AsString,
-                Version = document[nameof(Note.Version)].AsInt32
-            };
-        }
-
-        /// <inheritdoc />
-        public bool IsTransient(Note document)
-        {
-            Check.DoRequireArgumentNotNull(document, nameof(document));
-
-            return document.IsTransient;
-        }
-
-        /// <inheritdoc />
-        public bool IsChanged(Note version1, Note version2)
-        {
-            Check.DoRequireArgumentNotNull(version1, nameof(version1));
-            Check.DoRequireArgumentNotNull(version2, nameof(version2));
-
-            return version1.Text != version2.Text;
-        }
-
-        /// <inheritdoc />
-        public int IncrementVersion(Note document)
-        {
-            Check.DoRequireArgumentNotNull(document.Id, nameof(document.Id));
-            if (SetLastUpdateTimeWithVersionIncrement)
-                document.LastUpdateTime = DateTime.Now;
-            return ++document.Version;
-        }
-    }
-
     class Program
     {
         static void TestLitedb()
         {
             var mapper = new BsonMapper();
-            var adapter = new NoteLightDbAdapter();
 
             mapper.Entity<Note>()
                 .Ignore(n => n.Name)
