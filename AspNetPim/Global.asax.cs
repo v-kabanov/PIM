@@ -14,9 +14,12 @@ using System.Web.Routing;
 using AspNetPim.Controllers;
 using AspNetPim.Models;
 using Autofac.Core;
+using Autofac.Extras.CommonServiceLocator;
+using CommonServiceLocator;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
 using LiteDB;
+using PimIdentity.Models;
 
 namespace AspNetPim
 {
@@ -78,9 +81,12 @@ namespace AspNetPim
             builder.RegisterType<HomeController>();
             builder.RegisterType<ViewEditController>();
             builder.RegisterType<SearchController>();
+            builder.Register(c => new IdentityDatabaseContext(AuthDatabase)).SingleInstance();
             var container = builder.Build();
 
             DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
+            IServiceLocator autofacServiceLocator = new AutofacServiceLocator(container) as IServiceLocator;
+            ServiceLocator.SetLocatorProvider(() => autofacServiceLocator);
         }
 
         protected void Application_End()

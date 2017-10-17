@@ -1,11 +1,11 @@
-﻿using System.Web;
-using AspNet.Identity.LiteDB;
+﻿using AspNet.Identity.LiteDB;
 using AspNetPim.Models;
 using FulltextStorageLib.Util;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin;
 using Owin;
-using Microsoft.AspNet.Identity.Owin;
+using PimIdentity;
+using PimIdentity.Models;
 
 [assembly: OwinStartup(typeof(AspNetPim.Startup))]
 namespace AspNetPim

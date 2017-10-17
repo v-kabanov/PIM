@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Data.Entity;
+using System.Diagnostics.Contracts;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web.Hosting;
 using Microsoft.AspNet.Identity;
 using AspNet.Identity.LiteDB;
+using CommonServiceLocator;
 using LiteDB;
 
-namespace AspNetPim.Models
+namespace PimIdentity.Models
 {
     // You can add profile data for the user by adding more properties to your ApplicationUser class, please visit http://go.microsoft.com/fwlink/?LinkID=317594 to learn more.
     public class ApplicationUser : IdentityUser
@@ -21,23 +21,27 @@ namespace AspNetPim.Models
         }
     }
 
-    public class DbContext : IDisposable
+    public class IdentityDatabaseContext : IDisposable
     {
-        private readonly LiteDatabase _database;
+        private static readonly Lazy<IdentityDatabaseContext> SingleInstance = new Lazy<IdentityDatabaseContext>(
+            () => ServiceLocator.Current.GetInstance<IdentityDatabaseContext>());
 
-        public DbContext()
+        public IdentityDatabaseContext(LiteDatabase database)
         {
-            _database = MvcApplication.AuthDatabase;
+            Contract.Requires(database != null);
+            
+            Roles = database.GetCollection<IdentityRole>("roles");
+            Users = database.GetCollection<ApplicationUser>("users");
         }
 
-        public static DbContext Create()
+        public static IdentityDatabaseContext Create()
         {
-            return new DbContext();
+            return SingleInstance.Value;
         }
 
-        public LiteCollection<ApplicationUser> Users => _database.GetCollection<ApplicationUser>("users");
+        public LiteCollection<ApplicationUser> Users { get; }
 
-        public LiteCollection<IdentityRole> Roles => _database.GetCollection<IdentityRole>("roles");
+        public LiteCollection<IdentityRole> Roles { get; }
 
         public void Dispose() { }
     }
