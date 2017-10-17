@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 using AspNet.Identity.LiteDB;
-using FulltextStorageLib.Util;
 using Microsoft.AspNet.Identity.Owin;
 using PimIdentity;
 using PimIdentity.Models;

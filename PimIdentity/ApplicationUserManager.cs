@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using AspNet.Identity.LiteDB;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
@@ -14,9 +15,6 @@ namespace PimIdentity
         {
         }
 
-        public static UserStore<ApplicationUser> CreateUserStore(IdentityDatabaseContext identityDatabaseContext) =>
-            new UserStore<ApplicationUser>((identityDatabaseContext ?? IdentityDatabaseContext.Create()).Users);
-
         /// <param name="options">
         ///     Optional
         /// </param>
@@ -26,7 +24,10 @@ namespace PimIdentity
         /// <returns></returns>
         public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context) 
         {
-            var manager = new ApplicationUserManager(CreateUserStore(context?.Get<IdentityDatabaseContext>()));
+            Contract.Requires(options != null);
+            Contract.Requires(context != null);
+
+            var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<IdentityDatabaseContext>().Users));
             // Configure validation logic for usernames
             manager.UserValidator = new UserValidator<ApplicationUser>(manager)
             {
@@ -72,9 +73,9 @@ namespace PimIdentity
             return manager;
         }
 
-        public static ApplicationUserManager CreateOutOfContext()
+        public static ApplicationUserManager CreateOutOfContext(IdentityDatabaseContextFactory databaseContextFactory)
         {
-            return Create(null, null);
+            return new ApplicationUserManager(databaseContextFactory.UserStore);
         }
     }
 }

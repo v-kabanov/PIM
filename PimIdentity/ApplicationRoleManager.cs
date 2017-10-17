@@ -1,8 +1,8 @@
-﻿using AspNet.Identity.LiteDB;
+﻿using System.Diagnostics.Contracts;
+using AspNet.Identity.LiteDB;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
-using PimIdentity.Models;
 
 namespace PimIdentity
 {
@@ -21,12 +21,19 @@ namespace PimIdentity
         /// <returns></returns>
         public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
         {
-            var dbContext = context?.Get<IdentityDatabaseContext>() ?? IdentityDatabaseContext.Create();
+            Contract.Requires(options != null);
+            Contract.Requires(context != null);
+
+            var dbContext = context.Get<IdentityDatabaseContext>();
             var roleStore = new RoleStore<IdentityRole>(dbContext.Roles);
             return new ApplicationRoleManager(roleStore);
         }
 
-        public static ApplicationRoleManager CreateOutOfContext() => new ApplicationRoleManager(
-            new RoleStore<IdentityRole>(IdentityDatabaseContext.Create().Roles));
+        public static ApplicationRoleManager CreateOutOfContext(IdentityDatabaseContextFactory databaseContextFactory)
+        {
+            Contract.Requires(databaseContextFactory != null);
+
+            return new ApplicationRoleManager(databaseContextFactory.RoleStore);
+        }
     }
 }

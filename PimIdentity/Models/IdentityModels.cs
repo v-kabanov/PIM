@@ -1,11 +1,7 @@
-﻿using System;
-using System.Diagnostics.Contracts;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
 using AspNet.Identity.LiteDB;
-using CommonServiceLocator;
-using LiteDB;
 
 namespace PimIdentity.Models
 {
@@ -19,30 +15,5 @@ namespace PimIdentity.Models
             // Add custom user claims here
             return userIdentity;
         }
-    }
-
-    public class IdentityDatabaseContext : IDisposable
-    {
-        private static readonly Lazy<IdentityDatabaseContext> SingleInstance = new Lazy<IdentityDatabaseContext>(
-            () => ServiceLocator.Current.GetInstance<IdentityDatabaseContext>());
-
-        public IdentityDatabaseContext(LiteDatabase database)
-        {
-            Contract.Requires(database != null);
-            
-            Roles = database.GetCollection<IdentityRole>("roles");
-            Users = database.GetCollection<ApplicationUser>("users");
-        }
-
-        public static IdentityDatabaseContext Create()
-        {
-            return SingleInstance.Value;
-        }
-
-        public LiteCollection<ApplicationUser> Users { get; }
-
-        public LiteCollection<IdentityRole> Roles { get; }
-
-        public void Dispose() { }
     }
 }

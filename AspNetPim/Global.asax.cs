@@ -2,7 +2,6 @@
 using Autofac.Integration.Mvc;
 using log4net;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -12,14 +11,10 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using AspNetPim.Controllers;
-using AspNetPim.Models;
-using Autofac.Core;
-using Autofac.Extras.CommonServiceLocator;
-using CommonServiceLocator;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
 using LiteDB;
-using PimIdentity.Models;
+using PimIdentity;
 
 namespace AspNetPim
 {
@@ -81,12 +76,10 @@ namespace AspNetPim
             builder.RegisterType<HomeController>();
             builder.RegisterType<ViewEditController>();
             builder.RegisterType<SearchController>();
-            builder.Register(c => new IdentityDatabaseContext(AuthDatabase)).SingleInstance();
+            builder.Register(c => new IdentityDatabaseContextFactory(AuthDatabase)).SingleInstance();
             var container = builder.Build();
 
             DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
-            IServiceLocator autofacServiceLocator = new AutofacServiceLocator(container) as IServiceLocator;
-            ServiceLocator.SetLocatorProvider(() => autofacServiceLocator);
         }
 
         protected void Application_End()

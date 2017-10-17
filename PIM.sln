@@ -8,6 +8,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FulltextStorageLib", "FulltextStorageLib\FulltextStorageLib.csproj", "{5F0C603E-F305-4D23-8D6F-CD8AEC00CBC4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspNetPim", "AspNetPim\AspNetPim.csproj", "{3F27DAB0-C3BB-4DF5-AF7B-B603366F2412}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B45E4C7F-4EEA-4DF8-B060-BC472BFE0802} = {B45E4C7F-4EEA-4DF8-B060-BC472BFE0802}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FulltextStorageLibTest", "FulltextStorageLibTest\FulltextStorageLibTest.csproj", "{5C923FDF-42DB-436D-9504-3B071865E8C0}"
 EndProject
