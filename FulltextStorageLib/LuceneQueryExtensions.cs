@@ -7,6 +7,7 @@
 
 using FulltextStorageLib.Util;
 using Lucene.Net.Search;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

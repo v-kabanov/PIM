@@ -105,6 +105,7 @@
     <Compile Include="ApplicationSignInManager.cs" />
     <Compile Include="ApplicationUserManager.cs" />
     <Compile Include="EmailService.cs" />
+    <Compile Include="IdentityConfiguration.cs" />
     <Compile Include="IdentityDatabaseContext.cs" />
     <Compile Include="IdentityDatabaseContextFactory.cs" />
     <Compile Include="Models\IdentityModels.cs" />
@@ -114,6 +115,12 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Pim.CommonLib\Pim.CommonLib.csproj">
+      <Project>{5743f793-e48a-4441-ac6f-c398fb9b448b}</Project>
+      <Name>Pim.CommonLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

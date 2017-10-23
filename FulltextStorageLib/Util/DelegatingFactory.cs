@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 
 using System;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

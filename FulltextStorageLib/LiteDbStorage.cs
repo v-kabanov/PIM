@@ -7,6 +7,7 @@
 using System.Collections.Generic;
 using FulltextStorageLib.Util;
 using LiteDB;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

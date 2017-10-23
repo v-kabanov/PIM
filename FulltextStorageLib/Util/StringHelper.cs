@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 // 
 using System.Text.RegularExpressions;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

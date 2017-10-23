@@ -245,7 +245,6 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
     <Compile Include="Controllers\ViewEditController.cs" />
-    <Compile Include="FulltextIndexWorker.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -398,6 +397,10 @@
     <ProjectReference Include="..\FulltextStorageLib\FulltextStorageLib.csproj">
       <Project>{5f0c603e-f305-4d23-8d6f-cd8aec00cbc4}</Project>
       <Name>FulltextStorageLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Pim.CommonLib\Pim.CommonLib.csproj">
+      <Project>{5743f793-e48a-4441-ac6f-c398fb9b448b}</Project>
+      <Name>Pim.CommonLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\PimIdentity\PimIdentity.csproj">
       <Project>{b45e4c7f-4eea-4df8-b060-bc472bfe0802}</Project>

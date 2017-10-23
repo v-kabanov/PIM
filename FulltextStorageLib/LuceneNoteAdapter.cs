@@ -9,6 +9,7 @@ using System.Linq;
 using FulltextStorageLib.Util;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

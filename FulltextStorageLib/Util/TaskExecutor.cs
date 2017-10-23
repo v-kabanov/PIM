@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using log4net;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

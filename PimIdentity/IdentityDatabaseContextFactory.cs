@@ -1,4 +1,10 @@
-﻿using System;
+﻿// /**********************************************************************************************
+// Author:  Vasily Kabanov
+// Created  2017-10-18
+// Comment  
+// **********************************************************************************************/
+
+using System;
 using System.Diagnostics.Contracts;
 using AspNet.Identity.LiteDB;
 using LiteDB;

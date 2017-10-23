@@ -1,18 +1,17 @@
-﻿// /**********************************************************************************************
-// Author:		Vasily Kabanov
-// Created		2013-05-30
-// Comment		
+// /**********************************************************************************************
+// Author:  Vasily Kabanov
+// Created  2017-10-23
+// Comment  
 // **********************************************************************************************/
 
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace FulltextStorageLib.Util
+namespace Pim.CommonLib
 {
     public static class ObjectExtensions
     {
-
         public static bool In<T>(this T value, params T[] values)
         {
             return values.Contains(value);
@@ -49,5 +48,10 @@ namespace FulltextStorageLib.Util
             Check.DoRequireArgumentNotNull(value, nameof(value));
         }
 
+        [SourceTemplate]
+        public static void CheckArgNotBlank(this string value)
+        {
+            Check.DoRequireArgumentNotBlank(value, nameof(value));
+        }
     }
 }

@@ -7,6 +7,7 @@
 using System;
 using System.Reflection;
 using log4net;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

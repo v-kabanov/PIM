@@ -15,6 +15,7 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Pim.CommonLib;
 using Version = Lucene.Net.Util.Version;
 
 namespace FulltextStorageLib

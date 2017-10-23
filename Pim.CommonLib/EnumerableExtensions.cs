@@ -1,40 +1,17 @@
-﻿using System;
+// /**********************************************************************************************
+// Author:  Vasily Kabanov
+// Created  2017-10-23
+// Comment  
+// **********************************************************************************************/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FulltextStorageLib.Util
+namespace Pim.CommonLib
 {
     public static class EnumerableExtensions
     {
-        // Calculate the stdev value for a collection of type Double.
-        public static double? StDev(this IEnumerable<double> stDevAggregate)
-        {
-            return StatisticalFunctions.StDev(stDevAggregate.ToArray());
-        }
-
-        // Project the collection of generic items as type Double and calculate the stdev value.
-        public static double? StDev<T>(this IEnumerable<T> stDevAggregate, Func<T, double> selector)
-        {
-            var values = (from element in stDevAggregate select selector(element)).ToArray();
-
-            return StatisticalFunctions.StDev(values);
-        }
-
-
-        //// Calculate the stdevp value for a collection of type Double.
-        public static double? StDevP(this IEnumerable<double> stDevAggregate)
-        {
-            return StatisticalFunctions.StDevP(stDevAggregate.ToArray());
-        }
-
-
-        // Project the collection of generic items as type Double and calculate the stdevp value.
-        public static double? StDevP<T>(this IEnumerable<T> stDevAggregate, Func<T, double> selector)
-        {
-            var values = (from element in stDevAggregate select selector(element)).ToArray();
-            return StatisticalFunctions.StDevP(values);
-        }
-
         /// <summary>
         ///     Create hash set from collection
         /// </summary>
@@ -60,7 +37,7 @@ namespace FulltextStorageLib.Util
         /// <summary>
         ///     Create case insensitive hash set from collection of strings
         /// </summary>
-        public static ISet<string> ToCaseInsensitiveSet(this IEnumerable<string> source)
+        public static HashSet<string> ToCaseInsensitiveSet(this IEnumerable<string> source)
         {
             return source.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
         }
@@ -80,7 +57,7 @@ namespace FulltextStorageLib.Util
         /// <returns>
         ///     New collection
         /// </returns>
-        public static ISet<T> ToSortedSet<T>(this IEnumerable<T> source, IComparer<T> comparer = null)
+        public static SortedSet<T> ToSortedSet<T>(this IEnumerable<T> source, IComparer<T> comparer = null)
         {
             Check.DoRequireArgumentNotNull(source, nameof(source));
 
@@ -92,11 +69,22 @@ namespace FulltextStorageLib.Util
         /// <summary>
         ///     Create dictionary with case insensitive string keys.
         /// </summary>
-        public static IDictionary<string, T> ToCaseInsensitiveDictionary<T>(this IEnumerable<T> source, Func<T, string> keyGetter)
+        public static Dictionary<string, T> ToCaseInsensitiveDictionary<T>(this IEnumerable<T> source, Func<T, string> keyGetter)
         {
             Check.DoRequireArgumentNotNull(source, nameof(source));
 
             return source?.ToDictionary(keyGetter, StringComparer.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
+        ///     Create dictionary with case insensitive string keys.
+        /// </summary>
+        // ReSharper disable once InconsistentNaming
+        public static Dictionary<string, V> ToCaseInsensitiveDictionary<T, V>(this IEnumerable<T> source, Func<T, string> keyGetter, Func<T, V> valueGetter)
+        {
+            Check.DoRequireArgumentNotNull(source, nameof(source));
+
+            return source?.ToDictionary(keyGetter, valueGetter, StringComparer.InvariantCultureIgnoreCase);
         }
     }
 }

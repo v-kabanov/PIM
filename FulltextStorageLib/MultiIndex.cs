@@ -15,6 +15,7 @@ using log4net;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

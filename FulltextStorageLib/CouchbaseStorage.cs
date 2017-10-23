@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using Couchbase.Lite;
 using FulltextStorageLib.Util;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

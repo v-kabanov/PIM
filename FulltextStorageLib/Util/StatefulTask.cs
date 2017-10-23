@@ -6,6 +6,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

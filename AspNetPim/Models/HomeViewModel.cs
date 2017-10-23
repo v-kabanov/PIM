@@ -13,6 +13,7 @@ using System.Web.Mvc;
 using FulltextStorageLib;
 using FulltextStorageLib.Util;
 using log4net;
+using Pim.CommonLib;
 
 namespace AspNetPim.Models
 {

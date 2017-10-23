@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using FulltextStorageLib.Util;
 using log4net;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

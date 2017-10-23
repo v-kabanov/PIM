@@ -1,6 +1,9 @@
-﻿using Autofac;
-using Autofac.Integration.Mvc;
-using log4net;
+﻿// /**********************************************************************************************
+// Author:  Vasily Kabanov
+// Created  2017-05-31
+// Comment  
+// **********************************************************************************************/
+
 using System;
 using System.Configuration;
 using System.IO;
@@ -11,9 +14,12 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using AspNetPim.Controllers;
+using Autofac;
+using Autofac.Integration.Mvc;
 using FulltextStorageLib;
-using FulltextStorageLib.Util;
+using log4net;
 using LiteDB;
+using Pim.CommonLib;
 using PimIdentity;
 
 namespace AspNetPim
@@ -54,7 +60,7 @@ namespace AspNetPim
             if (string.IsNullOrWhiteSpace(languageSetting))
                 languageSetting = "English,Russian";
 
-            var stemmerNames = languageSetting.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries).ToCaseInsensitiveSet();
+            var stemmerNames = languageSetting.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries).ToCaseInsensitiveSet();
             var redundantIndexes = storage.ActiveIndexNames.Where(name => !stemmerNames.Contains(name));
             foreach (var redundantIndexName in redundantIndexes)
             {

@@ -12,6 +12,7 @@ using System.Reflection;
 using FulltextStorageLib.Util;
 using log4net;
 using Lucene.Net.Analysis;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib
 {

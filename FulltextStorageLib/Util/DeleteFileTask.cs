@@ -6,6 +6,7 @@
 // 
 
 using System.IO;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

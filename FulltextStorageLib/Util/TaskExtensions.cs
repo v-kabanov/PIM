@@ -6,6 +6,7 @@
 
 using System;
 using System.Linq;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {

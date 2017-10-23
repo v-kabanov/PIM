@@ -6,6 +6,7 @@
 // 
 
 using System.Collections.Generic;
+using Pim.CommonLib;
 
 namespace FulltextStorageLib.Util
 {
