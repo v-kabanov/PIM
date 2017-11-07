@@ -72,34 +72,5 @@ namespace FulltextStorageLib
 
             return result;
         }
-
-        /// <summary>
-        ///     Factory method creating standard indexed note storage.
-        /// </summary>
-        /// <param name="rootDirectoryPath">
-        ///     Path to the root directory containing all storage and index files.
-        /// </param>
-        /// <param name="updateLastUpdateAutomatically">
-        ///     Set <see cref="IFulltextIndexEntry.LastUpdateTime"/> to current time when saving. If false, last update time is maintained by the client.
-        /// </param>
-        /// <returns></returns>
-        public static NoteStorage CreateCouchbase(string rootDirectoryPath, bool updateLastUpdateAutomatically = false)
-        {
-            var dbPath = Path.Combine(rootDirectoryPath, "db");
-            var fulltextPath = Path.Combine(rootDirectoryPath, "ft");
-
-            Directory.CreateDirectory(dbPath);
-            Directory.CreateDirectory(fulltextPath);
-
-            var luceneAdapter = new LuceneNoteAdapter();
-
-            var storage = new CouchbaseStorage<Note>(dbPath, new NoteCouchbaseAdapter(updateLastUpdateAutomatically));
-            var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
-            var searchEngine = new SearchEngine<Note, INoteHeader, string>(fulltextPath, luceneAdapter, multiIndex);
-
-            var result = new NoteStorage(storage, searchEngine) { RootPath = rootDirectoryPath };
-
-            return result;
-        }
     }
 }

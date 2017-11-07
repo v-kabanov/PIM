@@ -278,47 +278,6 @@ namespace FulltextStorageLib
             return FulltextBackgroundTaskExecutor.WaitForAllCurrentTasksToFinish(maxWaitMilliseconds);
         }
 
-        /// <summary>
-        ///     Factory method creating typical configuration with Couchbase Lite as storage and Lucene fulltext search engine.
-        ///     Initiates opening of existing fulltext indexes.
-        /// </summary>
-        /// <param name="rootDirectoryPath">
-        ///     Mandatory, rot directory of indexed storage. Will contain 2 subfolders 'db' with Couchbase Lite database and 'ft' with fulltext indexes.
-        /// </param>
-        /// <param name="couchbaseAdapter">
-        ///     Adapter for generic Couchbase storage implementation (see <see cref="CouchbaseStorage{TDoc}"/>)
-        /// </param>
-        /// <param name="luceneAdapter">
-        ///     Adapter for generic Lucene multi index search engine implementation (see <see cref="SearchEngine"/>)
-        /// </param>
-        /// <returns>
-        ///     Instantiated storage component in need of opening (see <see cref="IDocumentStorageWithFulltextSearch{TDoc,TKey,THeader}.Open"/>).
-        ///     Fulltext indexes are not yet opened in the returned instance.
-        /// </returns>
-        public static DocumentStorageWithFulltextSearch<TDoc, string, THeader> CreateStandard(
-            string rootDirectoryPath
-            , ICouchbaseDocumentAdapter<TDoc> couchbaseAdapter
-            , ILuceneEntityAdapter<TDoc, THeader, string> luceneAdapter)
-        {
-            Check.DoRequireArgumentNotNull(rootDirectoryPath, nameof(rootDirectoryPath));
-            Check.DoRequireArgumentNotNull(couchbaseAdapter, nameof(couchbaseAdapter));
-            Check.DoRequireArgumentNotNull(luceneAdapter, nameof(luceneAdapter));
-
-            var dbPath = Path.Combine(rootDirectoryPath, "db");
-            var fulltextPath = Path.Combine(rootDirectoryPath, "ft");
-
-            Directory.CreateDirectory(dbPath);
-            Directory.CreateDirectory(fulltextPath);
-
-            var storage = new CouchbaseStorage<TDoc>(rootDirectoryPath, couchbaseAdapter);
-            var multiIndex = new MultiIndex(luceneAdapter.DocumentKeyName);
-            var searchEngine = new SearchEngine<TDoc, THeader, string>(fulltextPath, luceneAdapter, multiIndex);
-
-            var result = new DocumentStorageWithFulltextSearch<TDoc, string, THeader>(storage, searchEngine);
-
-            return result;
-        }
-
         private bool _disposedValue;
 
         protected virtual void Dispose(bool disposing)

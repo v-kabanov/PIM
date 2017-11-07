@@ -56,14 +56,6 @@
       <HintPath>..\packages\Autofac.Mvc5.4.0.2\lib\net45\Autofac.Integration.Mvc.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Couchbase.Lite, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Couchbase.Lite.1.4.0\lib\net45\Couchbase.Lite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Couchbase.Lite.Storage.SystemSQLite, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Couchbase.Lite.Storage.SystemSQLite.1.4.0\lib\net45\Couchbase.Lite.Storage.SystemSQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib.Portable, Version=0.86.0.51803, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.Portable.0.86.0.0003\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid+Xamarin.iOS10\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
       <Private>True</Private>
@@ -105,36 +97,12 @@
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="SQLitePCL.raw, Version=0.9.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCL.raw.0.9.3\lib\net45\SQLitePCL.raw.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="SQLitePCL.ugly, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCL.ugly.0.9.3\lib\net35\SQLitePCL.ugly.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="SQLitePCLPlugin_esqlite3, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SQLitePCL.plugin.sqlite3.net45.0.9.3\lib\net45\SQLitePCLPlugin_esqlite3.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Stateless, Version=3.0.0.0, Culture=neutral, PublicKeyToken=93038f0927583c9a, processorArchitecture=MSIL">
       <HintPath>..\packages\Stateless.3.1.0\lib\net45\Stateless.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite, Version=1.0.105.1, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.Core.1.0.105.1\lib\net46\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Data.SQLite.EF6, Version=1.0.105.1, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.EF6.1.0.105.1\lib\net46\System.Data.SQLite.EF6.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Data.SQLite.Linq, Version=1.0.105.1, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.105.1\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Numerics" />
@@ -200,10 +168,6 @@
     </Reference>
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="websocket-sharp, Version=1.0.2.37453, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Couchbase.Lite.1.4.0\lib\net45\websocket-sharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -439,13 +403,9 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\SQLitePCL.native.sqlite3.v110_xp.0.9.3\build\SQLitePCL.native.sqlite3.v110_xp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SQLitePCL.native.sqlite3.v110_xp.0.9.3\build\SQLitePCL.native.sqlite3.v110_xp.targets'))" />
-    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.105.1\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.105.1\build\net46\System.Data.SQLite.Core.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.2.2.0\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.2.2.0\build\Microsoft.Net.Compilers.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.5\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.5\build\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
   </Target>
-  <Import Project="..\packages\SQLitePCL.native.sqlite3.v110_xp.0.9.3\build\SQLitePCL.native.sqlite3.v110_xp.targets" Condition="Exists('..\packages\SQLitePCL.native.sqlite3.v110_xp.0.9.3\build\SQLitePCL.native.sqlite3.v110_xp.targets')" />
-  <Import Project="..\packages\System.Data.SQLite.Core.1.0.105.1\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.105.1\build\net46\System.Data.SQLite.Core.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
