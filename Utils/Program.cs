@@ -93,9 +93,17 @@ namespace Pim.Utils
                 var contextFactory = new IdentityDatabaseContextFactory(database);
                 var identityConfig = new IdentityConfiguration(contextFactory);
 
+                identityConfig.EnsureDefaultUsersAndRolesAsync();
+
+                Console.WriteLine("Resetting admin password in {0} to {1}", arguments.IdentityDatabasePath, arguments.NewPassword);
                 identityConfig.ResetPasswordAsync(IdentityConfiguration.AdminUserName, arguments.NewPassword)
                     .GetAwaiter()
                     .GetResult();
+                var userManager = ApplicationUserManager.CreateOutOfContext(contextFactory);
+                var adminUser = userManager.FindByEmailAsync(IdentityConfiguration.AdminUserName)
+                    .GetAwaiter().GetResult();
+
+                Console.WriteLine("Admin user locked: {0}; end date: {1}, has password: {2}", adminUser?.LockoutEnabled, adminUser?.LockoutEndDateUtc, adminUser?.HasPassword());
             }
             else
             {
@@ -115,7 +123,7 @@ namespace Pim.Utils
 
             var optionSet = new OptionSet()
             {
-                {"|op=", "Operation to perform (ResetAdmin)", o => result.Operation = o },
+                {"op|Operation=", "Operation to perform (ResetAdmin)", o => result.Operation = o },
                 { "np|NewPassword=", "New password (optional, defaults to 'password')", o => result.NewPassword = o},
                 { "db|DbFilePath=", "Database file path", o => result.IdentityDatabasePath = o},
                 { "pw|DatabasePassword=", "Database password", o => result.DatabasePassword = o}
