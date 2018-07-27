@@ -13,6 +13,7 @@ using Autofac;
 using Autofac.Integration.Mvc;
 using FulltextStorageLib;
 using log4net;
+using log4net.Config;
 using LiteDB;
 using Microsoft.Owin;
 using Microsoft.Owin.BuilderProperties;
@@ -29,22 +30,30 @@ namespace AspNetPim
 
         private const string AppSettingKeyFulltextIndexLanguages = "FulltextIndexLanguages";
 
-        public static INoteStorage Storage { get; private set; }
+        public INoteStorage Storage { get; private set; }
 
-        public static LiteDatabase AuthDatabase { get; private set; }
+        public LiteDatabase AuthDatabase { get; private set; }
+
+        protected IdentityDatabaseContextFactory IdentityDatabaseContextFactory { get; private set; }
+
+        public IContainer Container { get; private set; }
 
         public void Configuration(IAppBuilder app)
         {
+            var logConfigFileInfo = new FileInfo(HostingEnvironment.MapPath("~/log4net.config"));
+            if (logConfigFileInfo.Exists)
+                XmlConfigurator.ConfigureAndWatch(logConfigFileInfo);
+            else
+                XmlConfigurator.Configure();
+
+            ConfigureBackend(app);
+
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
-            ConfigureBackend(app);
-
-            var databaseContextFactory = DependencyResolver.Current.GetService<IdentityDatabaseContextFactory>();
-
-            var identityConfiguration = new IdentityConfiguration(databaseContextFactory);
+            var identityConfiguration = new IdentityConfiguration(IdentityDatabaseContextFactory);
             var task = identityConfiguration.EnsureDefaultUsersAndRolesAsync();
 
             ConfigureAuth(app);
@@ -59,6 +68,7 @@ namespace AspNetPim
                 {
                     Storage?.Dispose();
                     AuthDatabase?.Dispose();
+                    Container?.Dispose();
                 });
             }
         }
@@ -71,6 +81,7 @@ namespace AspNetPim
             var database = NoteLiteDb.GetNoteDatabase($"Filename={dbPath}; Upgrade=true; Initial Size=5MB; Password=;");
 
             AuthDatabase = database;
+            IdentityDatabaseContextFactory = new IdentityDatabaseContextFactory(AuthDatabase);
 
             var storage = NoteStorage.CreateStandard(database, appDataPath, true);
             storage.Open();
@@ -101,10 +112,15 @@ namespace AspNetPim
             builder.RegisterType<HomeController>();
             builder.RegisterType<ViewEditController>();
             builder.RegisterType<SearchController>();
-            builder.Register(c => new IdentityDatabaseContextFactory(AuthDatabase)).SingleInstance();
-            var container = builder.Build();
+            builder.Register(c => IdentityDatabaseContextFactory).SingleInstance();
 
-            DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
+            builder.RegisterControllers(typeof(Startup).Assembly);
+
+            Container = builder.Build();
+
+            app.UseAutofacMiddleware(Container);
+            app.UseAutofacMvc();
+            DependencyResolver.SetResolver(new AutofacDependencyResolver(Container));
         }
     }
 }
