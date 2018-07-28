@@ -58,6 +58,10 @@ namespace AspNetPim
 
             ConfigureAuth(app);
 
+            //app.AddMvc();
+            //app.UseResponseCompression();
+            //app.UseMvcWithDefaultRoute();
+
             task.GetAwaiter().GetResult();
 
             var properties = new AppProperties(app.Properties);

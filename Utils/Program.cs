@@ -93,17 +93,26 @@ namespace Pim.Utils
                 var contextFactory = new IdentityDatabaseContextFactory(database);
                 var identityConfig = new IdentityConfiguration(contextFactory);
 
-                identityConfig.EnsureDefaultUsersAndRolesAsync();
+                identityConfig.EnsureDefaultUsersAndRolesAsync().GetAwaiter().GetResult();
 
                 Console.WriteLine("Resetting admin password in {0} to {1}", arguments.IdentityDatabasePath, arguments.NewPassword);
                 identityConfig.ResetPasswordAsync(IdentityConfiguration.AdminUserName, arguments.NewPassword)
                     .GetAwaiter()
                     .GetResult();
                 var userManager = ApplicationUserManager.CreateOutOfContext(contextFactory);
-                var adminUser = userManager.FindByEmailAsync(IdentityConfiguration.AdminUserName)
+                var adminUser = userManager.FindByNameAsync(IdentityConfiguration.AdminUserName)
                     .GetAwaiter().GetResult();
-
                 Console.WriteLine("Admin user locked: {0}; end date: {1}, has password: {2}", adminUser?.LockoutEnabled, adminUser?.LockoutEndDateUtc, adminUser?.HasPassword());
+                if (adminUser != null)
+                {
+                    if (adminUser.LockoutEnabled)
+                    {
+                        Console.WriteLine("Unlocking admin");
+                        userManager.ResetAccessFailedCountAsync(adminUser.Id);
+                        userManager.SetLockoutEnabledAsync(adminUser.Id, false);
+                    }
+                }
+
             }
             else
             {
