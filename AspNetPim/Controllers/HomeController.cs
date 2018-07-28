@@ -8,6 +8,7 @@
 using System.Web.Mvc;
 using AspNetPim.Models;
 using FulltextStorageLib;
+using Microsoft.Owin;
 
 namespace AspNetPim.Controllers
 {
@@ -15,9 +16,12 @@ namespace AspNetPim.Controllers
     [Authorize(Roles = "Admin,Reader,Writer")]
     public class HomeController : Controller
     {
-        public HomeController(INoteStorage noteStorage)
+        public IOwinContext OwinContext { get; }
+        public HomeController(INoteStorage noteStorage, IOwinContext owinContext)
         {
             NoteStorage = noteStorage;
+
+            OwinContext = owinContext;
         }
 
         // ReSharper disable once MemberCanBePrivate.Global

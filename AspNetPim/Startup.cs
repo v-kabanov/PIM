@@ -38,9 +38,19 @@ namespace AspNetPim
 
         public IContainer Container { get; private set; }
 
+        public string AppLocalRootPath { get; private set; }
+
         public void Configuration(IAppBuilder app)
         {
-            var logConfigFileInfo = new FileInfo(HostingEnvironment.MapPath("~/log4net.config"));
+            AppLocalRootPath = HostingEnvironment.MapPath("~/");
+            var log4NetConfigFilePath = HostingEnvironment.MapPath("~/log4net.config");
+            if (AppLocalRootPath == null)
+            {
+                Console.WriteLine("Starting in self hosting mode");
+                AppLocalRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                log4NetConfigFilePath = Path.Combine(AppLocalRootPath, "log4net.config");
+            }
+            var logConfigFileInfo = new FileInfo(log4NetConfigFilePath);
             if (logConfigFileInfo.Exists)
                 XmlConfigurator.ConfigureAndWatch(logConfigFileInfo);
             else
@@ -48,19 +58,15 @@ namespace AspNetPim
 
             ConfigureBackend(app);
 
+
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
-
             var identityConfiguration = new IdentityConfiguration(IdentityDatabaseContextFactory);
             var task = identityConfiguration.EnsureDefaultUsersAndRolesAsync();
 
             ConfigureAuth(app);
-
-            //app.AddMvc();
-            //app.UseResponseCompression();
-            //app.UseMvcWithDefaultRoute();
 
             task.GetAwaiter().GetResult();
 
@@ -75,11 +81,12 @@ namespace AspNetPim
                     Container?.Dispose();
                 });
             }
+
         }
 
         private void ConfigureBackend(IAppBuilder app)
         {
-            var appDataPath = HostingEnvironment.MapPath("~/App_Data");
+            var appDataPath = Path.Combine(AppLocalRootPath, "App_Data"); // HostingEnvironment.MapPath("~/App_Data");
 
             var dbPath = Path.Combine(appDataPath, "Pim.db");
             var database = NoteLiteDb.GetNoteDatabase($"Filename={dbPath}; Upgrade=true; Initial Size=5MB; Password=;");
@@ -112,19 +119,21 @@ namespace AspNetPim
 
             var builder = new ContainerBuilder();
 
-            builder.Register(context => Storage).SingleInstance();
-            builder.RegisterType<HomeController>();
-            builder.RegisterType<ViewEditController>();
-            builder.RegisterType<SearchController>();
-            builder.Register(c => IdentityDatabaseContextFactory).SingleInstance();
-
             builder.RegisterControllers(typeof(Startup).Assembly);
+
+            builder.Register(context => Storage).SingleInstance();
+            //builder.RegisterType<HomeController>();
+            //builder.RegisterType<ViewEditController>();
+            //builder.RegisterType<SearchController>();
+            builder.Register(c => IdentityDatabaseContextFactory).SingleInstance();
 
             Container = builder.Build();
 
             app.UseAutofacMiddleware(Container);
-            app.UseAutofacMvc();
+
             DependencyResolver.SetResolver(new AutofacDependencyResolver(Container));
+
+            app.UseAutofacMvc();
         }
     }
 }
