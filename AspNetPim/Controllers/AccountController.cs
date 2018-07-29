@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -10,6 +7,8 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using AspNetPim.Models;
+using log4net;
+using Microsoft.Owin;
 using PimIdentity;
 using PimIdentity.Models;
 
@@ -18,38 +17,38 @@ namespace AspNetPim.Controllers
     [Authorize]
     public class AccountController : Controller
     {
-        private ApplicationSignInManager _signInManager;
-        private ApplicationUserManager _userManager;
-        private ApplicationRoleManager _roleManager;
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public AccountController()
+        private readonly ApplicationSignInManager _signInManager;
+        private readonly ApplicationUserManager _userManager;
+        private readonly ApplicationRoleManager _roleManager;
+
+        public AccountController(IOwinContext owinContext)
         {
+            OwinContext = owinContext;
+
+            _userManager = OwinContext.GetUserManager<ApplicationUserManager>();
+            _signInManager = OwinContext.Get<ApplicationSignInManager>();
+            _roleManager = OwinContext.Get<ApplicationRoleManager>();
         }
 
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager, ApplicationRoleManager roleManager)
+        public IOwinContext OwinContext { get; }
+
+        public AccountController(IOwinContext owinContext, ApplicationUserManager userManager, ApplicationSignInManager signInManager, ApplicationRoleManager roleManager)
         {
-            UserManager = userManager;
-            SignInManager = signInManager;
-            RoleManager = roleManager;
+            Log.DebugFormat("Instantiating with provided dependencies.");
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _roleManager = roleManager;
+
+            OwinContext = owinContext;
         }
 
-        public ApplicationSignInManager SignInManager
-        {
-            get => _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
-            private set => _signInManager = value;
-        }
+        public ApplicationSignInManager SignInManager => _signInManager;
 
-        public ApplicationUserManager UserManager
-        {
-            get => _userManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            private set => _userManager = value;
-        }
+        public ApplicationUserManager UserManager => _userManager;
 
-        public ApplicationRoleManager RoleManager
-        {
-            get => _roleManager ?? HttpContext.GetOwinContext().Get<ApplicationRoleManager>();
-            private set => _roleManager = value;
-        }
+        public ApplicationRoleManager RoleManager => _roleManager;
 
         //
         // GET: /Account/Login
@@ -75,6 +74,9 @@ namespace AspNetPim.Controllers
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, change to shouldLockout: true
             var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
+
+            Log.InfoFormat("{0} sign in result: {1}; IsAuthenticated: {2}", model.Email, result, Request.IsAuthenticated);
+
             switch (result)
             {
                 case SignInStatus.Success:
@@ -465,9 +467,8 @@ namespace AspNetPim.Controllers
             if (disposing)
             {
                 _roleManager?.Dispose();
-                _roleManager = null;
                 _userManager?.Dispose();
-                _userManager = null;
+                _signInManager?.Dispose();
             }
 
             base.Dispose(disposing);
@@ -492,6 +493,7 @@ namespace AspNetPim.Controllers
         {
             if (Url.IsLocalUrl(returnUrl))
             {
+                Log.DebugFormat("Redirecting to {0}", returnUrl);
                 return Redirect(returnUrl);
             }
             return RedirectToAction("Index", "Home");
