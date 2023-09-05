@@ -6,137 +6,135 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 using FulltextStorageLib.Util;
 using LiteDB;
 
-namespace FulltextStorageLib
+namespace FulltextStorageLib;
+
+public class Note : IPersistentNote, IEquatable<INote>
 {
-    public class Note : IPersistentNote, IEquatable<INote>
+    private string _text;
+
+    private int _hashCode;
+
+    public string Id { get; set; }
+
+    public DateTime CreateTime { get; set; }
+
+    public DateTime LastUpdateTime { get; set; }
+
+    /// <summary>
+    ///     0 for unsaved, incremented every time it's updated in the storage
+    /// </summary>
+    public int Version { get; set; }
+
+    /// <summary>
+    ///     Register update
+    /// </summary>
+    /// <returns>
+    ///     New version
+    /// </returns>
+    public int IncrementVersion()
     {
-        private string _text;
+        return ++Version;
+    }
 
-        private int _hashCode;
+    /// <summary>
+    ///     Name is just cached first line of text; should not be persisted separately
+    /// </summary>
+    public string Name { get; private set; }
 
-        public string Id { get; set; }
-
-        public DateTime CreateTime { get; set; }
-
-        public DateTime LastUpdateTime { get; set; }
-
-        /// <summary>
-        ///     0 for unsaved, incremented every time it's updated in the storage
-        /// </summary>
-        public int Version { get; set; }
-
-        /// <summary>
-        ///     Register update
-        /// </summary>
-        /// <returns>
-        ///     New version
-        /// </returns>
-        public int IncrementVersion()
+    public string Text
+    {
+        get { return _text; }
+        set
         {
-            return ++Version;
+            Name = ExtractName(value);
+            _text = value;
         }
+    }
 
-        /// <summary>
-        ///     Name is just cached first line of text; should not be persisted separately
-        /// </summary>
-        public string Name { get; private set; }
+    /// <summary>
+    ///     Id is assigned after note is saved
+    /// </summary>
+    public bool IsTransient => Version == 0;
 
-        public string Text
+    public static Note Create(string text)
+    {
+        var result = new Note()
         {
-            get { return _text; }
-            set
-            {
-                Name = ExtractName(value);
-                _text = value;
-            }
-        }
+            Id = ObjectId.NewObjectId().ToString(),
+            Text = text,
+            CreateTime = DateTime.Now,
+            LastUpdateTime = DateTime.Now,
+            Version = 0
+        };
 
-        /// <summary>
-        ///     Id is assigned after note is saved
-        /// </summary>
-        public bool IsTransient => Version == 0;
+        if (string.IsNullOrEmpty(result.Name))
+            return null;
 
-        public static Note Create(string text)
-        {
-            var result = new Note()
-            {
-                Id = ObjectId.NewObjectId().ToString(),
-                Text = text,
-                CreateTime = DateTime.Now,
-                LastUpdateTime = DateTime.Now,
-                Version = 0
-            };
+        return result;
+    }
 
-            if (string.IsNullOrEmpty(result.Name))
-                return null;
+    /// <returns>
+    ///     null if text contains any valid text (non-blank-space)
+    /// </returns>
+    private static string ExtractName(string text)
+    {
+        if (text == null)
+            return null;
 
-            return result;
-        }
+        var firstLine = StringHelper.ExtractFirstLine(text);
 
-        /// <returns>
-        ///     null if text contains any valid text (non-blank-space)
-        /// </returns>
-        private static string ExtractName(string text)
-        {
-            if (text == null)
-                return null;
+        if (firstLine?.Length > 150)
+            return StringHelper.GetTextWithLimit(firstLine, 0, 100, false);
 
-            var firstLine = StringHelper.ExtractFirstLine(text);
+        return firstLine;
+    }
 
-            if (firstLine?.Length > 150)
-                return StringHelper.GetTextWithLimit(firstLine, 0, 100, false);
+    public static string CreateShortGuid()
+    {
+        var encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
 
-            return firstLine;
-        }
+        encoded = encoded
+            .Replace("/", "_")
+            .Replace("+", "-");
 
-        public static string CreateShortGuid()
-        {
-            var encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+        return encoded.Substring(0, 22);
+    }
 
-            encoded = encoded
-              .Replace("/", "_")
-              .Replace("+", "-");
+    public override string ToString()
+    {
+        return $"{Name}#{Id}";
+    }
 
-            return encoded.Substring(0, 22);
-        }
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as INote);
+    }
 
-        public override string ToString()
-        {
-            return $"{Name}#{Id}";
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as INote);
-        }
-
-        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-        public override int GetHashCode()
-        {
-            if (_hashCode != 0)
-                return _hashCode;
-
-            _hashCode = HashHelper.GetHashCode(IsTransient ? Text : Id);
-
+    [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+    public override int GetHashCode()
+    {
+        if (_hashCode != 0)
             return _hashCode;
-        }
 
-        public bool Equals(INote other)
-        {
-            if (other == null)
-                return false;
+        _hashCode = HashHelper.GetHashCode(IsTransient ? Text : Id);
 
-            if (!IsTransient && !other.IsTransient)
-                return Id == other.Id;
+        return _hashCode;
+    }
 
-            if (IsTransient && other.IsTransient)
-                return Text == other.Text;
-
+    public bool Equals(INote other)
+    {
+        if (other == null)
             return false;
-        }
+
+        if (!IsTransient && !other.IsTransient)
+            return Id == other.Id;
+
+        if (IsTransient && other.IsTransient)
+            return Text == other.Text;
+
+        return false;
     }
 }

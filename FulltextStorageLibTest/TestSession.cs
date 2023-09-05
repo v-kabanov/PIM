@@ -10,20 +10,19 @@ using log4net;
 using log4net.Config;
 using NUnit.Framework;
 
-namespace FulltextStorageLibTest
+namespace FulltextStorageLibTest;
+
+[SetUpFixture]
+public class TestSession
 {
-    [SetUpFixture]
-    public class TestSession
+    private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+    [OneTimeSetUp]
+    public static void StartSession()
     {
-        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        var log4NetConfigPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "log4net.config");
+        XmlConfigurator.ConfigureAndWatch(LogManager.GetRepository(Assembly.GetExecutingAssembly()), new FileInfo(log4NetConfigPath));
 
-        [OneTimeSetUp]
-        public static void StartSession()
-        {
-            var log4NetConfigPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "log4net.config");
-            XmlConfigurator.ConfigureAndWatch(new FileInfo(log4NetConfigPath));
-
-            Log.Info("Starting test session");
-        }
+        Log.Info("Starting test session");
     }
 }

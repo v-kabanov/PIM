@@ -8,47 +8,46 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using FulltextStorageLib.Util;
 
-namespace FulltextStorageLib
+namespace FulltextStorageLib;
+
+public class NoteHeader : INoteHeader, IEquatable<INoteHeader>
 {
-    public class NoteHeader : INoteHeader, IEquatable<INoteHeader>
+    private int _hashCode;
+
+    public string Id { get; set; }
+
+    public DateTime CreateTime { get; set; }
+
+    public DateTime LastUpdateTime { get; set; }
+
+    public string Name { get; set; }
+
+    public override string ToString()
     {
-        private int _hashCode;
+        return $"{Name}#{Id}";
+    }
 
-        public string Id { get; set; }
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as INoteHeader);
+    }
 
-        public DateTime CreateTime { get; set; }
-
-        public DateTime LastUpdateTime { get; set; }
-
-        public string Name { get; set; }
-
-        public override string ToString()
-        {
-            return $"{Name}#{Id}";
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as INoteHeader);
-        }
-
-        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-        public override int GetHashCode()
-        {
-            if (_hashCode != 0)
-                return _hashCode;
-
-            _hashCode = HashHelper.GetHashCode(string.IsNullOrEmpty(Id) ? Name : Id);
-
+    [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+    public override int GetHashCode()
+    {
+        if (_hashCode != 0)
             return _hashCode;
-        }
 
-        public bool Equals(INoteHeader other)
-        {
-            if (other == null)
-                return false;
+        _hashCode = HashHelper.GetHashCode(string.IsNullOrEmpty(Id) ? Name : Id);
 
-            return Id == other.Id;
-        }
+        return _hashCode;
+    }
+
+    public bool Equals(INoteHeader other)
+    {
+        if (other == null)
+            return false;
+
+        return Id == other.Id;
     }
 }

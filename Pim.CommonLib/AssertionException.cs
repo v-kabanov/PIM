@@ -27,32 +27,31 @@
 
 using System;
 
-namespace Pim.CommonLib
+namespace Pim.CommonLib;
+// End Check
+
+#region Exceptions
+
+/// <summary>
+/// Exception raised when an assertion fails.
+/// </summary>
+[Serializable]
+public class AssertionException : DesignByContractException
 {
-    // End Check
-
-	#region Exceptions
-
-    /// <summary>
-	/// Exception raised when an assertion fails.
+	/// <summary>
+	/// Assertion Exception.
 	/// </summary>
-	[Serializable]
-	public class AssertionException : DesignByContractException
-	{
-		/// <summary>
-		/// Assertion Exception.
-		/// </summary>
-		public AssertionException() {}
-		/// <summary>
-		/// Assertion Exception.
-		/// </summary>
-		public AssertionException(string message) : base(message) {}
-		/// <summary>
-		/// Assertion Exception.
-		/// </summary>
-		public AssertionException(string message, Exception inner) : base(message, inner) {}
-	}
+	public AssertionException() {}
+	/// <summary>
+	/// Assertion Exception.
+	/// </summary>
+	public AssertionException(string message) : base(message) {}
+	/// <summary>
+	/// Assertion Exception.
+	/// </summary>
+	public AssertionException(string message, Exception inner) : base(message, inner) {}
+}
 
-	#endregion // Exception classes
+#endregion // Exception classes
 
-} // End Design By Contract
+// End Design By Contract

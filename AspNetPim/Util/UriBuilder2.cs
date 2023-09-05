@@ -7,7 +7,6 @@
 using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
-using FulltextStorageLib.Util;
 using Pim.CommonLib;
 
 namespace AspNetPim.Util

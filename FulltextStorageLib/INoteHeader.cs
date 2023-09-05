@@ -6,26 +6,25 @@
 
 using System;
 
-namespace FulltextStorageLib
+namespace FulltextStorageLib;
+
+public interface IFulltextIndexEntry
 {
-    public interface IFulltextIndexEntry
-    {
-        /// <summary>
-        ///     This is fulltext key.
-        /// </summary>
-        string Id { get; }
+    /// <summary>
+    ///     This is fulltext key.
+    /// </summary>
+    string Id { get; }
 
-        /// <summary>
-        ///     This will appear in search results.
-        /// </summary>
-        string Name { get; }
+    /// <summary>
+    ///     This will appear in search results.
+    /// </summary>
+    string Name { get; }
 
-        DateTime CreateTime { get; }
+    DateTime CreateTime { get; }
 
-        DateTime LastUpdateTime { get; }
-    }
+    DateTime LastUpdateTime { get; }
+}
 
-    public interface INoteHeader : IFulltextIndexEntry
-    {
-    }
+public interface INoteHeader : IFulltextIndexEntry
+{
 }

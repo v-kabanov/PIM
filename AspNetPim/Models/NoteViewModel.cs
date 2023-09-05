@@ -9,7 +9,6 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
 using FulltextStorageLib;
-using FulltextStorageLib.Util;
 using Pim.CommonLib;
 
 namespace AspNetPim.Models

@@ -1,10 +1,9 @@
 using System;
 
-namespace FulltextStorageLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding;
+
+class TimeFilter : QueryTerm
 {
-    class TimeFilter : QueryTerm
-    {
-        public DateTime? From { get; set; }
-        public DateTime? To { get; set; }
-    }
+    public DateTime? From { get; set; }
+    public DateTime? To { get; set; }
 }

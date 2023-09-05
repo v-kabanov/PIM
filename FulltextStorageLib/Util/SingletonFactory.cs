@@ -4,20 +4,19 @@
 // Comment		
 // **********************************************************************************************/
 
-namespace FulltextStorageLib.Util
+namespace FulltextStorageLib.Util;
+
+public class SingletonFactory<T> : IFactory<T>
 {
-    public class SingletonFactory<T> : IFactory<T>
+    private readonly T _instance;
+
+    public SingletonFactory(T instance)
     {
-        private readonly T _instance;
+        _instance = instance;
+    }
 
-        public SingletonFactory(T instance)
-        {
-            _instance = instance;
-        }
-
-        public T Create()
-        {
-            return _instance;
-        }
+    public T Create()
+    {
+        return _instance;
     }
 }

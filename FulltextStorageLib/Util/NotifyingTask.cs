@@ -7,55 +7,54 @@
 using System;
 using Pim.CommonLib;
 
-namespace FulltextStorageLib.Util
+namespace FulltextStorageLib.Util;
+
+/// <summary>
+///     Adds "Executed" event to an existing task
+/// </summary>
+public class NotifyingTask : ITask
 {
-    /// <summary>
-    ///     Adds "Executed" event to an existing task
-    /// </summary>
-    public class NotifyingTask : ITask
+    private ITask _target;
+
+    public NotifyingTask(ITask target)
     {
-        private ITask _target;
+        Check.DoRequireArgumentNotNull(target, "target");
 
-        public NotifyingTask(ITask target)
+        _target = target;
+    }
+
+    /// <summary>
+    /// Event raised imediately after executing target task, regardless of whether exception has been thrown.
+    /// </summary>
+    /// <param name="sender">
+    /// </param>
+    /// <param name="args">
+    /// Will contain reference to target task (rather than this wrapper)
+    /// </param>
+    /// <remarks></remarks>
+    public event ExecutedEventHandler Executed;
+
+    public delegate void ExecutedEventHandler(object sender, TaskExecutedEventArgs args);
+
+    public void Execute()
+    {
+        try
         {
-            Check.DoRequireArgumentNotNull(target, "target");
-
-            _target = target;
+            _target.Execute();
+            OnExecuted(null);
+        }
+        catch (Exception ex)
+        {
+            OnExecuted(ex);
+            throw;
         }
 
-        /// <summary>
-        /// Event raised imediately after executing target task, regardless of whether exception has been thrown.
-        /// </summary>
-        /// <param name="sender">
-        /// </param>
-        /// <param name="args">
-        /// Will contain reference to target task (rather than this wrapper)
-        /// </param>
-        /// <remarks></remarks>
-        public event ExecutedEventHandler Executed;
+    }
 
-        public delegate void ExecutedEventHandler(object sender, TaskExecutedEventArgs args);
+    public string Name => _target.Name;
 
-        public void Execute()
-        {
-            try
-            {
-                _target.Execute();
-                OnExecuted(null);
-            }
-            catch (Exception ex)
-            {
-                OnExecuted(ex);
-                throw;
-            }
-
-        }
-
-        public string Name => _target.Name;
-
-        protected virtual void OnExecuted(Exception exception)
-        {
-            Executed?.Invoke(this, new TaskExecutedEventArgs(exception, _target));
-        }
+    protected virtual void OnExecuted(Exception exception)
+    {
+        Executed?.Invoke(this, new TaskExecutedEventArgs(exception, _target));
     }
 }

@@ -4,26 +4,23 @@
 // Comment		
 // **********************************************************************************************/
 
-using System;
+namespace FulltextStorageLib;
 
-namespace FulltextStorageLib
+/// <summary>
+///     Interface exposed to GUI
+/// </summary>
+public interface INote : INoteHeader
 {
-    /// <summary>
-    ///     Interface exposed to GUI
-    /// </summary>
-    public interface INote : INoteHeader
-    {
-        string Text { get; set; }
+    string Text { get; set; }
 
-        bool IsTransient { get; }
+    bool IsTransient { get; }
 
-        int Version { get; }
-    }
+    int Version { get; }
+}
 
-    public interface IPersistentNote : INote
-    {
-        //new int Version { get; set; }
+public interface IPersistentNote : INote
+{
+    //new int Version { get; set; }
 
-        int IncrementVersion();
-    }
+    int IncrementVersion();
 }

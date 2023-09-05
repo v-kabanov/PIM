@@ -8,7 +8,6 @@ using System.Web.Hosting;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
-using AspNetPim.Controllers;
 using Autofac;
 using Autofac.Integration.Mvc;
 using FulltextStorageLib;

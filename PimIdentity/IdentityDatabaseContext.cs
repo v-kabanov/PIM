@@ -5,28 +5,27 @@ using LiteDB;
 using Microsoft.AspNet.Identity;
 using PimIdentity.Models;
 
-namespace PimIdentity
+namespace PimIdentity;
+
+public class IdentityDatabaseContext : IDisposable
 {
-    public class IdentityDatabaseContext : IDisposable
+
+    public IdentityDatabaseContextFactory ContextFactory { get; }
+
+    public IdentityDatabaseContext(IdentityDatabaseContextFactory contextFactory)
     {
+        Contract.Requires(contextFactory != null);
 
-        public IdentityDatabaseContextFactory ContextFactory { get; }
-
-        public IdentityDatabaseContext(IdentityDatabaseContextFactory contextFactory)
-        {
-            Contract.Requires(contextFactory != null);
-
-            ContextFactory = contextFactory;
-        }
-
-        public LiteCollection<ApplicationUser> Users => ContextFactory.Users;
-
-        public LiteCollection<IdentityRole> Roles => ContextFactory.Roles;
-
-        public IUserStore<ApplicationUser> UserStore => ContextFactory.UserStore;
-
-        public IRoleStore<IdentityRole> RoleStore => ContextFactory.RoleStore;
-
-        public void Dispose() { }
+        ContextFactory = contextFactory;
     }
+
+    public LiteCollection<ApplicationUser> Users => ContextFactory.Users;
+
+    public LiteCollection<IdentityRole> Roles => ContextFactory.Roles;
+
+    public IUserStore<ApplicationUser> UserStore => ContextFactory.UserStore;
+
+    public IRoleStore<IdentityRole> RoleStore => ContextFactory.RoleStore;
+
+    public void Dispose() { }
 }

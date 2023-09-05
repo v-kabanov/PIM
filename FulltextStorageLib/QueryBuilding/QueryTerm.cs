@@ -1,7 +1,6 @@
-namespace FulltextStorageLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding;
+
+class QueryTerm
 {
-    class QueryTerm
-    {
-        public string FieldName { get; set; }
-    }
+    public string FieldName { get; set; }
 }

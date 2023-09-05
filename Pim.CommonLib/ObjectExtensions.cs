@@ -8,50 +8,49 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 
-namespace Pim.CommonLib
+namespace Pim.CommonLib;
+
+public static class ObjectExtensions
 {
-    public static class ObjectExtensions
+    public static bool In<T>(this T value, params T[] values)
     {
-        public static bool In<T>(this T value, params T[] values)
-        {
-            return values.Contains(value);
-        }
+        return values.Contains(value);
+    }
 
-        public static bool In<T>(this T value, IEnumerable<T> values)
-        {
-            return values.Contains(value);
-        }
+    public static bool In<T>(this T value, IEnumerable<T> values)
+    {
+        return values.Contains(value);
+    }
 
-        public static bool NotIn<T>(this T value, params T[] values)
-        {
-            return !values.Contains(value);
-        }
+    public static bool NotIn<T>(this T value, params T[] values)
+    {
+        return !values.Contains(value);
+    }
 
-        public static bool NotIn<T>(this T value, IEnumerable<T> values)
-        {
-            return !values.Contains(value);
-        }
+    public static bool NotIn<T>(this T value, IEnumerable<T> values)
+    {
+        return !values.Contains(value);
+    }
 
-        public static List<T> WrapInList<T>(this T value)
-        {
-            return Enumerable.Repeat(value, 1).ToList();
-        }
+    public static List<T> WrapInList<T>(this T value)
+    {
+        return Enumerable.Repeat(value, 1).ToList();
+    }
 
-        public static HashSet<T> WrapInSet<T>(this T value, IEqualityComparer<T> comparer = null)
-        {
-            return Enumerable.Repeat(value, 1).ToHashSet(comparer);
-        }
+    public static HashSet<T> WrapInSet<T>(this T value, IEqualityComparer<T> comparer = null)
+    {
+        return Enumerable.Repeat(value, 1).ToHashSet(comparer);
+    }
 
-        [SourceTemplate]
-        public static void CheckArgNotNull(this object value)
-        {
-            Check.DoRequireArgumentNotNull(value, nameof(value));
-        }
+    [SourceTemplate]
+    public static void CheckArgNotNull(this object value)
+    {
+        Check.DoRequireArgumentNotNull(value, nameof(value));
+    }
 
-        [SourceTemplate]
-        public static void CheckArgNotBlank(this string value)
-        {
-            Check.DoRequireArgumentNotBlank(value, nameof(value));
-        }
+    [SourceTemplate]
+    public static void CheckArgNotBlank(this string value)
+    {
+        Check.DoRequireArgumentNotBlank(value, nameof(value));
     }
 }

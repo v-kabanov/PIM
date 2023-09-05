@@ -4,19 +4,17 @@
 // Comment		
 // **********************************************************************************************/
 
-namespace FulltextStorageLib.Util
+namespace FulltextStorageLib.Util;
+
+/// <summary>
+/// Defines interface of a stateful task
+/// </summary>
+/// <remarks>
+/// Provides an alternative to Action delegate to facilitate reusable processing components
+/// </remarks>
+public interface ITask
 {
 
-    /// <summary>
-    /// Defines interface of a stateful task
-    /// </summary>
-    /// <remarks>
-    /// Provides an alternative to Action delegate to facilitate reusable processing components
-    /// </remarks>
-    public interface ITask
-    {
-
-        void Execute();
-        string Name { get; }
-    }
+    void Execute();
+    string Name { get; }
 }

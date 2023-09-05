@@ -1,8 +1,7 @@
-namespace FulltextStorageLib.QueryBuilding
+namespace FulltextStorageLib.QueryBuilding;
+
+enum BooleanOperation
 {
-    enum BooleanOperation
-    {
-        And,
-        Or
-    }
+    And,
+    Or
 }

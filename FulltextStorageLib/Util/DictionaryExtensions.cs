@@ -8,31 +8,30 @@
 using System.Collections.Generic;
 using Pim.CommonLib;
 
-namespace FulltextStorageLib.Util
+namespace FulltextStorageLib.Util;
+
+public static class DictionaryExtensions
 {
-    public static class DictionaryExtensions
+    /// <summary>
+    ///     Soft version of built-in method, returns default value if key not found.
+    /// </summary>
+    /// <param name="source">
+    ///     Mandatory
+    /// </param>
+    /// <param name="key">
+    ///     Key value, may be null
+    /// </param>
+    /// <returns>
+    ///     default value for <typeparamref name="TValue"/> if <paramref name="key"/> is not contained in <paramref name="source"/>.
+    /// </returns>
+    public static TValue TryGetValue<TKey, TValue>(this IDictionary<TKey, TValue> source, TKey key)
     {
-        /// <summary>
-        ///     Soft version of built-in method, returns default value if key not found.
-        /// </summary>
-        /// <param name="source">
-        ///     Mandatory
-        /// </param>
-        /// <param name="key">
-        ///     Key value, may be null
-        /// </param>
-        /// <returns>
-        ///     default value for <typeparamref name="TValue"/> if <paramref name="key"/> is not contained in <paramref name="source"/>.
-        /// </returns>
-        public static TValue TryGetValue<TKey, TValue>(this IDictionary<TKey, TValue> source, TKey key)
-        {
-            Check.DoRequireArgumentNotNull(source, nameof(source));
+        Check.DoRequireArgumentNotNull(source, nameof(source));
 
-            TValue result;
-            if (source.TryGetValue(key, out result))
-                return result;
+        TValue result;
+        if (source.TryGetValue(key, out result))
+            return result;
 
-            return default(TValue);
-        }
+        return default(TValue);
     }
 }

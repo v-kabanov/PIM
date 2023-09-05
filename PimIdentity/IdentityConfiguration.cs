@@ -11,102 +11,101 @@ using AspNet.Identity.LiteDB;
 using Pim.CommonLib;
 using PimIdentity.Models;
 
-namespace PimIdentity
-{
-    public interface IIdentityConfiguration
-    {
-        /// <summary>
-        ///     Create default roles and users if they do not exist - initialize identity store so that PIM can work with it.
-        /// </summary>
-        /// <returns></returns>
-        Task EnsureDefaultUsersAndRolesAsync();
+namespace PimIdentity;
 
-        /// <summary>
-        ///     Set new password directly, overriding current.
-        /// </summary>
-        /// <param name="userName">
-        ///     <see cref="IdentityUser.UserName"/>, mandatory
-        /// </param>
-        /// <param name="newPassword">
-        ///     Mandatory, no complexity checks.
-        /// </param>
-        Task ResetPasswordAsync(string userName, string newPassword);
-    }
+public interface IIdentityConfiguration
+{
+    /// <summary>
+    ///     Create default roles and users if they do not exist - initialize identity store so that PIM can work with it.
+    /// </summary>
+    /// <returns></returns>
+    Task EnsureDefaultUsersAndRolesAsync();
 
     /// <summary>
-    ///     Sets up PIM security - creates required roles and default users
+    ///     Set new password directly, overriding current.
     /// </summary>
-    public class IdentityConfiguration : IIdentityConfiguration
+    /// <param name="userName">
+    ///     <see cref="IdentityUser.UserName"/>, mandatory
+    /// </param>
+    /// <param name="newPassword">
+    ///     Mandatory, no complexity checks.
+    /// </param>
+    Task ResetPasswordAsync(string userName, string newPassword);
+}
+
+/// <summary>
+///     Sets up PIM security - creates required roles and default users
+/// </summary>
+public class IdentityConfiguration : IIdentityConfiguration
+{
+    public const string AdminRoleName = "Admin";
+    public const string AdminUserName = "admin";
+    public const string DefaultAdminPassword = "password";
+    private const string ReaderRoleName = "Reader";
+    private const string WriterRoleName = "Writer";
+
+    private readonly ApplicationRoleManager _roleManager;
+    private readonly ApplicationUserManager _userManager;
+
+    /// <inheritdoc />
+    public IdentityConfiguration(IdentityDatabaseContextFactory databaseContextFactory)
     {
-        public const string AdminRoleName = "Admin";
-        public const string AdminUserName = "admin";
-        public const string DefaultAdminPassword = "password";
-        private const string ReaderRoleName = "Reader";
-        private const string WriterRoleName = "Writer";
+        Check.DoRequireArgumentNotNull(databaseContextFactory, nameof(databaseContextFactory));
 
-        private readonly ApplicationRoleManager _roleManager;
-        private readonly ApplicationUserManager _userManager;
+        _roleManager = ApplicationRoleManager.CreateOutOfContext(databaseContextFactory);
+        _userManager = ApplicationUserManager.CreateOutOfContext(databaseContextFactory);
+    }
 
-        /// <inheritdoc />
-        public IdentityConfiguration(IdentityDatabaseContextFactory databaseContextFactory)
-        {
-            Check.DoRequireArgumentNotNull(databaseContextFactory, nameof(databaseContextFactory));
+    /// <inheritdoc />
+    public async Task ResetPasswordAsync(string userName, string newPassword)
+    {
+        Check.DoRequireArgumentNotBlank(userName, nameof(userName));
+        Check.DoRequireArgumentNotBlank(newPassword, nameof(newPassword));
 
-            _roleManager = ApplicationRoleManager.CreateOutOfContext(databaseContextFactory);
-            _userManager = ApplicationUserManager.CreateOutOfContext(databaseContextFactory);
-        }
+        var user = await _userManager.FindByNameAsync(userName);
 
-        /// <inheritdoc />
-        public async Task ResetPasswordAsync(string userName, string newPassword)
-        {
-            Check.DoRequireArgumentNotBlank(userName, nameof(userName));
-            Check.DoRequireArgumentNotBlank(newPassword, nameof(newPassword));
+        if (user == null)
+            throw new ArgumentException($"User with name '{userName}' does not exist.");
 
-            var user = await _userManager.FindByNameAsync(userName);
+        await _userManager.RemovePasswordAsync(user.Id);
+        await _userManager.AddPasswordAsync(user.Id, newPassword);
+    }
 
-            if (user == null)
-                throw new ArgumentException($"User with name '{userName}' does not exist.");
-
-            await _userManager.RemovePasswordAsync(user.Id);
-            await _userManager.AddPasswordAsync(user.Id, newPassword);
-        }
-
-        public async Task EnsureDefaultUsersAndRolesAsync()
-        {
+    public async Task EnsureDefaultUsersAndRolesAsync()
+    {
 #pragma warning disable 4014
-            EnsureRoleAsync(ReaderRoleName);
-            EnsureRoleAsync(WriterRoleName);
+        EnsureRoleAsync(ReaderRoleName);
+        EnsureRoleAsync(WriterRoleName);
 #pragma warning restore 4014
-            await EnsureRoleAsync(AdminRoleName);
+        await EnsureRoleAsync(AdminRoleName);
 
-            var admin = await EnsureUserAsync(AdminUserName, "admin@megapatam.com", DefaultAdminPassword);
+        var admin = await EnsureUserAsync(AdminUserName, "admin@megapatam.com", DefaultAdminPassword);
 
-            await _userManager.AddToRoleAsync(admin.Id, AdminUserName);
-        }
+        await _userManager.AddToRoleAsync(admin.Id, AdminUserName);
+    }
 
-        private async Task EnsureRoleAsync(string name)
+    private async Task EnsureRoleAsync(string name)
+    {
+        Contract.Requires(!string.IsNullOrWhiteSpace(name));
+
+        if (!await _roleManager.RoleExistsAsync(name))
+            await _roleManager.CreateAsync(new IdentityRole(name));
+    }
+
+    private async Task<ApplicationUser> EnsureUserAsync(string name, string email, string password)
+    {
+        Contract.Requires(!string.IsNullOrWhiteSpace(name));
+        Contract.Requires(!string.IsNullOrEmpty(email));
+        Contract.Requires(password != null);
+
+        var user = await _userManager.FindByNameAsync(name);
+
+        if (user == null)
         {
-            Contract.Requires(!string.IsNullOrWhiteSpace(name));
-
-            if (!await _roleManager.RoleExistsAsync(name))
-                await _roleManager.CreateAsync(new IdentityRole(name));
+            user = new ApplicationUser {UserName = name, Email = email};
+            await _userManager.CreateAsync(user, password);
         }
 
-        private async Task<ApplicationUser> EnsureUserAsync(string name, string email, string password)
-        {
-            Contract.Requires(!string.IsNullOrWhiteSpace(name));
-            Contract.Requires(!string.IsNullOrEmpty(email));
-            Contract.Requires(password != null);
-
-            var user = await _userManager.FindByNameAsync(name);
-
-            if (user == null)
-            {
-                user = new ApplicationUser {UserName = name, Email = email};
-                await _userManager.CreateAsync(user, password);
-            }
-
-            return user;
-        }
+        return user;
     }
 }
