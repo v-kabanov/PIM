@@ -7,7 +7,10 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using AspNet.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Models;
+using JetBrains.Annotations;
+using Microsoft.AspNetCore.Identity;
 using Pim.CommonLib;
 using PimIdentity.Models;
 
@@ -46,12 +49,12 @@ public class IdentityConfiguration : IIdentityConfiguration
 
     private readonly ApplicationRoleManager _roleManager;
     private readonly ApplicationUserManager _userManager;
+    private readonly IdentityDatabaseContextFactory _contextFactory;
 
     /// <inheritdoc />
-    public IdentityConfiguration(IdentityDatabaseContextFactory databaseContextFactory)
+    public IdentityConfiguration([NotNull] IdentityDatabaseContextFactory databaseContextFactory)
     {
-        Check.DoRequireArgumentNotNull(databaseContextFactory, nameof(databaseContextFactory));
-
+        _contextFactory = databaseContextFactory ?? throw new ArgumentNullException(nameof(databaseContextFactory));
         _roleManager = ApplicationRoleManager.CreateOutOfContext(databaseContextFactory);
         _userManager = ApplicationUserManager.CreateOutOfContext(databaseContextFactory);
     }

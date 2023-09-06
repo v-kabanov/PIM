@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using AspNet.Identity.LiteDB;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
+using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Owin;
 using PimIdentity.Models;
 
@@ -10,8 +12,9 @@ namespace PimIdentity;
 
 public class ApplicationUserManager : UserManager<ApplicationUser>
 {
-    public ApplicationUserManager(IUserStore<ApplicationUser> store)
-        : base(store)
+    public ApplicationUserManager(IUserStore<ApplicationUser> store, IOptions<IdentityOptions> options, IPasswordHasher<ApplicationUser> passwordHasher
+        IEnumerable<IUserValidator<ApplicationUser>> userValidators)
+        : base(store, options, passwordHasher, )
     {
     }
 

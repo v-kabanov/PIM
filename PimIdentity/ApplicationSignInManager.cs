@@ -1,12 +1,11 @@
 ﻿using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security;
 using PimIdentity.Models;
 
 namespace PimIdentity;
-
+/*
 public class ApplicationSignInManager : SignInManager<ApplicationUser, string>
 {
     public ApplicationSignInManager(ApplicationUserManager userManager, IAuthenticationManager authenticationManager)
@@ -24,3 +23,4 @@ public class ApplicationSignInManager : SignInManager<ApplicationUser, string>
         return new ApplicationSignInManager(context.GetUserManager<ApplicationUserManager>(), context.Authentication);
     }
 }
+*/

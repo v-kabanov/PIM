@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using AspNet.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB;
 using LiteDB;
-using Microsoft.AspNet.Identity;
 using PimIdentity.Models;
 
 namespace PimIdentity;

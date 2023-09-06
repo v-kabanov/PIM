@@ -1,14 +1,16 @@
 ﻿using System.Diagnostics.Contracts;
-using AspNet.Identity.LiteDB;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
+using AspNetCore.Identity.LiteDB.Data;
+using AspNetCore.Identity.LiteDB.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Owin;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
 public class ApplicationRoleManager : RoleManager<IdentityRole>
 {
-    public ApplicationRoleManager(IRoleStore<IdentityRole, string> store) : base(store)
+    public ApplicationRoleManager(IRoleStore<IdentityRole> store) : base(store)
     {
     }
 

@@ -41,6 +41,10 @@ public static class ObjectExtensions
     {
         return Enumerable.Repeat(value, 1).ToHashSet(comparer);
     }
+    
+    public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);
+    
+    public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
     [SourceTemplate]
     public static void CheckArgNotNull(this object value)
