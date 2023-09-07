@@ -14,6 +14,7 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using Lucene.Net.Util;
 using Pim.CommonLib;
 using Version = Lucene.Net.Util.Version;
 
@@ -176,9 +177,9 @@ public class LuceneIndex : ILuceneIndex
         Check.DoCheckArgument(from.HasValue || to.HasValue);
         Check.DoCheckArgument(!from.HasValue || !to.HasValue || from.Value < to.Value);
 
-        var fromString = from.HasValue ? DateTools.DateToString(from.Value, DateTools.Resolution.SECOND) : null;
-        var toString = to.HasValue ? DateTools.DateToString(to.Value, DateTools.Resolution.SECOND) : null;
-        return new TermRangeFilter(fieldName, fromString, toString, true, false);
+        var fromString = from.HasValue ? DateTools.DateToString(from.Value, DateResolution.SECOND) : null;
+        var toString = to.HasValue ? DateTools.DateToString(to.Value, DateResolution.SECOND) : null;
+        return new TermRangeFilter(fieldName, new BytesRef(fromString), new BytesRef(toString), true, false);
     }
 
     public Query CreateQuery(string fieldName, string queryText, bool fuzzy)
@@ -193,23 +194,15 @@ public class LuceneIndex : ILuceneIndex
 
         var termsString = string.Join(" ", terms);
 
-        var parser = new QueryParser(Version.LUCENE_30, fieldName, Analyzer)
-        {
-            PhraseSlop = 2,
-            FuzzyMinSim = 0.1f,
-            DefaultOperator = QueryParser.Operator.OR
-        };
-
-        var parsedQuery = Parse(queryText, parser);
-
-        var booleanQuery = new BooleanQuery().Or(parsedQuery);
-
-        var parsedTermsQuery = Parse(termsString, parser);
-        parsedTermsQuery.Boost = 0.3f;
-
-        booleanQuery.Or(parsedTermsQuery);
+        var queryBuilder = new QueryBuilder(Analyzer);
 
         var term = new Term(fieldName, queryText);
+
+        var parsedQuery = queryBuilder.CreatePhraseQuery(fieldName, queryText);
+        var parsedTermsQuery = queryBuilder.CreatePhraseQuery(fieldName, termsString, 2); //Parse(termsString, parser);
+        parsedTermsQuery.Boost = 0.3f;
+
+        var booleanQuery = new BooleanQuery().Or(parsedQuery).Or(parsedTermsQuery);
 
         if (fuzzy)
             booleanQuery.Or(new FuzzyQuery(term));

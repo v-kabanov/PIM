@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Models;
 using LiteDB;
-using PimIdentity.Models;
+using Microsoft.AspNetCore.Identity;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
 public class IdentityDatabaseContext : IDisposable
 {
-
     public IdentityDatabaseContextFactory ContextFactory { get; }
 
     public IdentityDatabaseContext(IdentityDatabaseContextFactory contextFactory)
@@ -18,9 +18,9 @@ public class IdentityDatabaseContext : IDisposable
         ContextFactory = contextFactory;
     }
 
-    public LiteCollection<ApplicationUser> Users => ContextFactory.Users;
+    public ILiteCollection<ApplicationUser> Users => ContextFactory.Users;
 
-    public LiteCollection<IdentityRole> Roles => ContextFactory.Roles;
+    public ILiteCollection<IdentityRole> Roles => ContextFactory.Roles;
 
     public IUserStore<ApplicationUser> UserStore => ContextFactory.UserStore;
 

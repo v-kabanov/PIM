@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using AspNetCore.Identity.LiteDB;
 using AspNetCore.Identity.LiteDB.Models;
 using JetBrains.Annotations;
-using Microsoft.AspNetCore.Identity;
 using Pim.CommonLib;
 using PimIdentity.Models;
 
@@ -28,7 +27,7 @@ public interface IIdentityConfiguration
     ///     Set new password directly, overriding current.
     /// </summary>
     /// <param name="userName">
-    ///     <see cref="IdentityUser.UserName"/>, mandatory
+    ///     <see cref="ApplicationUser.UserName"/>, mandatory
     /// </param>
     /// <param name="newPassword">
     ///     Mandatory, no complexity checks.
@@ -70,8 +69,8 @@ public class IdentityConfiguration : IIdentityConfiguration
         if (user == null)
             throw new ArgumentException($"User with name '{userName}' does not exist.");
 
-        await _userManager.RemovePasswordAsync(user.Id);
-        await _userManager.AddPasswordAsync(user.Id, newPassword);
+        await _userManager.RemovePasswordAsync(user);
+        await _userManager.AddPasswordAsync(user, newPassword);
     }
 
     public async Task EnsureDefaultUsersAndRolesAsync()
@@ -84,7 +83,7 @@ public class IdentityConfiguration : IIdentityConfiguration
 
         var admin = await EnsureUserAsync(AdminUserName, "admin@megapatam.com", DefaultAdminPassword);
 
-        await _userManager.AddToRoleAsync(admin.Id, AdminUserName);
+        await _userManager.AddToRoleAsync(admin, AdminUserName);
     }
 
     private async Task EnsureRoleAsync(string name)

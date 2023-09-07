@@ -1,11 +1,16 @@
 using System.Reflection;
+using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Data;
+using AspNetCore.Identity.LiteDB.Models;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FulltextStorageLib;
 using log4net;
 using log4net.Config;
+using Microsoft.AspNetCore.Identity;
 using Pim.CommonLib;
 using PimIdentity;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 var Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -25,6 +30,7 @@ var appOptionsSection = builder.Configuration.GetSection(nameof(AppOptions));
 appOptionsSection.Bind(appOptions);
 
 var appDataPath = Path.Combine(appRootPath, "App_Data"); // HostingEnvironment.MapPath("~/App_Data");
+Directory.CreateDirectory(appDataPath);
 
 var dbPath = Path.Combine(appDataPath, "Pim.db");
 var database = NoteLiteDb.GetNoteDatabase($"Filename={dbPath}; Upgrade=true; Initial Size=5MB; Password=;");
@@ -56,9 +62,6 @@ storage.OpenOrCreateIndexes(stemmerNames);
 
 storage.MultiIndex.UseFuzzySearch = true;
 
-builder.Services.AddRazorPages();
-builder.Services.AddSingleton(appOptions);
-
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
 // Register services directly with Autofac here.
@@ -68,7 +71,32 @@ builder.Host.ConfigureContainer<ContainerBuilder>(
     {
         conBuilder.Register(context => storage).SingleInstance();
         conBuilder.Register(c => identityDatabaseContextFactory).SingleInstance();
+        conBuilder.Register(c => identityDatabaseContextFactory.Create()).InstancePerLifetimeScope();
     });
+
+builder.Services
+    .AddAutofac()
+    .AddSingleton(appOptions)
+    .AddRazorPages();
+
+builder.Services.AddSingleton<ILiteDbContext>(identityDatabaseContextFactory.DbContext);
+
+builder.Services
+    .AddScoped<UserManager<ApplicationUser>>(serviceProvider => ApplicationUserManager.Create(serviceProvider))
+    .AddScoped<RoleManager<IdentityRole>>(serviceProvider => ApplicationRoleManager.Create(serviceProvider))
+    .AddIdentity<ApplicationUser, IdentityRole>(options => ApplicationUserManager.SetOptions(options))
+    .AddUserStore<LiteDbUserStore<ApplicationUser>>()
+    .AddRoleStore<LiteDbRoleStore<IdentityRole>>()
+    //.AddUserManager<ApplicationUserManager>()
+    //.AddRoleManager<ApplicationRoleManager>()
+    .AddDefaultTokenProviders();
+
+// to customize auth
+//builder.Services.ConfigureApplicationCookie(o =>
+//{
+//    o.LoginPath = "Account/Login";
+//    o.SlidingExpiration = true;
+//});
 
 var app = builder.Build();
 
@@ -80,12 +108,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthorization();
+app
+    .UseHttpsRedirection()
+    .UseStaticFiles()
+    .UseRouting()
+    .UseAuthentication()
+    .UseAuthorization();
 
 app.MapRazorPages();
 

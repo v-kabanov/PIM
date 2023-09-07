@@ -1,8 +1,9 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace PimIdentity;
 
+/*
 public class SmsService : IIdentityMessageService
 {
     public Task SendAsync(IdentityMessage message)
@@ -10,4 +11,4 @@ public class SmsService : IIdentityMessageService
         // Plug in your SMS service here to send a text message.
         return Task.FromResult(0);
     }
-}
+}*/

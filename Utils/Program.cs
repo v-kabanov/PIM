@@ -104,8 +104,8 @@ class Program
                 if (adminUser.LockoutEnabled)
                 {
                     Console.WriteLine("Unlocking admin");
-                    userManager.ResetAccessFailedCountAsync(adminUser.Id);
-                    userManager.SetLockoutEnabledAsync(adminUser.Id, false);
+                    userManager.ResetAccessFailedCountAsync(adminUser);
+                    userManager.SetLockoutEnabledAsync(adminUser, false);
                 }
             }
 

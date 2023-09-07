@@ -5,24 +5,24 @@
 
 @Html.Partial("SearchPartial", Model, ViewData)
 
-@section Init
-{
-    var config = {
-    mainFormSelector: '#mainForm',
-    deleteNoteUrl: '@Url.Action("Delete")',
-    deleteNoteButtonSelector: '[delete-note-by-id]',
-    divInProgressSelector: '#progressIndicator',
-    buttonAttributeNameNoteId: "noteId",
-    divNoteListSelector: "#divNoteList",
-    };
-
-    (pim.pages.search)
-    &&
-    (pim.pages.search.init(config));
-}
- 
-<hr/>
-   
-<div>
-    @Html.ActionLink("Back to home page", "Index", "Home")
-</div>
+@* @section Init *@
+@* { *@
+@*     var config = { *@
+@*     mainFormSelector: '#mainForm', *@
+@*     deleteNoteUrl: '@Url.Action("Delete")', *@
+@*     deleteNoteButtonSelector: '[delete-note-by-id]', *@
+@*     divInProgressSelector: '#progressIndicator', *@
+@*     buttonAttributeNameNoteId: "noteId", *@
+@*     divNoteListSelector: "#divNoteList", *@
+@*     }; *@
+@* *@
+@*     (pim.pages.search) *@
+@*     && *@
+@*     (pim.pages.search.init(config)); *@
+@* } *@
+@*   *@
+@* <hr/> *@
+@*     *@
+@* <div> *@
+@*     @Html.ActionLink("Back to home page", "Index", "Home") *@
+@* </div> *@

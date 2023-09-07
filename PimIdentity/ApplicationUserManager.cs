@@ -1,83 +1,73 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Data;
 using AspNetCore.Identity.LiteDB.Models;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.Owin;
-using PimIdentity.Models;
+using Pim.CommonLib;
 
 namespace PimIdentity;
 
 public class ApplicationUserManager : UserManager<ApplicationUser>
 {
-    public ApplicationUserManager(IUserStore<ApplicationUser> store, IOptions<IdentityOptions> options, IPasswordHasher<ApplicationUser> passwordHasher
-        IEnumerable<IUserValidator<ApplicationUser>> userValidators)
-        : base(store, options, passwordHasher, )
+    public ApplicationUserManager(IUserStore<ApplicationUser> store, IOptions<IdentityOptions> options = null, IServiceProvider serviceProvider = null)
+        : base(store, options, new PasswordHasher<ApplicationUser>()
+            , new UserValidator<ApplicationUser>().WrapInList()
+            , new PasswordValidator<ApplicationUser>().WrapInList()
+            , new UpperInvariantLookupNormalizer()
+            , new IdentityErrorDescriber()
+            , serviceProvider
+            , null)
     {
     }
 
-    /// <param name="options">
-    ///     Optional
-    /// </param>
-    /// <param name="context">
-    ///     Optional
-    /// </param>
-    /// <returns></returns>
-    public static ApplicationUserManager Create(IdentityFactoryOptions<ApplicationUserManager> options, IOwinContext context) 
+    public static IUserStore<ApplicationUser> CreateUserStore(ILiteDbContext databaseContext) => new LiteDbUserStore<ApplicationUser>(databaseContext);
+
+    public static ApplicationUserManager Create(IServiceProvider serviceProvider, bool setOptions = true) 
     {
-        Contract.Requires(options != null);
-        Contract.Requires(context != null);
+        Contract.Requires(serviceProvider != null);
 
-        var manager = new ApplicationUserManager(new UserStore<ApplicationUser>(context.Get<IdentityDatabaseContext>().Users));
-        // Configure validation logic for usernames
-        manager.UserValidator = new UserValidator<ApplicationUser>(manager)
-        {
-            AllowOnlyAlphanumericUserNames = false,
-            RequireUniqueEmail = true
-        };
-
-        // Configure validation logic for passwords
-        manager.PasswordValidator = new PasswordValidator
-        {
-            RequiredLength = 5,
-            RequireNonLetterOrDigit = false,
-            RequireDigit = false,
-            RequireLowercase = false,
-            RequireUppercase = false,
-        };
-
-        // Configure user lockout defaults
-        manager.UserLockoutEnabledByDefault = true;
-        manager.DefaultAccountLockoutTimeSpan = TimeSpan.FromMinutes(5);
-        manager.MaxFailedAccessAttemptsBeforeLockout = 5;
-
-        // Register two factor authentication providers. This application uses Phone and Emails as a step of receiving a code for verifying the user
-        // You can write your own provider and plug it in here.
-        manager.RegisterTwoFactorProvider("Phone Code", new PhoneNumberTokenProvider<ApplicationUser>
-        {
-            MessageFormat = "Your security code is {0}"
-        });
-        manager.RegisterTwoFactorProvider("Email Code", new EmailTokenProvider<ApplicationUser>
-        {
-            Subject = "Security Code",
-            BodyFormat = "Your security code is {0}"
-        });
-        manager.EmailService = new EmailService();
-        manager.SmsService = new SmsService();
-        var dataProtectionProvider = options?.DataProtectionProvider;
-
-        if (dataProtectionProvider != null)
-        {
-            manager.UserTokenProvider = 
-                new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
-        }
-        return manager;
+        var identityDatabaseContext = serviceProvider.GetRequiredService<IdentityDatabaseContext>();
+        
+        return CreateInternal(identityDatabaseContext.UserStore, setOptions);
     }
 
-    public static ApplicationUserManager CreateOutOfContext(IdentityDatabaseContextFactory databaseContextFactory)
+    public static ApplicationUserManager CreateOutOfContext(IdentityDatabaseContextFactory databaseContextFactory, bool setOptions = true)
+        => CreateInternal(databaseContextFactory.UserStore, setOptions);
+    
+    private static ApplicationUserManager CreateInternal([NotNull] IUserStore<ApplicationUser> store, bool setOptions)
     {
-        return new ApplicationUserManager(databaseContextFactory.UserStore);
+        if (store == null) throw new ArgumentNullException(nameof(store));
+        
+        var options = setOptions
+            ? GetDefaultOptions()
+            : null;
+
+        return new ApplicationUserManager(store, options);
+    }
+    
+    public static IOptions<IdentityOptions> GetDefaultOptions()
+    {
+        var result = new IdentityOptions();
+        SetOptions(result);
+        return new OptionsWrapper<IdentityOptions>(result);
+    }
+    
+    public static void SetOptions(IdentityOptions options)
+    {
+        options.Password = new PasswordOptions
+        {
+            RequireDigit = false
+            , RequireLowercase = false
+            , RequireUppercase = false
+            , RequiredUniqueChars = 4
+            , RequiredLength = 6
+            , RequireNonAlphanumeric = false
+        };
+        options.Stores = new StoreOptions { MaxLengthForKeys = 5 };
+        //options.User = new UserOptions { RequireUniqueEmail = true };
     }
 }

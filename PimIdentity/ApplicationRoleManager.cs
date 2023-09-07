@@ -1,34 +1,34 @@
-﻿using System.Diagnostics.Contracts;
-using AspNetCore.Identity.LiteDB.Data;
-using AspNetCore.Identity.LiteDB.Models;
+﻿using System;
+using System.Diagnostics.Contracts;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Owin;
+using Microsoft.Extensions.DependencyInjection;
+using Pim.CommonLib;
 using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
 public class ApplicationRoleManager : RoleManager<IdentityRole>
 {
-    public ApplicationRoleManager(IRoleStore<IdentityRole> store) : base(store)
+    public ApplicationRoleManager(IRoleStore<IdentityRole> store)
+        : base(
+            store
+            , new RoleValidator<IdentityRole>().WrapInList()
+            , new UpperInvariantLookupNormalizer()
+            , new IdentityErrorDescriber()
+            , null)
     {
     }
 
-    /// <param name="options">
-    ///     Optional
+    /// <param name="serviceProvider">
+    ///     Mandatory
     /// </param>
-    /// <param name="context">
-    ///     Optional
-    /// </param>
-    /// <returns></returns>
-    public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
+    public static ApplicationRoleManager Create(IServiceProvider serviceProvider)
     {
-        Contract.Requires(options != null);
-        Contract.Requires(context != null);
+        Contract.Requires(serviceProvider != null);
 
-        var dbContext = context.Get<IdentityDatabaseContext>();
-        var roleStore = new RoleStore<IdentityRole>(dbContext.Roles);
-        return new ApplicationRoleManager(roleStore);
+        var identityDatabaseContext = serviceProvider.GetRequiredService<IdentityDatabaseContext>();
+        
+        return new ApplicationRoleManager(identityDatabaseContext.RoleStore);
     }
 
     public static ApplicationRoleManager CreateOutOfContext(IdentityDatabaseContextFactory databaseContextFactory)
