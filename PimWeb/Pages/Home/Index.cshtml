@@ -1,10 +1,11 @@
-﻿@using AspNetPim.Models
-@model HomeViewModel
+﻿@model PimWeb.Models.HomeViewModel
 
 @{
     ViewBag.Title = "Fulltext PIM";
     ViewBag.ShowPageCaption = false;
 }
+
+<script src="~/js/SeeLatestAndCreate.js" asp-append-version="true"></script>
 
 <div class="caption">
     <h2>
@@ -14,22 +15,22 @@
 
 @Html.Partial("IndexPartial", Model)
 
-@* @section Init *@
-@* { *@
-@*     var config = { *@
-@*         mainFormSelector: '#mainForm', *@
-@*         createNoteUrl: '@Url.Action("Create", "Home")', *@
-@*         deleteNoteUrl: '@Url.Action("DeleteNote", "Home")', *@
-@*         createNoteButtonSelector: '#btnSubmit', *@
-@*         newNoteTextSelector: '#@Html.IdFor(m => m.NewNoteText)', *@
-@*         deleteNoteButtonSelector: '[delete-note-by-id]', *@
-@*         openNoteLinkSelector: '#formMessages', *@
-@*     divInProgressSelector: '#progressIndicator', *@
-@*     buttonAttributeNameNoteId: "noteId", *@
-@*     divNoteListSelector: "#divNoteList", *@
-@*     }; *@
-@* *@
-@*     (pim.pages.latestAndCreate) *@
-@*     && *@
-@*     (pim.pages.latestAndCreate.init(config)); *@
-@* } *@
+@section Init
+{
+    var config = {
+        mainFormSelector: '#mainForm',
+        createNoteUrl: '@Url.Action("Create", "Home")',
+        deleteNoteUrl: '@Url.Action("DeleteNote", "Home")',
+        createNoteButtonSelector: '#btnSubmit',
+        newNoteTextSelector: '#@Html.IdFor(m => m.NewNoteText)',
+        deleteNoteButtonSelector: '[delete-note-by-id]',
+        openNoteLinkSelector: '#formMessages',
+    divInProgressSelector: '#progressIndicator',
+    buttonAttributeNameNoteId: "noteId",
+    divNoteListSelector: "#divNoteList",
+    };
+
+    (pim.pages.latestAndCreate)
+    &&
+    (pim.pages.latestAndCreate.init(config));
+}

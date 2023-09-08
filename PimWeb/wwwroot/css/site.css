@@ -16,3 +16,30 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+#progressIndicator {
+  display: inline;
+  margin-left: 10px;
+}
+
+input.input-validation-error {
+  border: 1px solid red;
+}
+
+div.validation-summary-errors {
+  color: red;
+}
+
+.field-validation-error {
+  color: red;
+}
+
+input.datepicker {
+  width: 9em !important;
+}
+
+div.width-center-80pc {
+  display: block !important;
+  width: 80%;
+  margin: 0 auto;
+}

@@ -10,84 +10,83 @@ using System.Reflection;
 using FulltextStorageLib;
 using log4net;
 
-namespace AspNetPim.Models
+namespace PimWeb.Models;
+
+public class SearchViewModel
 {
-    public class SearchViewModel
+    private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+    public const int MaxPageCount = 10;
+    public const int DefaultResultsPerPage = 10;
+
+    private Note _deletedNote;
+
+    public INoteStorage NoteStorage { get; private set; }
+
+    public void Initialize(INoteStorage noteStorage)
     {
-        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        NoteStorage = noteStorage;
+    }
 
-        public const int MaxPageCount = 10;
-        public const int DefaultResultsPerPage = 10;
+    [Required(AllowEmptyStrings = false)]
+    public string Query { get; set; }
 
-        private Note _deletedNote;
+    [DisplayName("Period start (inclusive):")]
+    [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
+    public DateTime? PeriodStart { get; set; }
 
-        public INoteStorage NoteStorage { get; private set; }
+    [DisplayName("Period end (exclusive):")]
+    [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
+    public DateTime? PeriodEnd { get; set; }
 
-        public void Initialize(INoteStorage noteStorage)
-        {
-            NoteStorage = noteStorage;
-        }
+    public string NoteId { get; set; }
 
-        [Required(AllowEmptyStrings = false)]
-        public string Query { get; set; }
+    /// <summary>
+    ///     1 - based
+    /// </summary>
+    public int PageNumber { get; set; } = 1;
 
-        [DisplayName("Period start (inclusive):")]
-        [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
-        public DateTime? PeriodStart { get; set; }
+    public int TotalPageCount { get; private set; }
 
-        [DisplayName("Period end (exclusive):")]
-        [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
-        public DateTime? PeriodEnd { get; set; }
+    public IList<Note> SearchResultPage { get; private set; }
 
-        public string NoteId { get; set; }
+    public void Delete()
+    {
+        if (!string.IsNullOrWhiteSpace(NoteId))
+            _deletedNote = NoteStorage.Delete(NoteId);
+    }
 
-        /// <summary>
-        ///     1 - based
-        /// </summary>
-        public int PageNumber { get; set; } = 1;
+    public void ExecuteSearch()
+    {
+        if (PageNumber < 1)
+            PageNumber = 1;
+        else if (PageNumber > MaxPageCount)
+            PageNumber = MaxPageCount;
 
-        public int TotalPageCount { get; private set; }
+        var maxResults = MaxPageCount * DefaultResultsPerPage;
 
-        public IList<Note> SearchResultPage { get; private set; }
+        var headers = NoteStorage.SearchInPeriod(
+            // ReSharper disable once RedundantArgumentDefaultValue
+            PeriodStart, PeriodEnd, Query, maxResults + 1, SearchableDocumentTime.LastUpdate);
 
-        public void Delete()
-        {
-            if (!string.IsNullOrWhiteSpace(NoteId))
-                _deletedNote = NoteStorage.Delete(NoteId);
-        }
+        if (_deletedNote != null)
+            headers.Remove(_deletedNote);
+        else if (headers.Any() && headers.Count > maxResults)
+            headers.RemoveAt(headers.Count - 1);
 
-        public void ExecuteSearch()
-        {
-            if (PageNumber < 1)
-                PageNumber = 1;
-            else if (PageNumber > MaxPageCount)
-                PageNumber = MaxPageCount;
+        TotalPageCount = (int)Math.Ceiling((double)headers.Count / DefaultResultsPerPage);
 
-            var maxResults = MaxPageCount * DefaultResultsPerPage;
+        var headersPage = headers
+            .Skip((PageNumber - 1) * DefaultResultsPerPage)
+            .Take(DefaultResultsPerPage)
+            .ToList();
 
-            var headers = NoteStorage.SearchInPeriod(
-                // ReSharper disable once RedundantArgumentDefaultValue
-                PeriodStart, PeriodEnd, Query, maxResults + 1, SearchableDocumentTime.LastUpdate);
+        SearchResultPage = headersPage
+            .Select(h => NoteStorage.GetExisting(h.Id))
+            .Where(x => x != null)
+            .ToList();
 
-            if (_deletedNote != null)
-                headers.Remove(_deletedNote);
-            else if (headers.Any() && headers.Count > maxResults)
-                headers.RemoveAt(headers.Count - 1);
-
-            TotalPageCount = (int)Math.Ceiling((double)headers.Count / DefaultResultsPerPage);
-
-            var headersPage = headers
-                .Skip((PageNumber - 1) * DefaultResultsPerPage)
-                .Take(DefaultResultsPerPage)
-                .ToList();
-
-            SearchResultPage = headersPage
-                .Select(h => NoteStorage.GetExisting(h.Id))
-                .Where(x => x != null)
-                .ToList();
-
-            if (headersPage.Count > SearchResultPage.Count)
-                Log.Warn("Fulltext index out of sync: rebuild it");
-        }
+        if (headersPage.Count > SearchResultPage.Count)
+            Log.Warn("Fulltext index out of sync: rebuild it");
     }
 }

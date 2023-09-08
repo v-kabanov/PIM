@@ -1,0 +1,28 @@
+﻿
+@if (User.Identity?.IsAuthenticated == true)
+{
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <ul class="nav navbar-nav">
+            <li>
+                @Html.ActionLink(User.Identity.Name, "ChangePassword", "Account", null, new { title = "Change password" })
+            </li>
+            @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                <li>
+                    @Html.ActionLink("Manage", "Manage", "Account", routeValues: null, htmlAttributes: new { title = "Manage users" })
+                </li>
+            }
+            <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+        </ul>
+    }
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}

@@ -3,16 +3,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - PimWeb</title>
+    <title>Fulltext PIM -  - PimWeb</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/fontawesome/font-awesome.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/PimWeb.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">PimWeb</a>
+                <a class="navbar-brand" asp-area="" asp-page="/Index">MegaPatam PIM</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -23,29 +23,84 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/About">About</a>
+                        </li>
+                        <li>
+                            @await Html.PartialAsync("_LoginPartial")
+                        </li>
+                        <li class="nav-item">
+                            @using (Html.BeginForm("Search", "Search", FormMethod.Get, new { @class = "navbar-form navbar-right", role = "search", style = "" }))
+                            {
+                                <div class="input-group" style="">
+                                    @Html.TextBox("query", null, new { id = "tbQuery", @class = "form-control", style = "background-color: lightgray;", title="Search your notes" })
+                                    <div class="input-group-btn">
+                                        <button type="submit" class="btn">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container-fluid">
+        @if (ViewBag.ShowPageCaption != false && !string.IsNullOrWhiteSpace(ViewBag.Title))
+        {
+            <div class="caption">
+                <h2>
+                    @ViewBag.Title
+                </h2>
+                <hr/>
+            </div>
+        }
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
+        
+        <hr/>
+
+        <div id="formMessages">
+            @Html.ValidationSummary(true)
+        </div>
+
+        <div id="divInProgress" hidden="hidden">
+            <img src="~/Content/Images/bigrotation2.gif" />&nbsp;Work in progress
+        </div>
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2023 - PimWeb - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
+        &copy; @DateTime.Now.Year - MegaPatam Inc
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/pim.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+    @if (IsSectionDefined("Init"))
+    {
+        <script type="text/javascript">
+               
+            // init the root module
+            pim.init({
+                serverUrl: ('@Url.Content("~/")' === '/') ? '' : '@Url.Content("~/")'
+                ,$: jQuery
+            });
+
+
+            $(document).ready(function () {
+                //layout page init call
+                (pim.pages.layout) && pim.pages.layout.init();
+                //other child pages init call
+                @await RenderSectionAsync("Init", required:false);
+            });
+
+        </script>
+    }
+
 </body>
 </html>

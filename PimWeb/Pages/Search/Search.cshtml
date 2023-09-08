@@ -1,7 +1,8 @@
-﻿@model AspNetPim.Models.SearchViewModel
+﻿@model PimWeb.Models.SearchViewModel
 @{
     ViewBag.Title = "Search";
 }
+<script src="~/js/Search.js" asp-append-version="true"></script>
 
 @Html.Partial("SearchPartial", Model, ViewData)
 

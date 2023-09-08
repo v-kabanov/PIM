@@ -1,0 +1,31 @@
+﻿@model PimWeb.Models.SelectUserRolesViewModel
+
+@{
+    ViewBag.Title = $"Roles for {Model.UserName}";
+}
+
+@using (Html.BeginForm("UserRoles", "Account", FormMethod.Post, new { encType = "multipart/form-data", name = "myform" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true)
+        @Html.HiddenFor(m => m.UserId)
+
+        <div class="form-group">
+            <div class="col-md-12">
+                @Html.EditorFor(model => model.Roles)
+            </div>
+        </div>
+
+        <hr />
+
+        <div class="form-group">
+            <div class="col-md-12">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+@Html.ActionLink("Back to List", "Manage")

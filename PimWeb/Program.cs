@@ -102,6 +102,8 @@ builder.Services
 //    o.SlidingExpiration = true;
 //});
 
+builder.Logging.ClearProviders().AddLog4Net();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

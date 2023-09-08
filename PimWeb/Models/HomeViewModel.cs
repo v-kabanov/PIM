@@ -11,101 +11,100 @@ using FulltextStorageLib.Util;
 using log4net;
 using Pim.CommonLib;
 
-namespace AspNetPim.Models
+namespace PimWeb.Models;
+
+public class HomeViewModel
 {
-    public class HomeViewModel
+    private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+    private const int MaxNumberOfNotesInRecentList = 10;
+    private const int TargetNoteTextSummaryLength = 200;
+
+    public IList<Note> LastUpdatedNotes { get; private set; }
+
+    public INoteStorage NoteStorage { get; private set; }
+
+    private Note _changedNote;
+
+    private bool _changeIsDeletion;
+
+    public HomeViewModel()
     {
-        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+    }
 
-        private const int MaxNumberOfNotesInRecentList = 10;
-        private const int TargetNoteTextSummaryLength = 200;
+    public HomeViewModel(INoteStorage noteStorage)
+    {
+        Check.DoRequireArgumentNotNull(noteStorage, nameof(noteStorage));
 
-        public IList<Note> LastUpdatedNotes { get; private set; }
+        NoteStorage = noteStorage;
+    }
 
-        public INoteStorage NoteStorage { get; private set; }
+    public void Initialize(INoteStorage noteStorage)
+    {
+        NoteStorage = noteStorage;
+    }
 
-        private Note _changedNote;
+    //[AllowHtml]
+    [Required(AllowEmptyStrings = false)]
+    public string NewNoteText { get; set; }
 
-        private bool _changeIsDeletion;
+    public void LoadLatest()
+    {
+        var resultCount = MaxNumberOfNotesInRecentList;
 
-        public HomeViewModel()
+        if (_changedNote != null && _changeIsDeletion)
+            ++resultCount;
+
+        // ReSharper disable once RedundantArgumentDefaultValue
+        var lastHeaders = NoteStorage.GetTopInPeriod(null, DateTime.Now, resultCount, SearchableDocumentTime.LastUpdate);
+        LastUpdatedNotes = lastHeaders.Select(h => NoteStorage.GetExisting(h.Id)).Where(x => x != null).ToList();
+
+        if (lastHeaders.Count > LastUpdatedNotes.Count)
+            Log.WarnFormat("Fulltext index out of sync: rebuild it");
+
+        // FT index is updated asynchronously, so when we've just created new note it may not be returned
+        if (_changedNote != null)
         {
+            if (!_changeIsDeletion && !LastUpdatedNotes.Contains(_changedNote))
+                LastUpdatedNotes.Insert(0, _changedNote);
+            else if (_changeIsDeletion && LastUpdatedNotes.Contains(_changedNote))
+                LastUpdatedNotes.Remove(_changedNote);
         }
 
-        public HomeViewModel(INoteStorage noteStorage)
-        {
-            Check.DoRequireArgumentNotNull(noteStorage, nameof(noteStorage));
+        if (LastUpdatedNotes.Count > MaxNumberOfNotesInRecentList)
+            LastUpdatedNotes.RemoveAt(LastUpdatedNotes.Count - 1);
+    }
 
-            NoteStorage = noteStorage;
-        }
+    public Note CreateNew()
+    {
+        if (string.IsNullOrWhiteSpace(NewNoteText))
+            return null;
 
-        public void Initialize(INoteStorage noteStorage)
-        {
-            NoteStorage = noteStorage;
-        }
+        _changedNote = Note.Create(NewNoteText);
 
-        //[AllowHtml]
-        [Required(AllowEmptyStrings = false)]
-        public string NewNoteText { get; set; }
+        NoteStorage.SaveOrUpdate(_changedNote);
+        NewNoteText = string.Empty;
 
-        public void LoadLatest()
-        {
-            var resultCount = MaxNumberOfNotesInRecentList;
+        return _changedNote;
+    }
 
-            if (_changedNote != null && _changeIsDeletion)
-                ++resultCount;
+    public Note Delete(string noteId)
+    {
+        _changedNote = NoteStorage.Delete(noteId);
 
-            // ReSharper disable once RedundantArgumentDefaultValue
-            var lastHeaders = NoteStorage.GetTopInPeriod(null, DateTime.Now, resultCount, SearchableDocumentTime.LastUpdate);
-            LastUpdatedNotes = lastHeaders.Select(h => NoteStorage.GetExisting(h.Id)).Where(x => x != null).ToList();
+        _changeIsDeletion = true;
 
-            if (lastHeaders.Count > LastUpdatedNotes.Count)
-                Log.WarnFormat("Fulltext index out of sync: rebuild it");
+        return _changedNote;
+    }
 
-            // FT index is updated asynchronously, so when we've just created new note it may not be returned
-            if (_changedNote != null)
-            {
-                if (!_changeIsDeletion && !LastUpdatedNotes.Contains(_changedNote))
-                    LastUpdatedNotes.Insert(0, _changedNote);
-                else if (_changeIsDeletion && LastUpdatedNotes.Contains(_changedNote))
-                    LastUpdatedNotes.Remove(_changedNote);
-            }
+    public static string GetNoteTextSummary(INote note)
+    {
+        Check.DoRequireArgumentNotNull(note, nameof(note));
+        if (note.Text == null)
+            return null;
 
-            if (LastUpdatedNotes.Count > MaxNumberOfNotesInRecentList)
-                LastUpdatedNotes.RemoveAt(LastUpdatedNotes.Count - 1);
-        }
+        var bodyStartIndex = note.Text.IndexOf(note.Name, StringComparison.Ordinal) + note.Name.Length;
 
-        public Note CreateNew()
-        {
-            if (string.IsNullOrWhiteSpace(NewNoteText))
-                return null;
-
-            _changedNote = Note.Create(NewNoteText);
-
-            NoteStorage.SaveOrUpdate(_changedNote);
-            NewNoteText = string.Empty;
-
-            return _changedNote;
-        }
-
-        public Note Delete(string noteId)
-        {
-            _changedNote = NoteStorage.Delete(noteId);
-
-            _changeIsDeletion = true;
-
-            return _changedNote;
-        }
-
-        public static string GetNoteTextSummary(INote note)
-        {
-            Check.DoRequireArgumentNotNull(note, nameof(note));
-            if (note.Text == null)
-                return null;
-
-            var bodyStartIndex = note.Text.IndexOf(note.Name, StringComparison.Ordinal) + note.Name.Length;
-
-            return note.Text.GetTextWithLimit(bodyStartIndex, TargetNoteTextSummaryLength);
-        }
+        return note.Text.GetTextWithLimit(bodyStartIndex, TargetNoteTextSummaryLength);
     }
 }

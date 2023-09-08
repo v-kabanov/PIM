@@ -10,89 +10,88 @@ using System.ComponentModel.DataAnnotations;
 using FulltextStorageLib;
 using Pim.CommonLib;
 
-namespace AspNetPim.Models
+namespace PimWeb.Models;
+
+public class NoteViewModel
 {
-    public class NoteViewModel
+    public string NoteId { get; set; }
+
+    [DisplayName("Text")]
+    [Required(AllowEmptyStrings = false)]
+    //[AllowHtml]
+    public string NoteText { get; set; }
+
+    [DisplayFormat(DataFormatString = "{0:f}")]
+    [DisplayName("Creation Time")]
+    public DateTime? CreateTime => Note?.CreateTime;
+
+    [DisplayName("Last Update Time")]
+    [DisplayFormat(DataFormatString = "{0:f}")]
+    public DateTime? LastUpdateTime => Note?.LastUpdateTime;
+
+    [DisplayName("Version")]
+    public int? Version => Note?.Version;
+
+    public bool NoteDeleted { get; private set; }
+
+    public INoteStorage NoteStorage { get; private set; }
+
+    public Note Note { get; private set; }
+
+    public NoteViewModel()
     {
-        public string NoteId { get; set; }
+    }
 
-        [DisplayName("Text")]
-        [Required(AllowEmptyStrings = false)]
-        //[AllowHtml]
-        public string NoteText { get; set; }
+    public NoteViewModel(INoteStorage noteStorage)
+    {
+        NoteStorage = noteStorage;
+    }
 
-        [DisplayFormat(DataFormatString = "{0:f}")]
-        [DisplayName("Creation Time")]
-        public DateTime? CreateTime => Note?.CreateTime;
+    public void Initialize(INoteStorage noteStorage)
+    {
+        NoteStorage = noteStorage;
+    }
 
-        [DisplayName("Last Update Time")]
-        [DisplayFormat(DataFormatString = "{0:f}")]
-        public DateTime? LastUpdateTime => Note?.LastUpdateTime;
+    public void Load()
+    {
+        Note = ReadFromStorage();
 
-        [DisplayName("Version")]
-        public int? Version => Note?.Version;
+        NoteText = Note.Text;
+    }
 
-        public bool NoteDeleted { get; private set; }
+    public void Update()
+    {
+        var newText = NoteText?.Trim();
 
-        public INoteStorage NoteStorage { get; private set; }
+        Check.DoCheckOperationValid(!string.IsNullOrEmpty(newText), () => "Note text must not be empty.");
 
-        public Note Note { get; private set; }
-
-        public NoteViewModel()
-        {
-        }
-
-        public NoteViewModel(INoteStorage noteStorage)
-        {
-            NoteStorage = noteStorage;
-        }
-
-        public void Initialize(INoteStorage noteStorage)
-        {
-            NoteStorage = noteStorage;
-        }
-
-        public void Load()
-        {
+        if (Note == null)
             Note = ReadFromStorage();
 
-            NoteText = Note.Text;
-        }
-
-        public void Update()
+        if (Note.Text != newText)
         {
-            var newText = NoteText?.Trim();
+            Note.Text = newText;
+            Note.LastUpdateTime = DateTime.Now;
 
-            Check.DoCheckOperationValid(!string.IsNullOrEmpty(newText), () => "Note text must not be empty.");
-
-            if (Note == null)
-                Note = ReadFromStorage();
-
-            if (Note.Text != newText)
-            {
-                Note.Text = newText;
-                Note.LastUpdateTime = DateTime.Now;
-
-                NoteStorage.SaveOrUpdate(Note);
-            }
+            NoteStorage.SaveOrUpdate(Note);
         }
+    }
 
-        public void Delete()
-        {
-            Note = NoteStorage.Delete(NoteId);
+    public void Delete()
+    {
+        Note = NoteStorage.Delete(NoteId);
 
-            Check.DoEnsureLambda(Note != null, () => $"Note {NoteId} does not exist");
+        Check.DoEnsureLambda(Note != null, () => $"Note {NoteId} does not exist");
 
-            NoteDeleted = true;
-        }
+        NoteDeleted = true;
+    }
 
-        private Note ReadFromStorage()
-        {
-            var result = NoteStorage.GetExisting(NoteId);
+    private Note ReadFromStorage()
+    {
+        var result = NoteStorage.GetExisting(NoteId);
 
-            Check.DoEnsureLambda(result != null, () => $"Note {NoteId} does not exist");
+        Check.DoEnsureLambda(result != null, () => $"Note {NoteId} does not exist");
 
-            return result;
-        }
+        return result;
     }
 }
