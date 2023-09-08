@@ -72,8 +72,8 @@ public class LuceneNoteAdapter : ILuceneNoteAdapter
     public Document GetIndexedDocument(INote note)
     {
         var doc = new Document();
-        var lastUpdateTimeString = DateTools.DateToString(note.LastUpdateTime, DateTools.Resolution.SECOND);
-        var creationTimeString = DateTools.DateToString(note.CreateTime, DateTools.Resolution.SECOND);
+        var lastUpdateTimeString = DateTools.DateToString(note.LastUpdateTime, DateResolution.SECOND);
+        var creationTimeString = DateTools.DateToString(note.CreateTime, DateResolution.SECOND);
 
         doc.Add(new Field(FieldNameId, note.Id, Field.Store.YES, Field.Index.NOT_ANALYZED));
         doc.Add(new Field(FieldNameCreateTime, creationTimeString, Field.Store.YES, Field.Index.ANALYZED));

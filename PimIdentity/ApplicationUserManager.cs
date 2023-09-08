@@ -6,6 +6,7 @@ using AspNetCore.Identity.LiteDB.Models;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pim.CommonLib;
 
@@ -20,7 +21,8 @@ public class ApplicationUserManager : UserManager<ApplicationUser>
             , new UpperInvariantLookupNormalizer()
             , new IdentityErrorDescriber()
             , serviceProvider
-            , null)
+            , serviceProvider?.GetService<ILoggerFactory>()?.CreateLogger<UserManager<ApplicationUser>>()
+              ?? new Logger<UserManager<ApplicationUser>>(new LoggerFactory()))
     {
     }
 

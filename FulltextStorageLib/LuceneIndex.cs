@@ -11,12 +11,12 @@ using System.Linq;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.QueryParsers;
+using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Pim.CommonLib;
-using Version = Lucene.Net.Util.Version;
+using Version = Lucene.Net.Util.LuceneVersion;
 
 namespace FulltextStorageLib;
 
@@ -30,9 +30,6 @@ public class LuceneIndex : ILuceneIndex
     public Analyzer Analyzer { get; }
 
     private readonly IndexWriter _indexWriter;
-
-    private volatile Lazy<IndexSearcher> _scoringSearcher;
-    private volatile Lazy<IndexSearcher> _nonScoringSearcher;
 
     public LuceneIndex(string path, Analyzer analyzer, Lucene.Net.Store.Directory fullTextDirectory, string documentKeyName = "Id")
     {
@@ -50,22 +47,13 @@ public class LuceneIndex : ILuceneIndex
         _indexWriter = CreateWriter();
 
         RefreshStats();
-        ResetSearch();
     }
 
     public string Name { get; }
 
     public string Path { get; }
-
-    /// <summary>
-    ///     Fully thread safe lazy instance
-    /// </summary>
-    public IndexSearcher ScoringSearcher => _scoringSearcher.Value;
-
-    /// <summary>
-    ///     Fully thread safe lazy instance
-    /// </summary>
-    public IndexSearcher NonScoringSearcher => _nonScoringSearcher.Value;
+    
+    public DirectoryReader CreateReader() => DirectoryReader.Open(Directory);
 
     /// <summary>
     ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string) 'primary key'
@@ -91,7 +79,6 @@ public class LuceneIndex : ILuceneIndex
     {
         _indexWriter.Commit();
         RefreshStats();
-        ResetSearch();
     }
 
     public void Add(params Document[] docs)
@@ -147,14 +134,12 @@ public class LuceneIndex : ILuceneIndex
     /// <summary>
     ///     Wrap in FilteredQuery
     /// </summary>
-    /// <param name="query"></param>
-    /// <param name="maxResults"></param>
-    /// <returns></returns>
     public IList<LuceneSearchHit> Search(Query query, int maxResults)
     {
-        var search = ScoringSearcher;
+        using var reader = CreateReader();
+        var search = new IndexSearcher(reader);
 
-        var hits = search.Search(query, null, maxResults, Sort.RELEVANCE).ScoreDocs;
+        var hits = search.Search(query, null, maxResults, Sort.RELEVANCE, true, false).ScoreDocs;
 
         return hits.Select(h => new LuceneSearchHit(search.Doc(h.Doc), h.Score, KeyFieldName)).ToList();
     }
@@ -194,15 +179,23 @@ public class LuceneIndex : ILuceneIndex
 
         var termsString = string.Join(" ", terms);
 
-        var queryBuilder = new QueryBuilder(Analyzer);
+        var parser = new QueryParser(LuceneVersion.LUCENE_48, fieldName, Analyzer)
+        {
+            PhraseSlop = 2,
+            FuzzyMinSim = 0.1f,
+            DefaultOperator = Operator.OR
+        };
 
-        var term = new Term(fieldName, queryText);
+        var parsedQuery = Parse(queryText, parser);
 
-        var parsedQuery = queryBuilder.CreatePhraseQuery(fieldName, queryText);
-        var parsedTermsQuery = queryBuilder.CreatePhraseQuery(fieldName, termsString, 2); //Parse(termsString, parser);
+        var booleanQuery = new BooleanQuery().Or(parsedQuery);
+
+        var parsedTermsQuery = Parse(termsString, parser);
         parsedTermsQuery.Boost = 0.3f;
 
-        var booleanQuery = new BooleanQuery().Or(parsedQuery).Or(parsedTermsQuery);
+        booleanQuery.Or(parsedTermsQuery);
+
+        var term = new Term(fieldName, queryText);
 
         if (fuzzy)
             booleanQuery.Or(new FuzzyQuery(term));
@@ -245,25 +238,19 @@ public class LuceneIndex : ILuceneIndex
 
     public void CleanupDeletes()
     {
-        _indexWriter.ExpungeDeletes();
+        _indexWriter.Flush(false, true);
     }
 
     public void Optimize()
     {
-        _indexWriter.Optimize();
-    }
-
-    public IndexSearcher CreateSearcher(bool readOnly, bool calcScore)
-    {
-        var result = new IndexSearcher(Directory, readOnly);
-        if (calcScore)
-            result.SetDefaultFieldSortScoring(true, true);
-        return result;
+        //not supported anymore
+        //_indexWriter.Optimize();
     }
 
     private IndexWriter CreateWriter()
     {
-        return new IndexWriter(Directory, Analyzer, IndexWriter.MaxFieldLength.UNLIMITED);
+        var config = new IndexWriterConfig(LuceneVersion.LUCENE_48, Analyzer) {OpenMode = OpenMode.CREATE_OR_APPEND };
+        return new IndexWriter(Directory, config);
     }
 
     /// <summary>
@@ -271,7 +258,7 @@ public class LuceneIndex : ILuceneIndex
     /// </summary>
     private void RefreshStats()
     {
-        DocCount = _indexWriter.NumDocs();
+        DocCount = _indexWriter.NumDocs;
     }
 
     private static Query Parse(string text, QueryParser parser)
@@ -287,16 +274,6 @@ public class LuceneIndex : ILuceneIndex
         }
 
         return result;
-    }
-
-    /// <summary>
-    ///     Needs to be done after every write.
-    /// </summary>
-    private void ResetSearch()
-    {
-        _scoringSearcher = new Lazy<IndexSearcher>(() => CreateSearcher(true, true));
-
-        _nonScoringSearcher = new Lazy<IndexSearcher>(() => CreateSearcher(true, false));
     }
 
     public static FSDirectory PreparePersistentDirectory(string directoryPath)
@@ -335,7 +312,7 @@ public class LuceneIndex : ILuceneIndex
     {
         Check.DoCheckArgument(GetAvailableSnowballStemmers().Contains(stemmerName), () => $"Snowball stemmer {stemmerName} is not supported.");
 
-        return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(Version.LUCENE_30, stemmerName);
+        return new Lucene.Net.Analysis.Snowball.SnowballAnalyzer(LuceneVersion.LUCENE_48, stemmerName);
     }
 
     /// <summary>
@@ -344,10 +321,10 @@ public class LuceneIndex : ILuceneIndex
     /// <returns></returns>
     public static IEnumerable<string> GetAvailableSnowballStemmers()
     {
-        var namespaceName = typeof(SF.Snowball.Ext.EnglishStemmer).Namespace;
+        var namespaceName = typeof(Lucene.Net.Tartarus.Snowball.Ext.EnglishStemmer).Namespace;
         const string stemmerSuffix = "Stemmer";
 
-        return (typeof(SF.Snowball.Ext.EnglishStemmer)).Assembly.GetTypes()
+        return (typeof(Lucene.Net.Tartarus.Snowball.Ext.EnglishStemmer)).Assembly.GetTypes()
             .Where(t => t.IsClass)
             .Where(t => t.Namespace == namespaceName)
             .Where(t => t.Name.EndsWith(stemmerSuffix))
@@ -363,12 +340,6 @@ public class LuceneIndex : ILuceneIndex
             if (disposing)
             {
                 _indexWriter?.Dispose();
-
-                if (_scoringSearcher.IsValueCreated)
-                    _scoringSearcher.Value.Dispose();
-
-                if (_nonScoringSearcher.IsValueCreated)
-                    _nonScoringSearcher.Value.Dispose();
 
                 Directory?.Dispose();
 

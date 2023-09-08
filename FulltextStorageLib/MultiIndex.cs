@@ -149,15 +149,15 @@ public class MultiIndex : IMultiIndex
 
         CheckActive();
 
-        var index = GetIndex(DefaultIndexName);
-        if (null == index)
-            index = Indexes.Values.First();
+        var index = GetIndex(DefaultIndexName) ?? Indexes.Values.First();
 
-        var searcher = index.NonScoringSearcher;
-        var sort = new Sort(new SortField(timeFieldName, CultureInfo.InvariantCulture, reverseChronologicalOrder));
+        using var reader = index.CreateReader();
+        var searcher = new IndexSearcher(reader);
+        
+        var sort = new Sort(new SortField(timeFieldName, SortFieldType.STRING, reverseChronologicalOrder));
         var query = index.CreateQueryFromFilter(index.CreateTimeRangeFilter(timeFieldName, periodStart, periodEnd));
 
-        var result = searcher.Search(query, null, maxResults, sort)
+        var result = searcher.Search(query, null, maxResults, sort, false, false)
             .ScoreDocs.Select(d => new LuceneSearchHit(searcher.Doc(d.Doc), d.Score, KeyFieldName))
             .ToList();
 

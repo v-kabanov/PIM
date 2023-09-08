@@ -29,7 +29,10 @@ var appOptions = new AppOptions();
 var appOptionsSection = builder.Configuration.GetSection(nameof(AppOptions));
 appOptionsSection.Bind(appOptions);
 
-var appDataPath = Path.Combine(appRootPath, "App_Data"); // HostingEnvironment.MapPath("~/App_Data");
+var appDataPath = appOptions.DataPath.IsNullOrEmpty()
+    ? Path.Combine(appRootPath, "App_Data")
+    : appOptions.DataPath;
+
 Directory.CreateDirectory(appDataPath);
 
 var dbPath = Path.Combine(appDataPath, "Pim.db");
@@ -82,6 +85,7 @@ builder.Services
 builder.Services.AddSingleton<ILiteDbContext>(identityDatabaseContextFactory.DbContext);
 
 builder.Services
+    .AddLogging()
     .AddScoped<UserManager<ApplicationUser>>(serviceProvider => ApplicationUserManager.Create(serviceProvider))
     .AddScoped<RoleManager<IdentityRole>>(serviceProvider => ApplicationRoleManager.Create(serviceProvider))
     .AddIdentity<ApplicationUser, IdentityRole>(options => ApplicationUserManager.SetOptions(options))

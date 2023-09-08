@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
+using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 
@@ -34,7 +35,7 @@ public interface ILuceneIndex : IDisposable
     Analyzer Analyzer { get; }
 
     /// <summary>
-    ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string)" /> 'primary key'
+    ///     Name to pass to <see cref="Document.Get(string)" /> 'primary key'
     /// </summary>
     string KeyFieldName { get; }
 
@@ -64,16 +65,8 @@ public interface ILuceneIndex : IDisposable
     void Delete(params Query[] queries);
 
     void Clear(bool commit = true);
-
-    /// <summary>
-    ///     Fully thread safe lazy instance
-    /// </summary>
-    IndexSearcher ScoringSearcher { get; }
-
-    /// <summary>
-    ///     Fully thread safe lazy instance
-    /// </summary>
-    IndexSearcher NonScoringSearcher { get; }
+    
+    DirectoryReader CreateReader();
 
     IList<LuceneSearchHit> Search(Query query, int maxResults);
 
