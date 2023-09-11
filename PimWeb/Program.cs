@@ -7,6 +7,7 @@ using Autofac.Extensions.DependencyInjection;
 using FulltextStorageLib;
 using log4net;
 using log4net.Config;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Pim.CommonLib;
 using PimIdentity;
@@ -80,9 +81,13 @@ builder.Host.ConfigureContainer<ContainerBuilder>(
 builder.Services
     .AddAutofac()
     .AddSingleton(appOptions)
-    .AddRazorPages();
+    .AddControllers();
+    //use controllers for now
+    //.AddRazorPages();
 
 builder.Services.AddSingleton<ILiteDbContext>(identityDatabaseContextFactory.DbContext);
+
+builder.Services.AddMvc(o => o.EnableEndpointRouting = false); //
 
 builder.Services
     .AddLogging()
@@ -91,14 +96,22 @@ builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options => ApplicationUserManager.SetOptions(options))
     .AddUserStore<LiteDbUserStore<ApplicationUser>>()
     .AddRoleStore<LiteDbRoleStore<IdentityRole>>()
+    .AddSignInManager()
     //.AddUserManager<ApplicationUserManager>()
     //.AddRoleManager<ApplicationRoleManager>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 // to customize auth
 //builder.Services.ConfigureApplicationCookie(o =>
 //{
-//    o.LoginPath = "Account/Login";
+//    o.LoginPath = "/Account/Login";
 //    o.SlidingExpiration = true;
 //});
 
@@ -114,14 +127,22 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapDefaultControllerRoute();
+
 app
+    .UseMvc()
     .UseHttpsRedirection()
     .UseStaticFiles()
     .UseRouting()
     .UseAuthentication()
     .UseAuthorization();
 
-app.MapRazorPages();
+app.MapControllers();
+
+//app.MapRazorPages();
 
 authSeedTask.GetAwaiter().GetResult();
 

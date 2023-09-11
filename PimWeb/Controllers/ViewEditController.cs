@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace PimWeb.Controllers;
 
-[Route("~/ViewEdit/{id}/{action=Index}")]
 [Authorize(Roles = "Admin,Writer,Reader")]
 public class ViewEditController : Controller
 {
@@ -27,6 +26,7 @@ public class ViewEditController : Controller
     }
 
     [HttpGet]
+    [Route("~/ViewEdit/{id}")]
     public ActionResult Index(string id)
     {
         var model = new NoteViewModel(NoteStorage) { NoteId = id };

@@ -3,40 +3,38 @@
     ViewBag.Title = "Log in";
 }
 
-<div class="row">
-    <div class="col-md-8">
-        <section id="loginForm">
+<div class="row g-0">
+    <div class="offset-3 col-6">
+        <section id="loginForm" class="mx-2">
             @using (Html.BeginForm("Login", "Account", new { ViewBag.ReturnUrl }, FormMethod.Post, true, new { @class = "form-horizontal", role = "form" }))
             {
                 @Html.AntiForgeryToken()
-                <h4>Use a local account to log in.</h4>
-                <hr />
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Email, new { @class = "col-md-2 control-label" })
-                    <div class="col-md-10">
+                <div class="my-1">
+                    @Html.LabelFor(m => m.Email, new { @class = "col-md-2 form-label" })
+                    <div class="col">
                         @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
                         @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
                     </div>
                 </div>
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Password, new { @class = "col-md-2 control-label" })
-                    <div class="col-md-10">
+                <div class="my-1">
+                    @Html.LabelFor(m => m.Password, new { @class = "col-md-2 form-label" })
+                    <div class="col">
                         @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
                         @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="col-md-offset-2 col-md-10">
+                <div class="my-1">
+                    <div class="col">
                         <div class="checkbox">
                             @Html.CheckBoxFor(m => m.RememberMe)
                             @Html.LabelFor(m => m.RememberMe)
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="col-md-offset-2 col-md-10">
-                        <input type="submit" value="Log in" class="btn btn-default" />
+                <div class="my-1">
+                    <div class="col">
+                        <input type="submit" value="Log in" class="btn btn-primary" />
                     </div>
                 </div>
                 <p>

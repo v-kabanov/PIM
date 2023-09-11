@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fulltext PIM -  - PimWeb</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/fontawesome/font-awesome.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -33,11 +33,9 @@
                             {
                                 <div class="input-group" style="">
                                     @Html.TextBox("query", null, new { id = "tbQuery", @class = "form-control", style = "background-color: lightgray;", title="Search your notes" })
-                                    <div class="input-group-btn">
-                                        <button type="submit" class="btn">
-                                            <i class="fa fa-search"></i>
-                                        </button>
-                                    </div>
+                                    <button type="submit" class="btn">
+                                        <i class="fa fa-search"></i>
+                                    </button>
                                 </div>
                             }
                         </li>
@@ -47,6 +45,7 @@
         </nav>
     </header>
     <div class="container-fluid">
+        fontawesome: <i class="fa-solid fa-user"></i>
         @if (ViewBag.ShowPageCaption != false && !string.IsNullOrWhiteSpace(ViewBag.Title))
         {
             <div class="caption">

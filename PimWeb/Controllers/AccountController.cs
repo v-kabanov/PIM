@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Pim.CommonLib;
-using PimIdentity;
 using PimWeb.Models;
 
 namespace PimWeb.Controllers;
@@ -16,22 +15,24 @@ public class AccountController : Controller
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
     private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly ApplicationUserManager _userManager;
-    private readonly ApplicationRoleManager _roleManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public AccountController(ApplicationUserManager userManager, SignInManager<ApplicationUser> signInManager, ApplicationRoleManager roleManager)
+    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager
+            //, RoleManager<IdentityRole> roleManager
+        )
     {
         Log.DebugFormat("Instantiating with provided dependencies.");
         _userManager = userManager;
         _signInManager = signInManager;
-        _roleManager = roleManager;
+        //_roleManager = roleManager;
     }
 
     public SignInManager<ApplicationUser> SignInManager => _signInManager;
 
-    public ApplicationUserManager UserManager => _userManager;
+    public UserManager<ApplicationUser> UserManager => _userManager;
 
-    public ApplicationRoleManager RoleManager => _roleManager;
+    public RoleManager<IdentityRole> RoleManager => _roleManager;
 
     //
     // GET: /Account/Login
