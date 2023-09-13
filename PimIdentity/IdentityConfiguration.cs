@@ -83,7 +83,7 @@ public class IdentityConfiguration : IIdentityConfiguration
 
         var admin = await EnsureUserAsync(AdminUserName, "admin@megapatam.com", DefaultAdminPassword);
 
-        await _userManager.AddToRoleAsync(admin, AdminUserName);
+        await _userManager.AddToRoleAsync(admin, AdminRoleName);
     }
 
     private async Task EnsureRoleAsync(string name)

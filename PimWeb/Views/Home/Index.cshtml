@@ -5,8 +5,6 @@
     ViewBag.ShowPageCaption = false;
 }
 
-<script src="~/js/SeeLatestAndCreate.js" asp-append-version="true"></script>
-
 <div class="caption">
     <h2>
         Create note
@@ -15,9 +13,10 @@
 
 @Html.Partial("IndexPartial", Model)
 
+<script>
 @section Init
 {
-    var config = {
+    const config = {
         mainFormSelector: '#mainForm',
         createNoteUrl: '@Url.Action("Create", "Home")',
         deleteNoteUrl: '@Url.Action("DeleteNote", "Home")',
@@ -25,12 +24,13 @@
         newNoteTextSelector: '#@Html.IdFor(m => m.NewNoteText)',
         deleteNoteButtonSelector: '[delete-note-by-id]',
         openNoteLinkSelector: '#formMessages',
-    divInProgressSelector: '#progressIndicator',
-    buttonAttributeNameNoteId: "noteId",
-    divNoteListSelector: "#divNoteList",
+        divInProgressSelector: '#progressIndicator',
+        buttonAttributeNameNoteId: "noteId",
+        divNoteListSelector: "#divNoteList",
     };
 
     (pim.pages.latestAndCreate)
     &&
     (pim.pages.latestAndCreate.init(config));
 }
+</script>

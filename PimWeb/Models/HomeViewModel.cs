@@ -44,7 +44,6 @@ public class HomeViewModel
         NoteStorage = noteStorage;
     }
 
-    //[AllowHtml]
     [Required(AllowEmptyStrings = false)]
     public string NewNoteText { get; set; }
 

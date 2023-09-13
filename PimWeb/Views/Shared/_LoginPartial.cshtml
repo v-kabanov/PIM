@@ -5,24 +5,24 @@
     {
         @Html.AntiForgeryToken()
 
-        <ul class="nav navbar-nav">
-            <li>
+        <div class="d-flex justify-content-between">
+            <div class="p-2">
                 @Html.ActionLink(User.Identity.Name, "ChangePassword", "Account", null, new { title = "Change password" })
-            </li>
+            </div>
             @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
             {
-                <li>
+                <div class="p-2">
                     @Html.ActionLink("Manage", "Manage", "Account", routeValues: null, htmlAttributes: new { title = "Manage users" })
-                </li>
+                </div>
             }
-            <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
-        </ul>
+            <div class="p-2"><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></div>
+        </div>
     }
 }
 else
 {
-    <ul class="nav navbar-nav navbar-right">
-        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
-        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
-    </ul>
+    <div class="d-flex justify-content-between">
+        <div class="p-2">@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</div>
+        <div class="p-2">@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</div>
+    </div>
 }

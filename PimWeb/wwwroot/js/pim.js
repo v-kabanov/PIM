@@ -262,7 +262,7 @@
                 var pleaseWaitDiv = $('<div class="modal " id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">' +
                     '<div class="modal-body"><span>Processing</span><img id="progressIndicator" src="' +
                     conf.serverUrl +
-                    '/Content/Images/progress.gif" alt="img progress" /> </div></div>');
+                    '/image/progress.gif" alt="img progress" /> </div></div>');
                 return {
                     showPleaseWait: function (modal) {
                         try {

@@ -9,6 +9,7 @@ using log4net;
 using log4net.Config;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pim.CommonLib;
 using PimIdentity;
 using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
@@ -33,6 +34,8 @@ appOptionsSection.Bind(appOptions);
 var appDataPath = appOptions.DataPath.IsNullOrEmpty()
     ? Path.Combine(appRootPath, "App_Data")
     : appOptions.DataPath;
+
+Console.WriteLine("Using data directory '{0}'", appDataPath);
 
 Directory.CreateDirectory(appDataPath);
 
@@ -73,7 +76,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(
     conBuilder =>
     {
-        conBuilder.Register(context => storage).SingleInstance();
+        conBuilder.Register<INoteStorage>(context => storage).SingleInstance();
         conBuilder.Register(c => identityDatabaseContextFactory).SingleInstance();
         conBuilder.Register(c => identityDatabaseContextFactory.Create()).InstancePerLifetimeScope();
     });
@@ -94,26 +97,30 @@ builder.Services
     .AddScoped<UserManager<ApplicationUser>>(serviceProvider => ApplicationUserManager.Create(serviceProvider))
     .AddScoped<RoleManager<IdentityRole>>(serviceProvider => ApplicationRoleManager.Create(serviceProvider))
     .AddIdentity<ApplicationUser, IdentityRole>(options => ApplicationUserManager.SetOptions(options))
+    .AddRoles<IdentityRole>()
     .AddUserStore<LiteDbUserStore<ApplicationUser>>()
     .AddRoleStore<LiteDbRoleStore<IdentityRole>>()
     .AddSignInManager()
-    //.AddUserManager<ApplicationUserManager>()
-    //.AddRoleManager<ApplicationRoleManager>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
-});
+builder.Services.AddAuthorization();
+
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+//        .RequireAuthenticatedUser()
+//        .Build();
+//});
 
 // to customize auth
-//builder.Services.ConfigureApplicationCookie(o =>
-//{
-//    o.LoginPath = "/Account/Login";
-//    o.SlidingExpiration = true;
-//});
+builder.Services.ConfigureApplicationCookie(o =>
+{
+    o.LoginPath = "/Account/Login";
+    //o.AccessDeniedPath = "/Account/Login";
+    o.SlidingExpiration = true;
+    o.ExpireTimeSpan = TimeSpan.FromDays(1);
+    o.Cookie.Name = ".auth";
+});
 
 builder.Logging.ClearProviders().AddLog4Net();
 
@@ -133,12 +140,13 @@ if (!app.Environment.IsDevelopment())
 app.MapDefaultControllerRoute();
 
 app
-    .UseMvc()
     .UseHttpsRedirection()
     .UseStaticFiles()
     .UseRouting()
     .UseAuthentication()
-    .UseAuthorization();
+    .UseAuthorization()
+    // must come after UseAuthentication
+    .UseMvc();
 
 app.MapControllers();
 

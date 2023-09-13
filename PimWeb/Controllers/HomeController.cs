@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace PimWeb.Controllers;
 
-[Authorize]
-[Authorize(Roles = "Admin,Reader,Writer")]
 public class HomeController : Controller
 {
     public HomeController(INoteStorage noteStorage)
@@ -29,7 +27,7 @@ public class HomeController : Controller
         return new HomeViewModel(NoteStorage);
     }
 
-    [Authorize(Roles = "Admin,Reader,Writer")]
+    [Authorize(Roles = "Admin,Writer")]
     public ActionResult Index()
     {
         var model = CreateViewModel();

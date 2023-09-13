@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">MegaPatam PIM</a>
+<header>
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container-fluid d-flex justify-content-between">
+            <div class="d-flex">
+                <a class="navbar-brand" asp-area="" href="~/">MegaPatam PIM</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,30 +23,23 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/About">About</a>
-                        </li>
-                        <li>
-                            @await Html.PartialAsync("_LoginPartial")
-                        </li>
-                        <li class="nav-item">
-                            @using (Html.BeginForm("Search", "Search", FormMethod.Get, new { @class = "navbar-form navbar-right", role = "search", style = "" }))
-                            {
-                                <div class="input-group" style="">
-                                    @Html.TextBox("query", null, new { id = "tbQuery", @class = "form-control", style = "background-color: lightgray;", title="Search your notes" })
-                                    <button type="submit" class="btn">
-                                        <i class="fa fa-search"></i>
-                                    </button>
-                                </div>
-                            }
-                        </li>
                     </ul>
                 </div>
             </div>
-        </nav>
-    </header>
+            @using (Html.BeginForm("Search", "Search", FormMethod.Get, new { @class = "", role = "search" }))
+            {
+                <div class="input-group w-100" style="">
+                    @Html.TextBox("query", null, new { id = "tbQuery", @class = "form-control", style = "background-color: lightgray;", title = "Search your notes" })
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            }
+            @await Html.PartialAsync("_LoginPartial")
+        </div>
+    </nav>
+</header>
     <div class="container-fluid">
-        fontawesome: <i class="fa-solid fa-user"></i>
         @if (ViewBag.ShowPageCaption != false && !string.IsNullOrWhiteSpace(ViewBag.Title))
         {
             <div class="caption">
@@ -66,7 +60,7 @@
         </div>
 
         <div id="divInProgress" hidden="hidden">
-            <img src="~/Content/Images/bigrotation2.gif" />&nbsp;Work in progress
+            <img src="~/image/bigrotation2.gif" />&nbsp;Work in progress
         </div>
     </div>
 
@@ -77,8 +71,11 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/pim.js" asp-append-version="true"></script>
+    <script src="~/js/SeeLatestAndCreate.js" asp-append-version="true"></script>
+    <script src="~/js/Search.js" asp-append-version="true"></script>
+    <script src="~/js/ViewEdit.js" asp-append-version="true"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+    //@await RenderSectionAsync("Scripts", required: false)
 
     @if (IsSectionDefined("Init"))
     {

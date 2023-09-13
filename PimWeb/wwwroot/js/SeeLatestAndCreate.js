@@ -54,4 +54,4 @@
             return confirm("Delete " + $.trim(noteName) + "?");
         }
     };
-})(pim, window, jQuery);
+})(window.pim, window, jQuery);

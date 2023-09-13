@@ -11,7 +11,6 @@ using PimWeb.Models;
 
 namespace PimWeb.Controllers;
 
-//[Route("~/Search/{action}")]
 [Authorize(Roles = "Admin,Reader,Writer")]
 public class SearchController : Controller
 {
@@ -24,7 +23,6 @@ public class SearchController : Controller
 
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]
-    [Route("")]
     [Route("~/Search")]
     public ActionResult Search(SearchViewModel model)
     {

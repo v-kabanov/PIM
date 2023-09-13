@@ -19,13 +19,13 @@ public class AccountController : Controller
     private readonly RoleManager<IdentityRole> _roleManager;
 
     public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager
-            //, RoleManager<IdentityRole> roleManager
+            , RoleManager<IdentityRole> roleManager
         )
     {
         Log.DebugFormat("Instantiating with provided dependencies.");
         _userManager = userManager;
         _signInManager = signInManager;
-        //_roleManager = roleManager;
+        _roleManager = roleManager;
     }
 
     public SignInManager<ApplicationUser> SignInManager => _signInManager;
@@ -57,9 +57,9 @@ public class AccountController : Controller
         
         // This doesn't count login failures towards account lockout
         // To enable password failures to trigger account lockout, change to shouldLockout: true
-        var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+        var result = await SignInManager.PasswordSignInAsync(model.Name, model.Password, model.RememberMe, false);
 
-        Log.InfoFormat("{0} sign in result: {1}; IsAuthenticated: {2}", model.Email, result, result.Succeeded);
+        Log.InfoFormat("{0} sign in result: {1}; IsAuthenticated: {2}", model.Name, result, result.Succeeded);
 
         if (result.Succeeded)
             return RedirectToLocal(returnUrl);

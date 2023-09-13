@@ -22,16 +22,15 @@ public class IdentityDatabaseContextFactory : IDisposable
         Contract.Requires(database != null);
         DbContext = new LiteDbContext(database);
 
-        Roles = database.GetCollection<IdentityRole>("roles");
-        Users = database.GetCollection<ApplicationUser>("users");
+        //Roles = database.GetCollection<IdentityRole>("roles");
+        //Users = database.GetCollection<ApplicationUser>("users");
 
         UserStore = new LiteDbUserStore<ApplicationUser>(DbContext);
         RoleStore = new LiteDbRoleStore<IdentityRole>(DbContext);
     }
 
-    public ILiteCollection<ApplicationUser> Users { get; }
-
-    public ILiteCollection<IdentityRole> Roles { get; }
+    //public ILiteCollection<ApplicationUser> Users { get; }
+    //public ILiteCollection<IdentityRole> Roles { get; }
 
     public LiteDbUserStore<ApplicationUser> UserStore { get; }
 
@@ -39,7 +38,7 @@ public class IdentityDatabaseContextFactory : IDisposable
 
     public IdentityDatabaseContext Create()
     {
-        return new IdentityDatabaseContext(this);
+        return new IdentityDatabaseContext(DbContext);
     }
 
     private bool _disposedValue;
@@ -53,7 +52,6 @@ public class IdentityDatabaseContextFactory : IDisposable
                 // dispose managed state (managed objects).
                 RoleStore?.Dispose();
                 UserStore?.Dispose();
-                DbContext?.LiteDatabase?.Dispose();
             }
             _disposedValue = true;
         }

@@ -162,8 +162,8 @@ public class LuceneIndex : ILuceneIndex
         Check.DoCheckArgument(from.HasValue || to.HasValue);
         Check.DoCheckArgument(!from.HasValue || !to.HasValue || from.Value < to.Value);
 
-        var fromString = from.HasValue ? DateTools.DateToString(from.Value, DateResolution.SECOND) : null;
-        var toString = to.HasValue ? DateTools.DateToString(to.Value, DateResolution.SECOND) : null;
+        var fromString = from.HasValue ? DateTools.DateToString(from.Value, DateResolution.SECOND) : string.Empty;
+        var toString = to.HasValue ? DateTools.DateToString(to.Value, DateResolution.SECOND) : string.Empty;
         return new TermRangeFilter(fieldName, new BytesRef(fromString), new BytesRef(toString), true, false);
     }
 
