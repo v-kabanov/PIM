@@ -25,8 +25,8 @@ public class IdentityDatabaseContextFactory : IDisposable
         //Roles = database.GetCollection<IdentityRole>("roles");
         //Users = database.GetCollection<ApplicationUser>("users");
 
-        UserStore = new LiteDbUserStore<ApplicationUser>(DbContext);
         RoleStore = new LiteDbRoleStore<IdentityRole>(DbContext);
+        UserStore = new PimUserStore<ApplicationUser>(DbContext, RoleStore);
     }
 
     //public ILiteCollection<ApplicationUser> Users { get; }

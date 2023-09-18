@@ -16,10 +16,10 @@ public class AccountController : Controller
 
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> _roleManager;
 
     public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager
-            , RoleManager<IdentityRole> roleManager
+            , RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> roleManager
         )
     {
         Log.DebugFormat("Instantiating with provided dependencies.");
@@ -32,7 +32,7 @@ public class AccountController : Controller
 
     public UserManager<ApplicationUser> UserManager => _userManager;
 
-    public RoleManager<IdentityRole> RoleManager => _roleManager;
+    public RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> RoleManager => _roleManager;
 
     //
     // GET: /Account/Login
@@ -40,6 +40,7 @@ public class AccountController : Controller
     public ActionResult Login(string returnUrl)
     {
         ViewBag.ReturnUrl = returnUrl;
+        
         return View();
     }
 
@@ -51,9 +52,7 @@ public class AccountController : Controller
     public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
     {
         if (!ModelState.IsValid)
-        {
             return View(model);
-        }
         
         // This doesn't count login failures towards account lockout
         // To enable password failures to trigger account lockout, change to shouldLockout: true

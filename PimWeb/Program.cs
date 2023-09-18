@@ -94,13 +94,12 @@ builder.Services.AddMvc(o => o.EnableEndpointRouting = false); //
 
 builder.Services
     .AddLogging()
-    .AddScoped<UserManager<ApplicationUser>>(serviceProvider => ApplicationUserManager.Create(serviceProvider))
-    .AddScoped<RoleManager<IdentityRole>>(serviceProvider => ApplicationRoleManager.Create(serviceProvider))
-    .AddIdentity<ApplicationUser, IdentityRole>(options => ApplicationUserManager.SetOptions(options))
+    //.AddScoped<UserManager<ApplicationUser>>(serviceProvider => ApplicationUserManager.Create(serviceProvider))
+    //.AddScoped<RoleManager<IdentityRole>>(serviceProvider => ApplicationRoleManager.Create(serviceProvider))
+    .AddIdentity<ApplicationUser, AspNetCore.Identity.LiteDB.IdentityRole>(ApplicationUserManager.SetOptions)
     .AddRoles<IdentityRole>()
-    .AddUserStore<LiteDbUserStore<ApplicationUser>>()
-    .AddRoleStore<LiteDbRoleStore<IdentityRole>>()
-    .AddSignInManager()
+    .AddRoleStore<LiteDbRoleStore<AspNetCore.Identity.LiteDB.IdentityRole>>()
+    .AddUserStore<PimUserStore<ApplicationUser>>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddAuthorization();
@@ -116,7 +115,7 @@ builder.Services.AddAuthorization();
 builder.Services.ConfigureApplicationCookie(o =>
 {
     o.LoginPath = "/Account/Login";
-    //o.AccessDeniedPath = "/Account/Login";
+    o.AccessDeniedPath = "/Account/Login";
     o.SlidingExpiration = true;
     o.ExpireTimeSpan = TimeSpan.FromDays(1);
     o.Cookie.Name = ".auth";

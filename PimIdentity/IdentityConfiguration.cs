@@ -7,11 +7,10 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using AspNetCore.Identity.LiteDB;
 using AspNetCore.Identity.LiteDB.Models;
 using JetBrains.Annotations;
 using Pim.CommonLib;
-using PimIdentity.Models;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
@@ -50,7 +49,6 @@ public class IdentityConfiguration : IIdentityConfiguration
     private readonly ApplicationUserManager _userManager;
     private readonly IdentityDatabaseContextFactory _contextFactory;
 
-    /// <inheritdoc />
     public IdentityConfiguration([NotNull] IdentityDatabaseContextFactory databaseContextFactory)
     {
         _contextFactory = databaseContextFactory ?? throw new ArgumentNullException(nameof(databaseContextFactory));
@@ -82,7 +80,7 @@ public class IdentityConfiguration : IIdentityConfiguration
         await EnsureRoleAsync(AdminRoleName);
 
         var admin = await EnsureUserAsync(AdminUserName, "admin@megapatam.com", DefaultAdminPassword);
-
+        
         await _userManager.AddToRoleAsync(admin, AdminRoleName);
     }
 
