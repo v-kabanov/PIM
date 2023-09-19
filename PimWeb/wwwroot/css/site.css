@@ -43,3 +43,8 @@ div.width-center-80pc {
   width: 80%;
   margin: 0 auto;
 }
+
+.top-search {
+  max-width: 30rem;
+  flex: auto;
+}

@@ -20,7 +20,7 @@ public class IdentityDatabaseContext : IDisposable
         //Users = database.GetCollection<ApplicationUser>("users");
 
         RoleStore = new LiteDbRoleStore<IdentityRole>(DbContext);
-        UserStore = new PimUserStore<ApplicationUser>(DbContext, RoleStore);
+        UserStore = new PimUserStore<ApplicationUser, IdentityRole>(DbContext, RoleStore);
     }
 
     //public ILiteCollection<ApplicationUser> Users { get; }

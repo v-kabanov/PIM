@@ -10,15 +10,16 @@ using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
-public class PimUserStore<TUser>
+public class PimUserStore<TUser, TRole>
     : LiteDbUserStore<TUser>
     , IUserRoleStore<TUser>
     where TUser : ApplicationUser, new()
+    where TRole: IdentityRole
 {
-    private readonly IRoleStore<IdentityRole> _roleStore;
+    private readonly IRoleStore<TRole> _roleStore;
     
     /// <inheritdoc />
-    public PimUserStore(ILiteDbContext dbContext, [NotNull] IRoleStore<IdentityRole> roleStore) : base(dbContext)
+    public PimUserStore(ILiteDbContext dbContext, [NotNull] IRoleStore<TRole> roleStore) : base(dbContext)
     {
         _roleStore = roleStore ?? throw new ArgumentNullException(nameof(roleStore));
     }
@@ -26,14 +27,10 @@ public class PimUserStore<TUser>
     async Task<bool> IUserRoleStore<TUser>.IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (user == null)
-            throw new ArgumentNullException(nameof (user));
-        if (roleName == null)
-            throw new ArgumentNullException(nameof (roleName));
+        if (user == null) throw new ArgumentNullException(nameof (user));
+        if (roleName == null) throw new ArgumentNullException(nameof (roleName));
         
-        var role = await _roleStore.FindByNameAsync(roleName, cancellationToken).ConfigureAwait(false);
-        if (role == null)
-            throw new ArgumentException($"Role '{roleName}' does not exist.");
+        var role = await GetRequiredRoleAsync(roleName, cancellationToken).ConfigureAwait(false);
         
         return user.Roles.Contains(role.Name);
     }
@@ -53,14 +50,11 @@ public class PimUserStore<TUser>
     async Task IUserRoleStore<TUser>.AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if ((object) user == null)
-            throw new ArgumentNullException(nameof (user));
-        if (roleName == null)
-            throw new ArgumentNullException(nameof (roleName));
         
-        var role = await _roleStore.FindByNameAsync(roleName, cancellationToken).ConfigureAwait(false);
-        if (role == null)
-            throw new ArgumentException($"Role '{roleName}' does not exist.");
+        if (user == null) throw new ArgumentNullException(nameof (user));
+        if (roleName == null) throw new ArgumentNullException(nameof (roleName));
+        
+        var role = await GetRequiredRoleAsync(roleName, cancellationToken).ConfigureAwait(false);
         
         user.Roles.Add(role.Name);
     }
@@ -71,16 +65,20 @@ public class PimUserStore<TUser>
     async Task IUserRoleStore<TUser>.RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (user == null)
-            throw new ArgumentNullException(nameof (user));
-        if (roleName == null)
-            throw new ArgumentNullException(nameof (roleName));
         
+        if (user == null) throw new ArgumentNullException(nameof (user));
+        if (roleName == null) throw new ArgumentNullException(nameof (roleName));
         
-        var role = await _roleStore.FindByNameAsync(roleName, cancellationToken).ConfigureAwait(false);
-        if (role == null)
-            throw new ArgumentException($"Role '{roleName}' does not exist.");
+        var role = await GetRequiredRoleAsync(roleName, cancellationToken).ConfigureAwait(false);
         
         user.Roles.Remove(role.Name);
+    }
+    
+    private async Task<TRole> GetRequiredRoleAsync(string normalizedName, CancellationToken cancellationToken)
+    {
+        var role = await _roleStore.FindByNameAsync(normalizedName, cancellationToken).ConfigureAwait(false);
+        if (role == null)
+            throw new ArgumentException($"Role '{normalizedName}' does not exist.");
+        return role;
     }
 }

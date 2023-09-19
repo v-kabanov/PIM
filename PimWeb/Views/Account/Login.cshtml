@@ -1,10 +1,11 @@
 ﻿@model PimWeb.Models.LoginViewModel
 @{
     ViewBag.Title = "Log in";
+    Layout = "_BaseLayout";
 }
 
-<div class="row g-0">
-    <div class="offset-3 col-6">
+<div class="d-flex vh-100 align-items-center justify-content-center">
+    <div class="col-6">
         <section id="loginForm" class="mx-2">
             @using (Html.BeginForm("Login", "Account", new { ViewBag.ReturnUrl }, FormMethod.Post, true, new { @class = "form-horizontal", role = "form" }))
             {

@@ -99,7 +99,7 @@ builder.Services
     .AddIdentity<ApplicationUser, AspNetCore.Identity.LiteDB.IdentityRole>(ApplicationUserManager.SetOptions)
     .AddRoles<IdentityRole>()
     .AddRoleStore<LiteDbRoleStore<AspNetCore.Identity.LiteDB.IdentityRole>>()
-    .AddUserStore<PimUserStore<ApplicationUser>>()
+    .AddUserStore<PimUserStore<ApplicationUser, AspNetCore.Identity.LiteDB.IdentityRole>>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddAuthorization();
