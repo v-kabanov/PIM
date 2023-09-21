@@ -42,8 +42,8 @@ public class IdentityConfiguration : IIdentityConfiguration
     public const string AdminRoleName = "Admin";
     public const string AdminUserName = "admin";
     public const string DefaultAdminPassword = "password";
-    private const string ReaderRoleName = "Reader";
-    private const string WriterRoleName = "Writer";
+    public const string ReaderRoleName = "Reader";
+    public const string WriterRoleName = "Writer";
 
     private readonly ApplicationRoleManager _roleManager;
     private readonly ApplicationUserManager _userManager;

@@ -16,6 +16,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="7.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.21" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="6.1.0" />
+    <PackageReference Include="RavenDB.Client" Version="5.4.110" />
+    <PackageReference Include="RavenDB.Embedded" Version="5.4.110" />
+    <PackageReference Include="RavenDB.Identity" Version="8.0.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,5 +82,6 @@
     <_ContentIncludedByDefault Remove="Pages\Privacy.cshtml" />
     <_ContentIncludedByDefault Remove="Pages\_ViewImports.cshtml" />
   </ItemGroup>
+
 
 </Project>

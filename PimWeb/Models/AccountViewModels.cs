@@ -1,9 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using AspNetCore.Identity.LiteDB;
-using AspNetCore.Identity.LiteDB.Models;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PimIdentity;
+using Raven.Identity;
 
 namespace PimWeb.Models;
 
@@ -139,10 +138,10 @@ public class EditUserViewModel
     public EditUserViewModel() { }
 
     // Allow Initialization with an instance of ApplicationUser:
-    public EditUserViewModel(ApplicationUser user)
+    public EditUserViewModel(IdentityUser user)
     {
         Name = user.UserName;
-        Email = user.Email.Address;
+        Email = user.Email;
         Id = user.Id;
     }
 
@@ -167,11 +166,11 @@ public class SelectUserRolesViewModel
 
 
     // Enable initialization with an instance of ApplicationUser:
-    public SelectUserRolesViewModel(ApplicationUser user, IEnumerable<string> allRoles)
+    public SelectUserRolesViewModel(IdentityUser user, IEnumerable<string> allRoles)
         : this()
     {
         UserName = user.UserName;
-        Email = user.Email.Address;
+        Email = user.Email;
         UserId = user.Id;
 
         ApplicationRoleManager roleManager = null;

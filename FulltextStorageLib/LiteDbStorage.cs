@@ -58,13 +58,13 @@ public class LiteDbStorage<TDoc> : IDocumentStorage<TDoc, string>
     /// <inheritdoc />
     public void SaveOrUpdate(params TDoc[] docs)
     {
-        if(!_database.BeginTrans())
-            throw new InvalidOperationException("Transaction is outstanding.");
+        // if(!_database.BeginTrans())
+        //     throw new InvalidOperationException("Transaction is outstanding.");
 
         foreach (var doc in docs)
             SaveOrUpdate(doc);
 
-       _database.Commit();
+       // _database.Commit();
     }
 
     /// <inheritdoc />

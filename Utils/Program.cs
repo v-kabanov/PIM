@@ -5,7 +5,7 @@ using log4net;
 using LiteDB;
 using Mono.Options;
 using Pim.CommonLib;
-using PimIdentity;
+//using PimIdentity;
 
 namespace Pim.Utils;
 
@@ -80,12 +80,19 @@ class Program
     {
         Check.DoRequireArgumentNotNull(arguments, nameof(arguments));
 
+        var db = new LiteDatabase($"Filename={arguments.IdentityDatabasePath}; Upgrade=true;");
+        
+        var docs = db.GetCollection<FulltextStorageLib.Note>();
+        
+        Console.WriteLine($"{docs.Count()} documents found");
+
         if (arguments.IsOperationResetAdmin)
         {
             CheckCommandLineArgument(!string.IsNullOrWhiteSpace(arguments.IdentityDatabasePath), "Identity database path is required.");
             CheckCommandLineArgument(!string.IsNullOrWhiteSpace(arguments.NewPassword), "New password is required.");
 
-            var database = new LiteDatabase($"Filename={arguments.IdentityDatabasePath}; Password={arguments.DatabasePassword};");
+            var database = new LiteDatabase($"Filename={arguments.IdentityDatabasePath}; Password={arguments.DatabasePassword}; Upgrade=true");
+            /*
             var contextFactory = new IdentityDatabaseContextFactory(database);
             var identityConfig = new IdentityConfiguration(contextFactory);
 
@@ -107,7 +114,7 @@ class Program
                     userManager.ResetAccessFailedCountAsync(adminUser);
                     userManager.SetLockoutEnabledAsync(adminUser, false);
                 }
-            }
+            }*/
 
         }
         else

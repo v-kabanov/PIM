@@ -1,11 +1,13 @@
 ﻿using System.Reflection;
-using AspNetCore.Identity.LiteDB.Models;
 using log4net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Pim.CommonLib;
 using PimWeb.Models;
+
+using IdentityUser = Raven.Identity.IdentityUser;
+using IdentityRole = Raven.Identity.IdentityRole;
 
 namespace PimWeb.Controllers;
 
@@ -14,12 +16,12 @@ public class AccountController : Controller
 {
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-    private readonly SignInManager<ApplicationUser> _signInManager;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> _roleManager;
+    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
-    public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager
-            , RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> roleManager
+    public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager
+            , RoleManager<IdentityRole> roleManager
         )
     {
         Log.DebugFormat("Instantiating with provided dependencies.");
@@ -28,11 +30,11 @@ public class AccountController : Controller
         _roleManager = roleManager;
     }
 
-    public SignInManager<ApplicationUser> SignInManager => _signInManager;
+    public SignInManager<IdentityUser> SignInManager => _signInManager;
 
-    public UserManager<ApplicationUser> UserManager => _userManager;
+    public UserManager<IdentityUser> UserManager => _userManager;
 
-    public RoleManager<AspNetCore.Identity.LiteDB.IdentityRole> RoleManager => _roleManager;
+    public RoleManager<IdentityRole> RoleManager => _roleManager;
 
     //
     // GET: /Account/Login
@@ -91,7 +93,7 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
             var result = await UserManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -411,5 +413,4 @@ public class AccountController : Controller
         RemovePhoneSuccess,
         Error
     }
-
 }
