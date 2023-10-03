@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Owin.Security;
+//using Microsoft.Owin.Security;
 
 namespace PimWeb.Models;
 
@@ -17,7 +17,7 @@ public class IndexViewModel
 public class ManageLoginsViewModel
 {
     public IList<UserLoginInfo> CurrentLogins { get; set; }
-    public IList<AuthenticationDescription> OtherLogins { get; set; }
+    //public IList<AuthenticationDescription> OtherLogins { get; set; }
 }
 
 public class FactorViewModel

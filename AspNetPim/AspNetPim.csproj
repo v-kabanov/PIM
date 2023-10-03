@@ -175,7 +175,6 @@
     <PackageReference Include="jQuery" Version="3.1.1" />
     <PackageReference Include="jQuery.UI.Combined" Version="1.12.1" />
     <PackageReference Include="jQuery.Validation" Version="1.16.0" />
-    <PackageReference Include="LiteDB" Version="5.0.17" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.2" />
     <PackageReference Include="Microsoft.AspNet.Identity.Owin" Version="2.2.2" />

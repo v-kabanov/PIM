@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using PimIdentity;
 using Raven.Identity;
 
 namespace PimWeb.Models;
@@ -173,7 +171,6 @@ public class SelectUserRolesViewModel
         Email = user.Email;
         UserId = user.Id;
 
-        ApplicationRoleManager roleManager = null;
         // Add all available roles to the list of EditorViewModels:
         //var roleManager = HttpContext.Current.GetOwinContext().Get<ApplicationRoleManager>();
 
@@ -196,7 +193,7 @@ public class SelectRoleEditorViewModel
 {
     public SelectRoleEditorViewModel() { }
 
-    public SelectRoleEditorViewModel([NotNull] string name)
+    public SelectRoleEditorViewModel(string name)
     {
         RoleName = name ?? throw new ArgumentNullException(nameof(name));
     }

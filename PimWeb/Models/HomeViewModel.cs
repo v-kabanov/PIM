@@ -6,10 +6,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using FulltextStorageLib;
-using FulltextStorageLib.Util;
 using log4net;
-using Pim.CommonLib;
+using PimWeb.AppCode;
 
 namespace PimWeb.Models;
 
@@ -22,7 +20,7 @@ public class HomeViewModel
 
     public IList<Note> LastUpdatedNotes { get; private set; }
 
-    public INoteStorage NoteStorage { get; private set; }
+    public INoteService NoteService { get; private set; }
 
     private Note _changedNote;
 
@@ -32,16 +30,16 @@ public class HomeViewModel
     {
     }
 
-    public HomeViewModel(INoteStorage noteStorage)
+    public HomeViewModel(INoteService noteService)
     {
-        Check.DoRequireArgumentNotNull(noteStorage, nameof(noteStorage));
+        if (noteService == null) throw new ArgumentNullException(nameof(noteService));
 
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
-    public void Initialize(INoteStorage noteStorage)
+    public void Initialize(INoteService noteStorage)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteStorage;
     }
 
     [Required(AllowEmptyStrings = false)]
@@ -55,8 +53,8 @@ public class HomeViewModel
             ++resultCount;
 
         // ReSharper disable once RedundantArgumentDefaultValue
-        var lastHeaders = NoteStorage.GetTopInPeriod(null, DateTime.Now, resultCount, SearchableDocumentTime.LastUpdate);
-        LastUpdatedNotes = lastHeaders.Select(h => NoteStorage.GetExisting(h.Id)).Where(x => x != null).ToList();
+        var lastHeaders = NoteService.GetTopInPeriod(null, DateTime.Now, resultCount, SearchableDocumentTime.LastUpdate);
+        LastUpdatedNotes = lastHeaders.Select(h => NoteService.Get(h.Id)).Where(x => x != null).ToList();
 
         if (lastHeaders.Count > LastUpdatedNotes.Count)
             Log.WarnFormat("Fulltext index out of sync: rebuild it");
@@ -81,24 +79,25 @@ public class HomeViewModel
 
         _changedNote = Note.Create(NewNoteText);
 
-        NoteStorage.SaveOrUpdate(_changedNote);
+        NoteService.SaveOrUpdate(_changedNote);
         NewNoteText = string.Empty;
 
         return _changedNote;
     }
 
-    public Note Delete(string noteId)
+    public Note Delete(int id)
     {
-        _changedNote = NoteStorage.Delete(noteId);
+        _changedNote = NoteService.Delete(id);
 
         _changeIsDeletion = true;
 
         return _changedNote;
     }
 
-    public static string GetNoteTextSummary(INote note)
+    public static string GetNoteTextSummary(Note note)
     {
-        Check.DoRequireArgumentNotNull(note, nameof(note));
+        if (note == null) throw new ArgumentNullException(nameof(note));
+
         if (note.Text == null)
             return null;
 

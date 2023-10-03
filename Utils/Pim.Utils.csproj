@@ -11,7 +11,6 @@
     <LangVersion>latestmajor</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LiteDB" Version="5.0.17" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Mono.Options" Version="5.3.0.1" />
   </ItemGroup>

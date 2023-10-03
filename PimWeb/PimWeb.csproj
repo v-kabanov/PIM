@@ -7,25 +7,32 @@
     <UserSecretsId>PimWeb-B4252337-DDA2-45EF-A5C5-8B5D791166D7</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <WarningsAsErrors />
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Autofac" Version="7.1.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
     <PackageReference Include="FontAwesome" Version="4.7.0" />
     <PackageReference Include="log4net" Version="2.0.15" />
-    <PackageReference Include="Lucene.Net.Contrib" Version="3.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Cryptography.Internal" Version="7.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="7.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.21" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.11" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="6.1.0" />
+    <PackageReference Include="Npgsql" Version="7.0.6" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
     <PackageReference Include="RavenDB.Client" Version="5.4.110" />
-    <PackageReference Include="RavenDB.Embedded" Version="5.4.110" />
     <PackageReference Include="RavenDB.Identity" Version="8.0.9" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\FulltextStorageLib\FulltextStorageLib.csproj" />
-    <ProjectReference Include="..\PimIdentity\PimIdentity.csproj" />
-  </ItemGroup>
 
 
   <ItemGroup>
@@ -84,5 +91,9 @@
     <_ContentIncludedByDefault Remove="Pages\_ViewImports.cshtml" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="AppCode\Migrations\" />
+  </ItemGroup>
 
 </Project>

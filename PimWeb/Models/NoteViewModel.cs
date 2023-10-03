@@ -7,18 +7,16 @@
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using FulltextStorageLib;
-using Pim.CommonLib;
+using PimWeb.AppCode;
 
 namespace PimWeb.Models;
 
 public class NoteViewModel
 {
-    public string NoteId { get; set; }
+    public int NoteId { get; set; }
 
     [DisplayName("Text")]
     [Required(AllowEmptyStrings = false)]
-    //[AllowHtml]
     public string NoteText { get; set; }
 
     [DisplayFormat(DataFormatString = "{0:f}")]
@@ -34,7 +32,7 @@ public class NoteViewModel
 
     public bool NoteDeleted { get; private set; }
 
-    public INoteStorage NoteStorage { get; private set; }
+    public INoteService NoteService { get; private set; }
 
     public Note Note { get; private set; }
 
@@ -42,14 +40,14 @@ public class NoteViewModel
     {
     }
 
-    public NoteViewModel(INoteStorage noteStorage)
+    public NoteViewModel(INoteService noteService)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
-    public void Initialize(INoteStorage noteStorage)
+    public void Initialize(INoteService noteService)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
     public void Load()
@@ -63,7 +61,8 @@ public class NoteViewModel
     {
         var newText = NoteText?.Trim();
 
-        Check.DoCheckOperationValid(!string.IsNullOrEmpty(newText), () => "Note text must not be empty.");
+        if (string.IsNullOrEmpty(newText))
+            throw new Exception("Note text must not be empty.");
 
         if (Note == null)
             Note = ReadFromStorage();
@@ -73,24 +72,26 @@ public class NoteViewModel
             Note.Text = newText;
             Note.LastUpdateTime = DateTime.Now;
 
-            NoteStorage.SaveOrUpdate(Note);
+            NoteService.SaveOrUpdate(Note);
         }
     }
 
     public void Delete()
     {
-        Note = NoteStorage.Delete(NoteId);
+        Note = NoteService.Delete(NoteId);
 
-        Check.DoEnsureLambda(Note != null, () => $"Note {NoteId} does not exist");
+        if(Note == null)
+            throw new Exception($"Note {NoteId} does not exist");
 
         NoteDeleted = true;
     }
 
     private Note ReadFromStorage()
     {
-        var result = NoteStorage.GetExisting(NoteId);
+        var result = NoteService.Get(NoteId);
 
-        Check.DoEnsureLambda(result != null, () => $"Note {NoteId} does not exist");
+        if(Note == null)
+            throw new Exception($"Note {NoteId} does not exist");
 
         return result;
     }

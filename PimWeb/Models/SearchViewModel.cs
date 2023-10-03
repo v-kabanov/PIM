@@ -7,8 +7,8 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using FulltextStorageLib;
 using log4net;
+using PimWeb.AppCode;
 
 namespace PimWeb.Models;
 
@@ -21,11 +21,11 @@ public class SearchViewModel
 
     private Note _deletedNote;
 
-    public INoteStorage NoteStorage { get; private set; }
+    public INoteService NoteService { get; private set; }
 
-    public void Initialize(INoteStorage noteStorage)
+    public void Initialize(INoteService noteService)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
     [Required(AllowEmptyStrings = false)]
@@ -39,7 +39,7 @@ public class SearchViewModel
     [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
     public DateTime? PeriodEnd { get; set; }
 
-    public string NoteId { get; set; }
+    public int NoteId { get; set; }
 
     /// <summary>
     ///     1 - based
@@ -52,8 +52,8 @@ public class SearchViewModel
 
     public void Delete()
     {
-        if (!string.IsNullOrWhiteSpace(NoteId))
-            _deletedNote = NoteStorage.Delete(NoteId);
+        if (NoteId > 0)
+            _deletedNote = NoteService.Delete(NoteId);
     }
 
     public void ExecuteSearch()
@@ -65,9 +65,9 @@ public class SearchViewModel
 
         var maxResults = MaxPageCount * DefaultResultsPerPage;
 
-        var headers = NoteStorage.SearchInPeriod(
+        var headers = NoteService.SearchInPeriod(
             // ReSharper disable once RedundantArgumentDefaultValue
-            PeriodStart, PeriodEnd, Query, maxResults + 1, SearchableDocumentTime.LastUpdate);
+            PeriodStart, PeriodEnd, Query, maxResults + 1, PageNumber, SearchableDocumentTime.LastUpdate, out var totalCount);
 
         if (_deletedNote != null)
             headers.Remove(_deletedNote);
@@ -82,7 +82,7 @@ public class SearchViewModel
             .ToList();
 
         SearchResultPage = headersPage
-            .Select(h => NoteStorage.GetExisting(h.Id))
+            .Select(h => NoteService.Get(h.Id))
             .Where(x => x != null)
             .ToList();
 

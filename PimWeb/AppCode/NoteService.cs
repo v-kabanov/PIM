@@ -1,0 +1,51 @@
+﻿namespace PimWeb.AppCode;
+
+
+/// <summary>
+///     Identifies searchable time property
+/// </summary>
+public enum SearchableDocumentTime
+{
+    Creation,
+    LastUpdate
+}
+
+public interface INoteService
+{
+    List<Note> GetTopInPeriod(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist);
+    
+    List<Note> SearchInPeriod(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount);
+    
+    Note Get(int id);
+    
+    Note SaveOrUpdate(Note note);
+    
+    Note Delete(int id);
+}
+
+public class NoteService : INoteService
+{
+    /// <inheritdoc />
+    public List<Note> GetTopInPeriod(string searchText, DateTime? latestUpdateTime, int pageSize, SearchableDocumentTime documentTime)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public Note Get(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public Note SaveOrUpdate(Note note)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public Note Delete(int id)
+    {
+        throw new NotImplementedException();
+    }
+}
