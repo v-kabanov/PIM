@@ -28,7 +28,7 @@ public class NoteViewModel
     public DateTime? LastUpdateTime => Note?.LastUpdateTime;
 
     [DisplayName("Version")]
-    public int? Version => Note?.Version;
+    public int? Version => Note?.IntegrityVersion;
 
     public bool NoteDeleted { get; private set; }
 

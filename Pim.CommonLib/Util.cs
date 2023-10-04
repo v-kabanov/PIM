@@ -4,6 +4,7 @@
 // Comment  
 // **********************************************************************************************/
 
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -28,5 +29,16 @@ public static class Util
         return exeDirectory == null
             ? relativePath
             : Path.Combine(exeDirectory, relativePath);
+    }
+
+    public static string CreateShortGuid()
+    {
+        var encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+
+        encoded = encoded
+            .Replace("/", "_")
+            .Replace("+", "-");
+
+        return encoded.Substring(0, 22);
     }
 }

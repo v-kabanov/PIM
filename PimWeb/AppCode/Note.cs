@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using NpgsqlTypes;
 
 namespace PimWeb.AppCode;
 
@@ -17,18 +18,7 @@ public class Note : IEquatable<Note>
     /// <summary>
     ///     0 for unsaved, incremented every time it's updated in the storage
     /// </summary>
-    public int Version { get; set; }
-
-    /// <summary>
-    ///     Register update
-    /// </summary>
-    /// <returns>
-    ///     New version
-    /// </returns>
-    public int IncrementVersion()
-    {
-        return ++Version;
-    }
+    public int IntegrityVersion { get; set; }
 
     /// <summary>
     ///     Name is just cached first line of text; should not be persisted separately
@@ -37,18 +27,20 @@ public class Note : IEquatable<Note>
 
     public string Text
     {
-        get { return _text; }
+        get => _text;
         set
         {
             Name = ExtractName(value);
             _text = value;
         }
     }
+    
+    public NpgsqlTsVector SearchVector { get; set; }
 
     /// <summary>
     ///     Id is assigned after note is saved
     /// </summary>
-    public bool IsTransient => Version == 0;
+    public bool IsTransient => IntegrityVersion == 0;
 
     public static Note Create(string text)
     {
@@ -57,7 +49,7 @@ public class Note : IEquatable<Note>
             Text = text,
             CreateTime = DateTime.Now,
             LastUpdateTime = DateTime.Now,
-            Version = 0
+            IntegrityVersion = 0
         };
 
         if (string.IsNullOrEmpty(result.Name))
@@ -80,17 +72,6 @@ public class Note : IEquatable<Note>
             return StringHelper.GetTextWithLimit(firstLine, 0, 100, false);
 
         return firstLine;
-    }
-
-    public static string CreateShortGuid()
-    {
-        var encoded = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-
-        encoded = encoded
-            .Replace("/", "_")
-            .Replace("+", "-");
-
-        return encoded.Substring(0, 22);
     }
 
     public override string ToString()

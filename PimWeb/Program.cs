@@ -1,16 +1,10 @@
 using System.Reflection;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using log4net;
 using log4net.Config;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pim.CommonLib;
 using PimWeb.AppCode;
-using Raven.Client.Documents.Session;
-using IdentityConstants = PimWeb.AppCode.IdentityConstants;
 
 var Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -31,18 +25,6 @@ else
 
 var appOptions = builder.Configuration.GetSection(nameof(AppOptions)).Get<AppOptions>();
 
-// var authDatabase = database;
-// var identityDatabaseContextFactory = new IdentityDatabaseContextFactory(authDatabase);
-// var identityConfiguration = new IdentityConfiguration(identityDatabaseContextFactory);
-//
-// var authSeedTask = identityConfiguration.EnsureDefaultUsersAndRolesAsync();
-
-var languageSetting = appOptions.FulltextIndexLanguages?.WhereNotWhiteSpace().ToArray();
-if (!(languageSetting?.Length > 0))
-    languageSetting = new [] { "English", "Russian"};
-
-var stemmerNames = languageSetting.WhereNotWhiteSpace().ToCaseInsensitiveSet();
-
 builder.Services
     .AddSingleton(appOptions)
     .AddControllers();
@@ -53,6 +35,7 @@ builder.Services.AddMvc(o => o.EnableEndpointRouting = false); //
 
 builder.Services
     .AddLogging()
+    .AddDbContext<DatabaseContext>()
     .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString))
     .AddDatabaseDeveloperPageExceptionFilter()
     .AddIdentity<IdentityUser<int>, IdentityRole<int>>(options =>
@@ -96,11 +79,19 @@ builder.Logging.ClearProviders().AddLog4Net();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+var ifSeed = "/seed".EqualsIgnoreCase(args.FirstOrDefault());
+if (ifSeed)
 {
+    Log.Info("Seeding identity");
+    using var scope = app.Services.CreateScope();
+    
     var seedUsers = builder.Configuration.GetSection(nameof(SeedUsers)).Get<SeedUsers>();
     if (seedUsers?.Users?.Count > 0)
         await scope.ServiceProvider.Seed(seedUsers);
+    else
+        Log.Warn("No data to seed found in the configuration.");
+    
+    return; 
 }
     
 // Configure the HTTP request pipeline.
