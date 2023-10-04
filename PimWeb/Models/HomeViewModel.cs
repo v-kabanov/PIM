@@ -53,7 +53,7 @@ public class HomeViewModel
             ++resultCount;
 
         // ReSharper disable once RedundantArgumentDefaultValue
-        var lastHeaders = NoteService.GetTopInPeriod(null, DateTime.Now, resultCount, SearchableDocumentTime.LastUpdate);
+        var lastHeaders = NoteService.GetTopInPeriod(null, DateTime.Now, resultCount, 0, SearchableDocumentTime.LastUpdate, out bool moreExist);
         LastUpdatedNotes = lastHeaders.Select(h => NoteService.Get(h.Id)).Where(x => x != null).ToList();
 
         if (lastHeaders.Count > LastUpdatedNotes.Count)

@@ -1,10 +1,6 @@
 ﻿using System.Reflection;
 using log4net;
 using Microsoft.AspNetCore.Identity;
-using Raven.Client.Documents;
-using Raven.Client.Documents.Session;
-using IdentityRole = Raven.Identity.IdentityRole;
-using IdentityUser = Raven.Identity.IdentityUser;
 
 namespace PimWeb.AppCode;
 
@@ -14,24 +10,17 @@ public static class IdentitySeed
     
     public static async Task Seed(this IServiceProvider serviceProvider, SeedUsers users)
     {
-        // Create the database if it doesn't exist.
-        // Also, create our roles if they don't exist. Needed because we're doing some role-based auth in this demo.
-        var docStore = serviceProvider.GetRequiredService<IDocumentStore>();
-        
-        docStore.EnsureExists();
-        //docStore.EnsureRolesExist(new List<string> { IdentityConstants.AdminRoleName, IdentityConstants.ReaderRoleName, IdentityConstants.WriterRoleName });
-
-        var roleManager = serviceProvider.GetService<RoleManager<IdentityRole>>();
+        var roleManager = serviceProvider.GetService<RoleManager<IdentityRole<int>>>();
 
         foreach (var roleName in IdentityConstants.AllRoleNames)
             if (!await roleManager.RoleExistsAsync(roleName))
             {
-                var ir = await roleManager.CreateAsync(new IdentityRole(roleName));
+                var ir = await roleManager.CreateAsync(new IdentityRole<int>(roleName));
                 if (!ir.Succeeded)
                     Log.ErrorFormat("'{0}' role creation: {1}", roleName, ir);
             }
 
-        var userManager = serviceProvider.GetService<UserManager<IdentityUser>>();
+        var userManager = serviceProvider.GetService<UserManager<IdentityUser<int>>>();
         
         foreach (var seedUser in users.Users)
         {
@@ -43,7 +32,7 @@ public static class IdentitySeed
         }
     }
     
-    private static async Task<IdentityResult> AddToRoleInternalAsync(this UserManager<IdentityUser> userManager, IdentityUser user, string roleName)
+    private static async Task<IdentityResult> AddToRoleInternalAsync(this UserManager<IdentityUser<int>> userManager, IdentityUser<int> user, string roleName)
     {
         var ir = await userManager.AddToRoleAsync(user, roleName);
         if (!ir.Succeeded)
@@ -51,12 +40,12 @@ public static class IdentitySeed
         return ir;
     }
     
-    private static async Task<IdentityUser> EnsureUser(this UserManager<IdentityUser> userManager, string name, string email, string password)
+    private static async Task<IdentityUser<int>> EnsureUser(this UserManager<IdentityUser<int>> userManager, string name, string email, string password)
     {
         var user = await userManager.FindByNameAsync(name);
         if (user == null)
         {
-            user = new IdentityUser
+            user = new IdentityUser<int>
             {
                 UserName = name,
                 Email = email,
@@ -64,7 +53,10 @@ public static class IdentitySeed
             };
             var ir = await userManager.CreateAsync(user, password);
             if (!ir.Succeeded)
+            {
                 Log.ErrorFormat("Creation of user '{0}': {1}", name, ir);
+                return null;
+            }
         }
 
         return user;

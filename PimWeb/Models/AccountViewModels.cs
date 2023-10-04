@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Raven.Identity;
 
 namespace PimWeb.Models;
 
@@ -66,8 +67,8 @@ public class RegisterViewModel
 {
     [Required]
     [EmailAddress]
-    [Display(Name = "Email")]
-    public string Email { get; set; }
+    [Display(Name = "Name")]
+    public string Name { get; set; }
 
     [Required]
     [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
@@ -136,14 +137,14 @@ public class EditUserViewModel
     public EditUserViewModel() { }
 
     // Allow Initialization with an instance of ApplicationUser:
-    public EditUserViewModel(IdentityUser user)
+    public EditUserViewModel(IdentityUser<int> user)
     {
         Name = user.UserName;
         Email = user.Email;
         Id = user.Id;
     }
 
-    public string Id { get; set; }
+    public int Id { get; set; }
 
     [Required]
     [Display(Name = "User Name")]
@@ -164,22 +165,21 @@ public class SelectUserRolesViewModel
 
 
     // Enable initialization with an instance of ApplicationUser:
-    public SelectUserRolesViewModel(IdentityUser user, IEnumerable<string> allRoles)
+    public SelectUserRolesViewModel(IdentityUser<int> identityUser, ISet<string> userRoles, IEnumerable<string> allRoles)
         : this()
     {
-        UserName = user.UserName;
-        Email = user.Email;
-        UserId = user.Id;
+        UserName = identityUser.UserName;
+        UserId = identityUser.Id;
 
         // Add all available roles to the list of EditorViewModels:
         //var roleManager = HttpContext.Current.GetOwinContext().Get<ApplicationRoleManager>();
 
         allRoles
-            .Select(r => new SelectRoleEditorViewModel(r) {Selected = user.Roles.Contains(r)})
+            .Select(r => new SelectRoleEditorViewModel(r) {Selected = userRoles.Contains(r)})
             .ToList();
     }
 
-    public string UserId { get; set; }
+    public int UserId { get; set; }
 
     public string UserName { get; set; }
 

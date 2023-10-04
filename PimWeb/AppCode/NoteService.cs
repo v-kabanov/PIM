@@ -26,7 +26,13 @@ public interface INoteService
 public class NoteService : INoteService
 {
     /// <inheritdoc />
-    public List<Note> GetTopInPeriod(string searchText, DateTime? latestUpdateTime, int pageSize, SearchableDocumentTime documentTime)
+    public List<Note> GetTopInPeriod(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public List<Note> SearchInPeriod(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount)
     {
         throw new NotImplementedException();
     }

@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Pim.CommonLib;
 using PimWeb.Models;
 
-using IdentityUser = Raven.Identity.IdentityUser;
-using IdentityRole = Raven.Identity.IdentityRole;
 
 namespace PimWeb.Controllers;
 
@@ -16,12 +14,12 @@ public class AccountController : Controller
 {
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly SignInManager<IdentityUser<int>> _signInManager;
+    private readonly UserManager<IdentityUser<int>> _userManager;
+    private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-    public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager
-            , RoleManager<IdentityRole> roleManager
+    public AccountController(UserManager<IdentityUser<int>> userManager, SignInManager<IdentityUser<int>> signInManager
+            , RoleManager<IdentityRole<int>> roleManager
         )
     {
         Log.DebugFormat("Instantiating with provided dependencies.");
@@ -30,11 +28,11 @@ public class AccountController : Controller
         _roleManager = roleManager;
     }
 
-    public SignInManager<IdentityUser> SignInManager => _signInManager;
+    public SignInManager<IdentityUser<int>> SignInManager => _signInManager;
 
-    public UserManager<IdentityUser> UserManager => _userManager;
+    public UserManager<IdentityUser<int>> UserManager => _userManager;
 
-    public RoleManager<IdentityRole> RoleManager => _roleManager;
+    public RoleManager<IdentityRole<int>> RoleManager => _roleManager;
 
     //
     // GET: /Account/Login
@@ -93,7 +91,7 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+            var user = new IdentityUser<int> { UserName = model.Name, Email = model.Name };
             var result = await UserManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -307,7 +305,7 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            var user = await UserManager.FindByIdAsync(model.Id);
+            var user = await UserManager.FindByIdAsync(model.Id.ToString());
             user.UserName = model.Name;
             user.Email = model.Email;
             await UserManager.UpdateAsync(user);
@@ -345,7 +343,9 @@ public class AccountController : Controller
     {
         var user = await UserManager.FindByIdAsync(id);
         var allRoles = RoleManager.Roles.Select(x => x.Name).ToList();
-        var model = new SelectUserRolesViewModel(user, allRoles);
+        var userRoles = (await UserManager.GetRolesAsync(user)).ToCaseInsensitiveSet();
+        
+        var model = new SelectUserRolesViewModel(user, userRoles, allRoles);
         return View(model);
     }
 
@@ -356,9 +356,10 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            var user = await UserManager.FindByIdAsync(model.UserId);
+            var user = await UserManager.FindByIdAsync(model.UserId.ToString());
+            var userRoles = await UserManager.GetRolesAsync(user);
 
-            var currentUserRoleNames = user.Roles.ToArray();
+            var currentUserRoleNames = userRoles.ToArray();
             await UserManager.RemoveFromRolesAsync(user, currentUserRoleNames);
 
             var newRoles = model.Roles.Where(mr => mr.Selected).Select(mr => mr.RoleName).ToArray();

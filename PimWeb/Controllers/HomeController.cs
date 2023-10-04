@@ -6,25 +6,25 @@
 // 
 
 using PimWeb.Models;
-using FulltextStorageLib;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PimWeb.AppCode;
 
 namespace PimWeb.Controllers;
 
 public class HomeController : Controller
 {
-    public HomeController(INoteStorage noteStorage)
+    public HomeController(INoteService noteService)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public INoteStorage NoteStorage { get; }
+    public INoteService NoteService { get; }
 
     private HomeViewModel CreateViewModel()
     {
-        return new HomeViewModel(NoteStorage);
+        return new HomeViewModel(NoteService);
     }
 
     [Authorize(Roles = "Admin,Writer")]
@@ -39,11 +39,11 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult DeleteNote(string noteId)
+    public ActionResult DeleteNote(int noteId)
     {
         var model = CreateViewModel();
 
-        if (!string.IsNullOrWhiteSpace(noteId))
+        if (noteId > 0)
         {
             var note = model.Delete(noteId);
 
@@ -61,7 +61,7 @@ public class HomeController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public ActionResult Create(HomeViewModel model)
     {
-        model.Initialize(NoteStorage);
+        model.Initialize(NoteService);
 
         if (!string.IsNullOrWhiteSpace(model.NewNoteText))
             model.CreateNew();

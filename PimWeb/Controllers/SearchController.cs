@@ -4,9 +4,9 @@
 // Comment  
 // **********************************************************************************************/
 
-using FulltextStorageLib;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PimWeb.AppCode;
 using PimWeb.Models;
 
 namespace PimWeb.Controllers;
@@ -14,11 +14,11 @@ namespace PimWeb.Controllers;
 [Authorize(Roles = "Admin,Reader,Writer")]
 public class SearchController : Controller
 {
-    public INoteStorage NoteStorage { get; }
+    public INoteService NoteService { get; }
 
-    public SearchController(INoteStorage noteStorage)
+    public SearchController(INoteService noteService)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
     [HttpGet]
@@ -26,7 +26,7 @@ public class SearchController : Controller
     [Route("~/Search")]
     public ActionResult Search(SearchViewModel model)
     {
-        model.Initialize(NoteStorage);
+        model.Initialize(NoteService);
 
         if (model.PeriodStart >= model.PeriodEnd)
             ModelState.AddModelError(nameof(model.PeriodEnd), "Period end date must be greater than start.");
@@ -40,7 +40,7 @@ public class SearchController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public ActionResult Delete(SearchViewModel model)
     {
-        model.Initialize(NoteStorage);
+        model.Initialize(NoteService);
 
         model.Delete();
 

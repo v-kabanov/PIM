@@ -6,9 +6,9 @@
 // 
 
 using PimWeb.Models;
-using FulltextStorageLib;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PimWeb.AppCode;
 
 namespace PimWeb.Controllers;
 
@@ -18,18 +18,18 @@ public class ViewEditController : Controller
     private const string PartialViewName = "ViewEditPartial";
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public INoteStorage NoteStorage { get; }
+    public INoteService NoteService { get; }
 
-    public ViewEditController(INoteStorage noteStorage)
+    public ViewEditController(INoteService noteService)
     {
-        NoteStorage = noteStorage;
+        NoteService = noteService;
     }
 
     [HttpGet]
     [Route("~/ViewEdit/{id}")]
-    public ActionResult Index(string id)
+    public ActionResult Index(int id)
     {
-        var model = new NoteViewModel(NoteStorage) { NoteId = id };
+        var model = new NoteViewModel(NoteService) { NoteId = id };
 
         model.Load();
 
@@ -40,7 +40,7 @@ public class ViewEditController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public ActionResult Update(NoteViewModel model)
     {
-        model.Initialize(NoteStorage);
+        model.Initialize(NoteService);
 
         model.Update();
 
@@ -51,7 +51,7 @@ public class ViewEditController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public ActionResult Delete(NoteViewModel model)
     {
-        model.Initialize(NoteStorage);
+        model.Initialize(NoteService);
 
         model.Delete();
 

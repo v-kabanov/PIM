@@ -1,7 +1,6 @@
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using FulltextStorageLib;
 using log4net;
 using log4net.Config;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pim.CommonLib;
-using PimIdentity;
 using PimWeb.AppCode;
 using Raven.Client.Documents.Session;
 using IdentityConstants = PimWeb.AppCode.IdentityConstants;
@@ -33,15 +31,6 @@ else
 
 var appOptions = builder.Configuration.GetSection(nameof(AppOptions)).Get<AppOptions>();
 
-var appDataPath = appOptions.DataPath.IsNullOrEmpty()
-    ? Path.Combine(appRootPath, "App_Data")
-    : appOptions.DataPath;
-
-Console.WriteLine("Using data directory '{0}'", appDataPath);
-
-Directory.CreateDirectory(appDataPath);
-
-
 // var authDatabase = database;
 // var identityDatabaseContextFactory = new IdentityDatabaseContextFactory(authDatabase);
 // var identityConfiguration = new IdentityConfiguration(identityDatabaseContextFactory);
@@ -53,40 +42,36 @@ if (!(languageSetting?.Length > 0))
     languageSetting = new [] { "English", "Russian"};
 
 var stemmerNames = languageSetting.WhereNotWhiteSpace().ToCaseInsensitiveSet();
-// var redundantIndexes = storage.ActiveIndexNames.Where(name => !stemmerNames.Contains(name));
-// foreach (var redundantIndexName in redundantIndexes)
-// {
-//     Log.InfoFormat("Removing FT index {0}", redundantIndexName);
-//     storage.RemoveIndex(redundantIndexName);
-// }
-//
-// stemmerNames.ExceptWith(storage.ActiveIndexNames);
-//
-// storage.OpenOrCreateIndexes(stemmerNames);
-//
-// storage.MultiIndex.UseFuzzySearch = true;
 
 builder.Services
-//    .AddAutofac()
     .AddSingleton(appOptions)
     .AddControllers();
     //use controllers for now
     //.AddRazorPages();
 
-//builder.Services.AddSingleton<ILiteDbContext>(identityDatabaseContextFactory.DbContext);
-
 builder.Services.AddMvc(o => o.EnableEndpointRouting = false); //
 
 builder.Services
     .AddLogging()
-    //.AddIdentity<Raven.Identity.IdentityUser, Raven.Identity.IdentityRole>(ApplicationUserManager.SetOptions)
-    .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql())
+    .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString))
     .AddDatabaseDeveloperPageExceptionFilter()
-    //.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<App>()
-    // use appsettings.json config
-    .AddDefaultTokenProviders();
+    .AddIdentity<IdentityUser<int>, IdentityRole<int>>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = true;
+        options.Password = new PasswordOptions
+        {
+            RequireDigit = false
+            , RequireLowercase = false
+            , RequireUppercase = false
+            , RequiredUniqueChars = 4
+            , RequiredLength = 6
+            , RequireNonAlphanumeric = false
+        };
+    })
+    //.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders()
+    .AddRoles<IdentityRole<int>>();
 
 builder.Services.AddAuthorization();
 
@@ -115,15 +100,9 @@ using (var scope = app.Services.CreateScope())
 {
     var seedUsers = builder.Configuration.GetSection(nameof(SeedUsers)).Get<SeedUsers>();
     if (seedUsers?.Users?.Count > 0)
-    {
         await scope.ServiceProvider.Seed(seedUsers);
-        var databaseSession = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
-        
-        // RavenDB.Identity inconsistently does not commit changes after adding roles to users (probably a bug)
-        await databaseSession.SaveChangesAsync();
-    }
 }
-
+    
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
