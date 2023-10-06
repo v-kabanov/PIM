@@ -79,7 +79,7 @@ public class HomeViewModel
 
         _changedNote = Note.Create(NewNoteText);
 
-        NoteService.SaveOrUpdate(_changedNote);
+        NoteService.SaveOrUpdateAsync(_changedNote);
         NewNoteText = string.Empty;
 
         return _changedNote;
@@ -87,7 +87,7 @@ public class HomeViewModel
 
     public Note Delete(int id)
     {
-        _changedNote = NoteService.Delete(id);
+        _changedNote = NoteService.DeleteAsync(id);
 
         _changeIsDeletion = true;
 

@@ -53,7 +53,7 @@ public class SearchViewModel
     public void Delete()
     {
         if (NoteId > 0)
-            _deletedNote = NoteService.Delete(NoteId);
+            _deletedNote = NoteService.DeleteAsync(NoteId);
     }
 
     public void ExecuteSearch()
@@ -65,7 +65,7 @@ public class SearchViewModel
 
         var maxResults = MaxPageCount * DefaultResultsPerPage;
 
-        var headers = NoteService.SearchInPeriod(
+        var headers = NoteService.SearchInPeriodAsync(
             // ReSharper disable once RedundantArgumentDefaultValue
             PeriodStart, PeriodEnd, Query, maxResults + 1, PageNumber, SearchableDocumentTime.LastUpdate, out var totalCount);
 

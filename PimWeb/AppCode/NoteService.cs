@@ -1,4 +1,7 @@
-﻿using JetBrains.Annotations;
+﻿using System.Data.Entity;
+using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
+using Pim.CommonLib;
 
 namespace PimWeb.AppCode;
 
@@ -14,15 +17,15 @@ public enum SearchableDocumentTime
 
 public interface INoteService
 {
-    List<Note> GetTopInPeriod(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist);
+    Task<List<Note>> GetTopInPeriodAsync(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist);
     
-    List<Note> SearchInPeriod(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount);
+    Task<List<Note>> SearchInPeriodAsync(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount);
     
-    Note Get(int id);
+    Task<Note> GetAsync(int id);
     
-    Note SaveOrUpdate(Note note);
+    Task<Note> SaveOrUpdateAsync(Note note);
     
-    Note Delete(int id);
+    Task<Note> DeleteAsync(int id);
 }
 
 public class NoteService : INoteService
@@ -35,28 +38,53 @@ public class NoteService : INoteService
     }
 
     /// <inheritdoc />
-    public List<Note> GetTopInPeriod(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist)
+    public async Task<List<Note>> GetTopInPeriodAsync(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist)
     {
-        var query = DataContext.Notes.AsQueryable();
-        if (documentTime == SearchableDocumentTime.Creation)
-        {
-            if (start.HasValue)
-                query = query.Where(x => x.CreateTime >= start);
-            if (end.HasValue)
-                query = query.Where(x => x.CreateTime < end);
-
-            query = query.OrderByDescending(x => x.CreateTime);
-        }
-        else
-        {
-            if (start.HasValue)
-                query = query.Where(x => x.LastUpdateTime >= start);
-            if (end.HasValue)
-                query = query.Where(x => x.LastUpdateTime < end);
-            
-            query = query.OrderByDescending(x => x.LastUpdateTime);
-        }
+        var query = CreateQuery(start, end, documentTime);
         
+        var skip = pageSize * pageNumber;
+        
+        var result = await query.Skip(skip).Take(pageSize + 1).ToListAsync();
+        moreExist = result.Count > pageSize;
+        if (moreExist)
+            result.RemoveAt(result.Count - 1);
+        
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<List<Note>> SearchInPeriodAsync(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount)
+    {
+        var query = CreateQuery(start, end, documentTime);
+
+        if (!searchText.IsNullOrWhiteSpace())
+            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(searchText)));
+        
+        // no futures in EF core; reluctant to use Z.EF
+        totalCount = await query.CountAsync().ConfigureAwait(false);
+        
+        var result = await ApplyPage(Sort(query, documentTime), pageSize, pageNumber)
+            .ToListAsync();
+        
+        return result;
+    }
+
+    /// <inheritdoc />
+    public Task<Note> GetAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public Task<Note> SaveOrUpdateAsync(Note note)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public Task<Note> DeleteAsync(int id)
+    {
+        throw new NotImplementedException();
     }
     
     private IQueryable<Note> CreateQuery(DateTime? start, DateTime? end, SearchableDocumentTime documentTime)
@@ -92,28 +120,12 @@ public class NoteService : INoteService
         
         return result.Take(pageSize);
     }
-
-    /// <inheritdoc />
-    public List<Note> SearchInPeriod(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount)
+    
+    private static IQueryable<Note> Sort(IQueryable<Note> query, SearchableDocumentTime documentTime)
     {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc />
-    public Note Get(int id)
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc />
-    public Note SaveOrUpdate(Note note)
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc />
-    public Note Delete(int id)
-    {
-        throw new NotImplementedException();
+        if (documentTime == SearchableDocumentTime.Creation)
+            return query.OrderByDescending(x => x.CreateTime);
+        
+        return query.OrderByDescending(x => x.LastUpdateTime);
     }
 }

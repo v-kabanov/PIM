@@ -72,13 +72,13 @@ public class NoteViewModel
             Note.Text = newText;
             Note.LastUpdateTime = DateTime.Now;
 
-            NoteService.SaveOrUpdate(Note);
+            NoteService.SaveOrUpdateAsync(Note);
         }
     }
 
     public void Delete()
     {
-        Note = NoteService.Delete(NoteId);
+        Note = NoteService.DeleteAsync(NoteId);
 
         if(Note == null)
             throw new Exception($"Note {NoteId} does not exist");
