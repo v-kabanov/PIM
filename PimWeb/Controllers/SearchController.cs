@@ -24,29 +24,26 @@ public class SearchController : Controller
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]
     [Route("~/Search")]
-    public ActionResult Search(SearchViewModel model)
+    public async Task<ActionResult> Search(SearchViewModel model)
     {
-        model.Initialize(NoteService);
-
+        var result = model;
         if (model.PeriodStart >= model.PeriodEnd)
             ModelState.AddModelError(nameof(model.PeriodEnd), "Period end date must be greater than start.");
         else if (ModelState.IsValid)
-            model.ExecuteSearch();
+            result = await NoteService.SearchAsync(model, false);
 
-        return View("Search", model);
+        return View("Search", result);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult Delete(SearchViewModel model)
+    public async Task<ActionResult> Delete(SearchViewModel model)
     {
-        model.Initialize(NoteService);
-
-        model.Delete();
-
+        var result = model;
+        
         if (ModelState.IsValid)
-            model.ExecuteSearch();
+            result = await NoteService.SearchAsync(model, true);
 
-        return PartialView("SearchPartial", model);
+        return PartialView("SearchPartial", result);
     }
 }

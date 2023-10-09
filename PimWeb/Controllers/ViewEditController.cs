@@ -27,33 +27,34 @@ public class ViewEditController : Controller
 
     [HttpGet]
     [Route("~/ViewEdit/{id}")]
-    public ActionResult Index(int id)
+    public async Task<ActionResult> Index(int id)
     {
-        var model = new NoteViewModel(NoteService) { NoteId = id };
-
-        model.Load();
+        var model = await NoteService.GetAsync(id).ConfigureAwait(false);
 
         return View("ViewEdit", model);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult Update(NoteViewModel model)
+    public async Task<ActionResult> Update(NoteViewModel model)
     {
-        model.Initialize(NoteService);
+        var result = await NoteService.SaveOrUpdateAsync(model);
 
-        model.Update();
-
-        return PartialView(PartialViewName, model);
+        return PartialView(PartialViewName, result);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult Delete(NoteViewModel model)
+    public async Task<ActionResult> Delete(NoteViewModel model)
     {
-        model.Initialize(NoteService);
+        var node = await NoteService.DeleteAsync(model.NoteId);
+        
+        if (node == null)
+        {
+            ModelState.AddModelError("", $"Note #{model.NoteId} does not exist.");
 
-        model.Delete();
+            return View("Error");
+        }
 
         return RedirectToAction("Index", "Home");
     }

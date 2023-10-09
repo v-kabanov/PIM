@@ -1,19 +1,22 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using NpgsqlTypes;
 
 namespace PimWeb.AppCode;
 
 public class Note : IEquatable<Note>
 {
+    [NotMapped]
     private string _text;
 
+    [NotMapped]
     private int _hashCode;
 
     public int Id { get; set; }
 
-    public DateTime CreateTime { get; set; }
+    public DateTime CreateTime { get; set; } = DateTime.Now;
 
-    public DateTime LastUpdateTime { get; set; }
+    public DateTime LastUpdateTime { get; set; } = DateTime.Now;
 
     /// <summary>
     ///     0 for unsaved, incremented every time it's updated in the storage
@@ -23,6 +26,7 @@ public class Note : IEquatable<Note>
     /// <summary>
     ///     Name is just cached first line of text; should not be persisted separately
     /// </summary>
+    [NotMapped]
     public string Name { get; private set; }
 
     public string Text

@@ -6,26 +6,28 @@
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using log4net;
 using PimWeb.AppCode;
 
 namespace PimWeb.Models;
 
 public class SearchViewModel
 {
-    private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-    public const int MaxPageCount = 10;
-    public const int DefaultResultsPerPage = 10;
-
-    private Note _deletedNote;
-
-    public INoteService NoteService { get; private set; }
-
-    public void Initialize(INoteService noteService)
+    public SearchViewModel()
     {
-        NoteService = noteService;
+    }
+
+    /// <summary>
+    ///     Copies user input only
+    /// </summary>
+    /// <param name="other">
+    ///     Mandatory
+    /// </param>
+    public SearchViewModel(SearchViewModel other)
+    {
+        if (other == null) throw new ArgumentNullException(nameof(other));
+        Query = other.Query;
+        PeriodStart = other.PeriodStart;
+        PeriodEnd = other.PeriodEnd;
     }
 
     [Required(AllowEmptyStrings = false)]
@@ -46,47 +48,12 @@ public class SearchViewModel
     /// </summary>
     public int PageNumber { get; set; } = 1;
 
-    public int TotalPageCount { get; private set; }
+    /// <summary>
+    ///     The number or counted notes is limited (e.g. to 10 pages past the selected page) for performance reasons.
+    /// </summary>
+    public int? TotalCountedPageCount { get; set; }
+    
+    public bool HasMore { get; set; }
 
-    public IList<Note> SearchResultPage { get; private set; }
-
-    public void Delete()
-    {
-        if (NoteId > 0)
-            _deletedNote = NoteService.DeleteAsync(NoteId);
-    }
-
-    public void ExecuteSearch()
-    {
-        if (PageNumber < 1)
-            PageNumber = 1;
-        else if (PageNumber > MaxPageCount)
-            PageNumber = MaxPageCount;
-
-        var maxResults = MaxPageCount * DefaultResultsPerPage;
-
-        var headers = NoteService.SearchInPeriodAsync(
-            // ReSharper disable once RedundantArgumentDefaultValue
-            PeriodStart, PeriodEnd, Query, maxResults + 1, PageNumber, SearchableDocumentTime.LastUpdate, out var totalCount);
-
-        if (_deletedNote != null)
-            headers.Remove(_deletedNote);
-        else if (headers.Any() && headers.Count > maxResults)
-            headers.RemoveAt(headers.Count - 1);
-
-        TotalPageCount = (int)Math.Ceiling((double)headers.Count / DefaultResultsPerPage);
-
-        var headersPage = headers
-            .Skip((PageNumber - 1) * DefaultResultsPerPage)
-            .Take(DefaultResultsPerPage)
-            .ToList();
-
-        SearchResultPage = headersPage
-            .Select(h => NoteService.Get(h.Id))
-            .Where(x => x != null)
-            .ToList();
-
-        if (headersPage.Count > SearchResultPage.Count)
-            Log.Warn("Fulltext index out of sync: rebuild it");
-    }
+    public List<Note> SearchResultPage { get; set; } = new ();
 }

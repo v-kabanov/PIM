@@ -35,8 +35,8 @@ builder.Services.AddMvc(o => o.EnableEndpointRouting = false); //
 
 builder.Services
     .AddLogging()
-    .AddDbContext<DatabaseContext>()
-    .AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString))
+    .AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
+    .AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
     .AddDatabaseDeveloperPageExceptionFilter()
     .AddIdentity<IdentityUser<int>, IdentityRole<int>>(options =>
     {
@@ -52,7 +52,7 @@ builder.Services
         };
     })
     //.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddEntityFrameworkStores<IdentityDbContext>()
     .AddDefaultTokenProviders()
     .AddRoles<IdentityRole<int>>();
 
@@ -75,7 +75,10 @@ builder.Services.ConfigureApplicationCookie(o =>
     o.Cookie.Name = ".auth";
 });
 
+builder.Services.AddScoped<INoteService, NoteService>();
+
 builder.Logging.ClearProviders().AddLog4Net();
+
 
 var app = builder.Build();
 

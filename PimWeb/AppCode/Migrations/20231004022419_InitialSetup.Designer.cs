@@ -11,7 +11,7 @@ using PimWeb.AppCode;
 
 namespace PimWeb.AppCode.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
+    [DbContext(typeof(IdentityDbContext))]
     [Migration("20231004022419_InitialSetup")]
     partial class InitialSetup
     {

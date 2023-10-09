@@ -7,13 +7,13 @@
     if (Model.NoteDeleted)
     {
         <h2>
-            Note @(Model.Note?.Name) has been deleted!
+            Note does not exist
         </h2>
     }
     else
     {
         <h2>
-            @(Model?.Note?.Name)
+            @(Model.Caption)
         </h2>
         <br />
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })

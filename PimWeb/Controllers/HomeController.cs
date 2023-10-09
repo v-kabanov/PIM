@@ -22,53 +22,39 @@ public class HomeController : Controller
     // ReSharper disable once MemberCanBePrivate.Global
     public INoteService NoteService { get; }
 
-    private HomeViewModel CreateViewModel()
-    {
-        return new HomeViewModel(NoteService);
-    }
-
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult Index()
+    public async Task<ActionResult> Index()
     {
-        var model = CreateViewModel();
-
-        model.LoadLatest();
+        var model = await NoteService.GetLatestAsync();
 
         return View(model);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult DeleteNote(int noteId)
+    public async Task<ActionResult> DeleteNote(int noteId)
     {
-        var model = CreateViewModel();
-
         if (noteId > 0)
         {
-            var note = model.Delete(noteId);
+            var note = await NoteService.DeleteAsync(noteId);
 
             ViewBag.Message = note == null
                 ? $"Note {noteId} was not found"
                 : $"Note {noteId} successfully deleted";
         }
 
-        model.LoadLatest();
+        var model = await NoteService.GetLatestAsync();
 
         return PartialView("IndexPartial", model);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public ActionResult Create(HomeViewModel model)
+    public async Task<ActionResult> Create(HomeViewModel model)
     {
-        model.Initialize(NoteService);
+        var result = await NoteService.CreateAsync(model);
 
-        if (!string.IsNullOrWhiteSpace(model.NewNoteText))
-            model.CreateNew();
-
-        model.LoadLatest();
-
-        return PartialView("IndexPartial", model);
+        return PartialView("IndexPartial", result);
     }
 
     public ActionResult About()

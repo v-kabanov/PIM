@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PimWeb.AppCode;
 
-public class ApplicationDbContext : IdentityDbContext<IdentityUser<int>, IdentityRole<int>, int>
+public class IdentityDbContext : IdentityDbContext<IdentityUser<int>, IdentityRole<int>, int>
 {
-    public ApplicationDbContext()
+    public IdentityDbContext()
     {
     }
 
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public IdentityDbContext(DbContextOptions<IdentityDbContext> options)
         : base(options)
     {
     }

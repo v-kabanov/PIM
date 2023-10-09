@@ -1,92 +1,160 @@
-﻿using System.Data.Entity;
-using JetBrains.Annotations;
+﻿
+// DO NOT REFERENCE!
+//using System.Data.Entity;
+
 using Microsoft.EntityFrameworkCore;
 using Pim.CommonLib;
+using PimWeb.Models;
 
 namespace PimWeb.AppCode;
 
-
-/// <summary>
-///     Identifies searchable time property
-/// </summary>
-public enum SearchableDocumentTime
-{
-    Creation,
-    LastUpdate
-}
-
-public interface INoteService
-{
-    Task<List<Note>> GetTopInPeriodAsync(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist);
-    
-    Task<List<Note>> SearchInPeriodAsync(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount);
-    
-    Task<Note> GetAsync(int id);
-    
-    Task<Note> SaveOrUpdateAsync(Note note);
-    
-    Task<Note> DeleteAsync(int id);
-}
-
 public class NoteService : INoteService
 {
+    public const int DefaultPageSize = 20;
+    
     public DatabaseContext DataContext { get; }
 
-    public NoteService([NotNull] DatabaseContext dataContext)
+    public int PageSize => DefaultPageSize;
+    
+    public NoteService(DatabaseContext dataContext)
     {
         DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
     }
 
-    /// <inheritdoc />
-    public async Task<List<Note>> GetTopInPeriodAsync(DateTime? start, DateTime? end, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out bool moreExist)
+    public async Task<SearchViewModel> SearchAsync(SearchViewModel model, bool withDelete)
     {
-        var query = CreateQuery(start, end, documentTime);
-        
-        var skip = pageSize * pageNumber;
-        
-        var result = await query.Skip(skip).Take(pageSize + 1).ToListAsync();
-        moreExist = result.Count > pageSize;
-        if (moreExist)
-            result.RemoveAt(result.Count - 1);
-        
-        return result;
-    }
+        var query = CreateQuery(model.PeriodStart, model.PeriodEnd, SearchableDocumentTime.LastUpdate);
 
-    /// <inheritdoc />
-    public async Task<List<Note>> SearchInPeriodAsync(DateTime? start, DateTime? end, string searchText, int pageSize, int pageNumber, SearchableDocumentTime documentTime, out int totalCount)
-    {
-        var query = CreateQuery(start, end, documentTime);
-
-        if (!searchText.IsNullOrWhiteSpace())
-            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(searchText)));
+        if (!model.Query.IsNullOrWhiteSpace())
+            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(model.Query)));
+        
+        var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         
         // no futures in EF core; reluctant to use Z.EF
-        totalCount = await query.CountAsync().ConfigureAwait(false);
+        var totalCount = await query.Take(maxNotesToCount).CountAsync().ConfigureAwait(false);
         
-        var result = await ApplyPage(Sort(query, documentTime), pageSize, pageNumber)
+        var notes = await query.Sort(SearchableDocumentTime.LastUpdate)
+            .ApplyPage(PageSize, model.PageNumber - 1, withDelete)
             .ToListAsync();
+        
+        if (withDelete)
+            notes.RemoveAll(x => x.Id == model.NoteId);
+        
+        if (notes.Count > PageSize)
+            notes.RemoveAt(notes.Count - 1);
+
+        var pageCount = (int)Math.Ceiling((double)totalCount / PageSize);
+        var result = new SearchViewModel(model)
+        {
+            SearchResultPage = notes,
+            TotalCountedPageCount = pageCount,
+            HasMore = pageCount > (model.PageNumber + 1),
+        };
+        
+        return result;
+    }
+    
+    public async Task<HomeViewModel> GetLatestAsync()
+    {
+        var notes = await DataContext.Notes
+            .OrderByDescending(x => x.LastUpdateTime)
+            .Take(PageSize)
+            .ToListAsync()
+            .ConfigureAwait(false);
+        
+        return new HomeViewModel { LastUpdatedNotes = notes };
+    }
+
+    /// <inheritdoc />
+    public async Task<NoteViewModel> GetAsync(int id)
+    {
+        var note = await DataContext.Notes.FindAsync(id).ConfigureAwait(false);
+        NoteViewModel result;
+        if (note != null)
+        {
+            result = new NoteViewModel
+            {
+                NoteId = id,
+                CreateTime = note.CreateTime,
+                LastUpdateTime = note.LastUpdateTime,
+                NoteText = note.Text,
+                Version = note.IntegrityVersion,
+            };
+        }
+        else
+            result = new NoteViewModel();
         
         return result;
     }
 
     /// <inheritdoc />
-    public Task<Note> GetAsync(int id)
+    public async Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model)
     {
-        throw new NotImplementedException();
+        var note = await DataContext.FindAsync<Note>(model.NoteId).ConfigureAwait(false);
+
+        var newText = model.NoteText?.Trim();
+        
+        if (note != null)
+        {
+            if (newText != note.Text)
+            {
+                note.Text = model.NoteText;
+                note.LastUpdateTime = DateTime.Now;
+            }
+        }
+        else
+        {
+            note = new Note { Text = model.NoteText };
+            await DataContext.Notes.AddAsync(note).ConfigureAwait(false);
+        }
+        
+        await DataContext.SaveChangesAsync().ConfigureAwait(false);
+        
+        return new NoteViewModel
+        {
+            NoteId = note.Id,
+            NoteText = note.Text,
+            Caption = note.Name,
+            Version = note.IntegrityVersion,
+            CreateTime = note.CreateTime,
+            LastUpdateTime = note.LastUpdateTime,
+        };
+    }
+
+
+    /// <inheritdoc />
+    public async Task<Note> DeleteAsync(int id)
+    {
+        var note = await DataContext.Notes.FindAsync(id).ConfigureAwait(false);
+        
+        if (note != null)
+        {
+            DataContext.Remove(note);
+            await DataContext.SaveChangesAsync().ConfigureAwait(false);
+        }
+        
+        return note;
     }
 
     /// <inheritdoc />
-    public Task<Note> SaveOrUpdateAsync(Note note)
+    public async Task<HomeViewModel> CreateAsync(HomeViewModel model)
     {
-        throw new NotImplementedException();
+        var created = !model.NewNoteText.IsNullOrWhiteSpace();
+        if (created)
+        {
+            var newNote = new Note { Text = model.NewNoteText };
+            await DataContext.AddAsync(newNote).ConfigureAwait(false);
+            await DataContext.SaveChangesAsync().ConfigureAwait(false);
+        }
+        
+        var result = await GetLatestAsync().ConfigureAwait(false);
+        
+        if (!created)
+            result.NewNoteText = model.NewNoteText;
+        
+        return result;
     }
 
-    /// <inheritdoc />
-    public Task<Note> DeleteAsync(int id)
-    {
-        throw new NotImplementedException();
-    }
-    
     private IQueryable<Note> CreateQuery(DateTime? start, DateTime? end, SearchableDocumentTime documentTime)
     {
         var query = DataContext.Notes.AsQueryable();
@@ -110,22 +178,5 @@ public class NoteService : INoteService
         }
         
         return query;
-    }
-    
-    private static IQueryable<Note> ApplyPage(IQueryable<Note> query, int pageSize, int pageNumber)
-    {
-        var result = query;
-        if (pageNumber > 0)
-            result = result.Skip(pageSize * pageNumber);
-        
-        return result.Take(pageSize);
-    }
-    
-    private static IQueryable<Note> Sort(IQueryable<Note> query, SearchableDocumentTime documentTime)
-    {
-        if (documentTime == SearchableDocumentTime.Creation)
-            return query.OrderByDescending(x => x.CreateTime);
-        
-        return query.OrderByDescending(x => x.LastUpdateTime);
     }
 }

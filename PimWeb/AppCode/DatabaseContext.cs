@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using JetBrains.Annotations;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace PimWeb.AppCode;
 
@@ -16,7 +14,7 @@ public class DatabaseContext : DbContext
     }
 
     /// <inheritdoc />
-    public DatabaseContext([NotNull] DbContextOptions options, AppOptions appOptions) : base(options)
+    public DatabaseContext(DbContextOptions<DatabaseContext> options, AppOptions appOptions) : base(options)
     {
         AppOptions = appOptions;
     }
@@ -30,6 +28,7 @@ public class DatabaseContext : DbContext
         
         modelBuilder.Entity<Note>(b =>
         {
+            b.ToTable("Note", "public");
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).UseSequence("NoteId", "public");
             b.Property(x => x.Text).IsRequired(); //.UseCompressionMethod("lz4");
@@ -38,7 +37,7 @@ public class DatabaseContext : DbContext
             b.Property(x => x.LastUpdateTime); //.HasColumnType("timestamp");
             b.HasGeneratedTsVectorColumn(
                     p => p.SearchVector,
-                    AppOptions.FulltextConfig,
+                    AppOptions.FulltextConfig ?? "english",
                     p => new { p.Text })  // Included properties
                 .HasIndex(p => p.SearchVector, IndexNameNoteSearch)
                 .HasMethod("GIN"); // Index method on the search vector (GIN or GIST)
