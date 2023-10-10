@@ -16,7 +16,7 @@ public class LiteDbStorage<TDoc> : IDocumentStorage<TDoc, string>
 {
     private LiteDatabase _database;
 
-    private readonly ILiteCollection<TDoc> _documents;
+    private readonly LiteCollection<TDoc> _documents;
 
     public IDocumentAdapter<TDoc> DocumentAdapter { get; }
 

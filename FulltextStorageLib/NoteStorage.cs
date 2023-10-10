@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 // 
 using System.IO;
+using LiteDB;
 using Pim.CommonLib;
 
 namespace FulltextStorageLib;

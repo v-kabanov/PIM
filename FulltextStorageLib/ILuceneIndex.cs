@@ -9,81 +9,90 @@ using System;
 using System.Collections.Generic;
 using Lucene.Net.Analysis;
 using Lucene.Net.Documents;
-using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 
-namespace FulltextStorageLib;
-
-/// <summary>
-///     Domain agnostic lucene full-text index.
-/// </summary>
-public interface ILuceneIndex : IDisposable
+namespace FulltextStorageLib
 {
-    /// <summary>
-    ///     Should generally match root directory name.
-    /// </summary>
-    string Name { get; }
 
     /// <summary>
-    ///     Index root directory
+    ///     Domain agnostic lucene full-text index.
     /// </summary>
-    string Path { get; }
+    public interface ILuceneIndex : IDisposable
+    {
+        /// <summary>
+        ///     Should generally match root directory name.
+        /// </summary>
+        string Name { get; }
 
-    Directory Directory { get; }
+        /// <summary>
+        ///     Index root directory
+        /// </summary>
+        string Path { get; }
 
-    Analyzer Analyzer { get; }
+        Directory Directory { get; }
 
-    /// <summary>
-    ///     Name to pass to <see cref="Document.Get(string)" /> 'primary key'
-    /// </summary>
-    string KeyFieldName { get; }
+        Analyzer Analyzer { get; }
 
-    void Add(Document document);
+        /// <summary>
+        ///     Name to pass to <see cref="Lucene.Net.Documents.Lucene.Net.Documents.Document.Get(string)" /> 'primary key'
+        /// </summary>
+        string KeyFieldName { get; }
 
-    void Add(params Document[] docs);
+        void Add(Document document);
 
-    /// <summary>
-    ///     Add all items. Does not commit.
-    /// </summary>
-    /// <param name="items">
-    ///     Mandatory
-    /// </param>
-    /// <param name="progressReporter">
-    ///     Optional delegate receiving number of items added so far.
-    /// </param>
-    void AddAll(IEnumerable<Document> items, Action<int> progressReporter = null);
+        void Add(params Document[] docs);
 
-    void Commit();
+        /// <summary>
+        ///     Add all items. Does not commit.
+        /// </summary>
+        /// <param name="items">
+        ///     Mandatory
+        /// </param>
+        /// <param name="progressReporter">
+        ///     Optional delegate receiving number of items added so far.
+        /// </param>
+        void AddAll(IEnumerable<Document> items, Action<int> progressReporter = null);
 
-    void Delete(string key);
+        void Commit();
 
-    void Delete(params string[] keys);
+        void Delete(string key);
 
-    void Delete(params Lucene.Net.Index.Term[] terms);
+        void Delete(params string[] keys);
 
-    void Delete(params Query[] queries);
+        void Delete(params Lucene.Net.Index.Term[] terms);
 
-    void Clear(bool commit = true);
-    
-    DirectoryReader CreateReader();
+        void Delete(params Query[] queries);
 
-    IList<LuceneSearchHit> Search(Query query, int maxResults);
+        void Clear(bool commit = true);
 
-    Filter CreateTimeRangeFilter(string fieldName, DateTime? from, DateTime? to);
+        /// <summary>
+        ///     Fully thread safe lazy instance
+        /// </summary>
+        IndexSearcher ScoringSearcher { get; }
 
-    Query CreateQuery(string searchFieldName, string queryText, bool fuzzy);
+        /// <summary>
+        ///     Fully thread safe lazy instance
+        /// </summary>
+        IndexSearcher NonScoringSearcher { get; }
 
-    Query AddFilter(Query query, Filter filter);
+        IList<LuceneSearchHit> Search(Query query, int maxResults);
 
-    /// <summary>
-    ///     Create query which only applies filter to all documents
-    /// </summary>
-    Query CreateQueryFromFilter(Filter filter);
+        Filter CreateTimeRangeFilter(string fieldName, DateTime? from, DateTime? to);
 
-    int DocCount { get; }
+        Query CreateQuery(string searchFieldName, string queryText, bool fuzzy);
 
-    void CleanupDeletes();
+        Query AddFilter(Query query, Filter filter);
 
-    void Optimize();
+        /// <summary>
+        ///     Create query which only applies filter to all documents
+        /// </summary>
+        Query CreateQueryFromFilter(Filter filter);
+
+        int DocCount { get; }
+
+        void CleanupDeletes();
+
+        void Optimize();
+    }
 }
