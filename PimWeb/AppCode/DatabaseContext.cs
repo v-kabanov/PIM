@@ -23,18 +23,16 @@ public class DatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //modelBuilder.UseKeySequences("Id", "public");
-        modelBuilder.HasSequence<int>("NoteId", "public");
-        
         modelBuilder.Entity<Note>(b =>
         {
             b.ToTable("Note", "public");
             b.HasKey(x => x.Id);
-            b.Property(x => x.Id).UseSequence("NoteId", "public");
-            b.Property(x => x.Text).IsRequired(); //.UseCompressionMethod("lz4");
+            //b.UseXminAsConcurrencyToken();
+            b.Property(x => x.Id).UseIdentityByDefaultColumn();
+            b.Property(x => x.Text).IsRequired().UsePropertyAccessMode(PropertyAccessMode.Property);
             b.Property(x => x.IntegrityVersion).IsConcurrencyToken();
-            b.Property(x => x.CreateTime); //.HasColumnType("timestamp");
-            b.Property(x => x.LastUpdateTime); //.HasColumnType("timestamp");
+            b.Property(x => x.CreateTime).HasColumnType("timestamp without time zone");
+            b.Property(x => x.LastUpdateTime).HasColumnType("timestamp without time zone");
             b.HasGeneratedTsVectorColumn(
                     p => p.SearchVector,
                     AppOptions.FulltextConfig ?? "english",

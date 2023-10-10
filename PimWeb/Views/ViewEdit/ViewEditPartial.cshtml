@@ -1,8 +1,10 @@
 ﻿@model PimWeb.Models.NoteViewModel
 
-@using (Html.BeginForm("Delete", "ViewEdit", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal" }))
+@using (Html.BeginForm("Update", "ViewEdit", FormMethod.Post, new { id = "mainForm", @class = "form-horizontal" }))
 {
     @Html.AntiForgeryToken()
+    
+    @Html.HiddenFor(x => x.Version)
 
     if (Model.NoteDeleted)
     {
@@ -28,30 +30,30 @@
 
         <hr/>
 
-        <div class="form-group">
+        <div class="form-group row">
             @Html.LabelFor(m => m.CreateTime, new { @class = "control-label col-md-2" })
-            <div class="col-md-10 form-control-static">
+            <div class="col-md-10">
                 @Html.DisplayFor(m => m.CreateTime)
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group row">
             @Html.LabelFor(m => m.LastUpdateTime, new { @class = "control-label col-md-2" })
-            <div class="col-md-10 form-control-static">
+            <div class="col-md-10">
                 @Html.DisplayFor(m => m.LastUpdateTime)
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group row">
             @Html.LabelFor(m => m.Version, new { @class = "control-label col-md-2" })
-            <div class="col-md-10 form-control-static">
+            <div class="col-md-10">
                 @Html.DisplayFor(m => m.Version)
             </div>
         </div>
     
-        <div class="form-group">
+        <div class="form-group row my-2">
             <div class="col-md-offset-2 col-md-10">
-                <input id="btnUpdate" type="submit" value="Update" class="btn btn-default" />
+                <input id="btnUpdate" type="submit" value="Update" class="btn btn-outline-primary" />
                 &nbsp;
                 <input type="submit" id="btnDelete" class="btn btn-warning" value="Delete" />
             </div>

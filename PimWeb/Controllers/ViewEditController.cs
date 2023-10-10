@@ -5,6 +5,7 @@
 // **********************************************************************************************/
 // 
 
+using System.Data.Entity.Core;
 using PimWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,17 @@ public class ViewEditController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public async Task<ActionResult> Update(NoteViewModel model)
     {
-        var result = await NoteService.SaveOrUpdateAsync(model);
+        ModelState[nameof(model.Version)].RawValue = null;
+        
+        var result = model;
+        try
+        {
+            result = await NoteService.SaveOrUpdateAsync(model);
+        }
+        catch (OptimisticConcurrencyException ex)
+        {
+            ModelState.AddModelError("", "Concurrent update detected, save your changes elsewhere, refresh the form and merge.");
+        }
 
         return PartialView(PartialViewName, result);
     }
@@ -47,7 +58,7 @@ public class ViewEditController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public async Task<ActionResult> Delete(NoteViewModel model)
     {
-        var node = await NoteService.DeleteAsync(model.NoteId);
+        var node = await NoteService.DeleteAsync(model, false);
         
         if (node == null)
         {

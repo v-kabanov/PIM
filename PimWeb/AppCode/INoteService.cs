@@ -19,7 +19,7 @@ public interface INoteService
     
     Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model);
     
-    Task<Note> DeleteAsync(int id);
+    Task<Note> DeleteAsync(NoteViewModel model, bool skipConcurrencyCheck);
     
     Task<HomeViewModel> GetLatestAsync();
     

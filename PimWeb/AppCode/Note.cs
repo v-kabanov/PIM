@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using NpgsqlTypes;
 
@@ -21,7 +22,10 @@ public class Note : IEquatable<Note>
     /// <summary>
     ///     0 for unsaved, incremented every time it's updated in the storage
     /// </summary>
-    public int IntegrityVersion { get; set; }
+    public int IntegrityVersion { get; set; } = 1;
+    
+    //[Timestamp]
+    //public byte[] Version { get; set; }
 
     /// <summary>
     ///     Name is just cached first line of text; should not be persisted separately
@@ -73,7 +77,7 @@ public class Note : IEquatable<Note>
         var firstLine = StringHelper.ExtractFirstLine(text);
 
         if (firstLine?.Length > 150)
-            return StringHelper.GetTextWithLimit(firstLine, 0, 100, false);
+            return firstLine.GetTextWithLimit(0, 100, false);
 
         return firstLine;
     }

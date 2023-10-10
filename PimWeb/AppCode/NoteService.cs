@@ -2,6 +2,7 @@
 // DO NOT REFERENCE!
 //using System.Data.Entity;
 
+using System.Data.Entity.Core;
 using Microsoft.EntityFrameworkCore;
 using Pim.CommonLib;
 using PimWeb.Models;
@@ -78,6 +79,7 @@ public class NoteService : INoteService
                 CreateTime = note.CreateTime,
                 LastUpdateTime = note.LastUpdateTime,
                 NoteText = note.Text,
+                Caption = note.Name,
                 Version = note.IntegrityVersion,
             };
         }
@@ -91,15 +93,19 @@ public class NoteService : INoteService
     public async Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model)
     {
         var note = await DataContext.FindAsync<Note>(model.NoteId).ConfigureAwait(false);
-
+        
         var newText = model.NoteText?.Trim();
         
         if (note != null)
         {
+            if (note.IntegrityVersion != model.Version)
+                throw new OptimisticConcurrencyException($"Version mismatch: updating {model.Version ?? 0} while server has {note.IntegrityVersion}.");
+
             if (newText != note.Text)
             {
                 note.Text = model.NoteText;
                 note.LastUpdateTime = DateTime.Now;
+                note.IntegrityVersion = (model.Version ?? 0) + 1;
             }
         }
         else
@@ -123,12 +129,15 @@ public class NoteService : INoteService
 
 
     /// <inheritdoc />
-    public async Task<Note> DeleteAsync(int id)
+    public async Task<Note> DeleteAsync(NoteViewModel model, bool skipConcurrencyCheck)
     {
-        var note = await DataContext.Notes.FindAsync(id).ConfigureAwait(false);
+        var note = await DataContext.Notes.FindAsync(model.NoteId).ConfigureAwait(false);
         
         if (note != null)
         {
+            if (!skipConcurrencyCheck && note.IntegrityVersion != model.Version)
+                throw new OptimisticConcurrencyException($"Note was updated on the server: deleting {model.Version ?? 0} while server has {note.IntegrityVersion}. Review changes before deleting.");
+
             DataContext.Remove(note);
             await DataContext.SaveChangesAsync().ConfigureAwait(false);
         }

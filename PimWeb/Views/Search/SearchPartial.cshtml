@@ -1,63 +1,67 @@
 ﻿@model PimWeb.Models.SearchViewModel
-@* *@
-@* @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm", @class = "form-horizontal"})) *@
-@* { *@
-@*     <div class="form-group"> *@
-@*         <div class="input-group col-md-offset-1 col-md-10"> *@
-@*             @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"}) *@
-@*             <div class="input-group-btn"> *@
-@*                 <button type="submit" class="btn"> *@
-@*                     <i class="glyphicon glyphicon-search"></i> *@
-@*                 </button> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@*     <div class="form-group"> *@
-@*         <div class="col-md-offset-1 col-md-10"> *@
-@*             <div class="form-inline"> *@
-@*                 <div class="form-group"> *@
-@*                     <div class="col-lg-12"> *@
-@*                         @Html.Label("Last update time from") *@
-@*                         @Html.TextBoxFor(m => m.PeriodStart, new {@class = "form-control datepicker", placeholder = "Optional"}) *@
-@*                     </div> *@
-@*                 </div> *@
-@*                 <div class="form-group"> *@
-@*                     <div class="col-lg-12"> *@
-@*                         @Html.Label("to") *@
-@*                         @Html.TextBoxFor(m => m.PeriodEnd, new {@class = "form-control datepicker", placeholder = "Optional" }) *@
-@*                         @Html.ValidationMessageFor(m => m.PeriodEnd) *@
-@*                     </div> *@
-@*                 </div> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* *@
-@*     <br/> *@
-@* *@
-@*     if (Model.SearchResultPage?.Count > 0) *@
-@*     { *@
-@*         <div id="divNoteList" class=""> *@
-@*             @Html.Partial("NoteList", Model.SearchResultPage) *@
-@* *@
-@*             @if (Model.TotalPageCount > 1) *@
-@*             { *@
-@*                 for (var i = 1; i <= Model.TotalPageCount; ++i) *@
-@*                 { *@
-@*                     if (i == Model.PageNumber) *@
-@*                     { *@
-@*                         @: @i *@
-@*                     } *@
-@*                     else *@
-@*                     { *@
-@*                         @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query}) *@
-@*                     } *@
-@*                     @:&nbsp; *@
-@*                 } *@
-@*             } *@
-@*         </div> *@
-@*     } *@
-@*     else *@
-@*     { *@
-@*         @: No results to display *@
-@*     } *@
-@* } *@
+
+@using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm"}))
+{
+    <div class="row">
+        <div class="input-group col-md-offset-1 col-md-10">
+            <div class="input-group w-100">
+                @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"})
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-auto my-2">
+            <div class="row">
+                @Html.Label("", "Last update time from", new { @class = "col-form-label col-auto" })
+                @Html.TextBoxFor(m => m.PeriodStart, new { @class = "form-control datepicker", placeholder = "Optional" })
+            </div>
+        </div>
+        <div class="col-md-auto my-2">
+            <div class="row">
+                @Html.Label("", "to", new { @class = "col-form-label col-auto" })
+                @Html.TextBoxFor(m => m.PeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
+                @Html.ValidationMessageFor(m => m.PeriodEnd)
+            </div>
+        </div>
+    </div>
+ 
+    <br/>
+
+    if (Model.SearchResultPage?.Count > 0)
+    {
+        <div id="divNoteList" class="">
+            @Html.Partial("NoteList", Model.SearchResultPage)
+
+            @if (Model.TotalCountedPageCount > 1)
+            {
+                var startPage = 1;
+                if (Model.PageNumber > 11)
+                    startPage = Model.PageNumber - 10;
+                
+                var endPage = Model.TotalCountedPageCount;
+                if (endPage > Model.PageNumber + 10)
+                    endPage = Model.PageNumber + 10;
+                
+                for (var i = startPage; i <= endPage; ++i)
+                {
+                    if (i == Model.PageNumber)
+                    {
+                        @: @i
+                    }
+                    else
+                    {
+                        @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
+                    }
+                    @:&nbsp;
+                }
+            }
+        </div>
+    }
+    else
+    {
+        @: No results to display
+    }
+}
