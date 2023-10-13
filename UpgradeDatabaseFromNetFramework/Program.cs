@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using FluentNHibernate.Mapping;
@@ -56,8 +57,8 @@ public class PostgresNoteMap : ClassMap<Note>
     public PostgresNoteMap()
     {
         Schema("public");
-        Table("Note");
-        Id(x => x.Id).GeneratedBy.Sequence("`Note_Id_seq`");
+        Table("note");
+        Id(x => x.Id).GeneratedBy.Sequence("note_id_seq");
         Map(x => x.Text);
         Map(x => x.CreateTime);
         Map(x => x.LastUpdateTime);
@@ -67,34 +68,25 @@ public class PostgresNoteMap : ClassMap<Note>
 
 public class PostgreSqlNamingStrategy : INamingStrategy
 {
-    public string ClassToTableName(string className)
-    {
-        return DoubleQuote(className);
-    }
-    public string PropertyToColumnName(string propertyName)
-    {
-        return DoubleQuote(propertyName);
-    }
-    public string TableName(string tableName)
-    {
-        return DoubleQuote(tableName);
-    }
-    public string ColumnName(string columnName)
-    {
-        return DoubleQuote(columnName);
-    }
-    public string PropertyToTableName(string className,
-        string propertyName)
-    {
-        return DoubleQuote(propertyName);
-    }
-    public string LogicalColumnName(string columnName,
-        string propertyName)
-    {
-        return string.IsNullOrWhiteSpace(columnName) ?
-            DoubleQuote(propertyName) :
-            DoubleQuote(columnName);
-    }
+    private static readonly Regex SplitPascalCaseRegex = new (@"([\s]|(?<=[a-z])(?=[A-Z]|[0-9])|(?<=[A-Z])(?=[A-Z][a-z]|[0-9])|(?<=[0-9])(?=[^0-9]))");
+
+    public string ClassToTableName(string className) => PascalCaseToSnake(className);
+
+    public string PropertyToColumnName(string propertyName) => PascalCaseToSnake(propertyName);
+
+    public string TableName(string tableName) => PascalCaseToSnake(tableName);
+
+    public string ColumnName(string columnName) => PascalCaseToSnake(columnName);
+
+    public string PropertyToTableName(string className, string propertyName) => PascalCaseToSnake(propertyName);
+
+    public string LogicalColumnName(string columnName, string propertyName) =>
+        string.IsNullOrWhiteSpace(columnName) ?
+            PascalCaseToSnake(propertyName) :
+            PascalCaseToSnake(columnName);
+
+    private static string PascalCaseToSnake(string name) => SplitPascalCaseRegex.Replace(name, "_");
+    
     private static string DoubleQuote(string raw)
     {
         // In some cases the identifier is single-quoted.
@@ -118,7 +110,7 @@ public class PostgreSqlNamingStrategy : INamingStrategy
                             .Port(5432)
                             .Database("pim")
                             .Username("pimweb")
-                            .Password("*"))
+                            .Password(""))
                             .ShowSql)
                     .Mappings(m => m.FluentMappings
                             .AddFromAssembly(Assembly.GetExecutingAssembly()));

@@ -31,12 +31,12 @@ builder.Services
     //use controllers for now
     //.AddRazorPages();
 
-builder.Services.AddMvc(o => o.EnableEndpointRouting = false); //
+builder.Services.AddMvc(o => o.EnableEndpointRouting = false);
 
 builder.Services
     .AddLogging()
-    .AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
     .AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
+    .AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
     .AddDatabaseDeveloperPageExceptionFilter()
     .AddIdentity<IdentityUser<int>, IdentityRole<int>>(options =>
     {
