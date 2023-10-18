@@ -27,7 +27,7 @@ public class NoteService : INoteService
         var query = CreateQuery(model.PeriodStart, model.PeriodEnd, SearchableDocumentTime.LastUpdate);
 
         if (!model.Query.IsNullOrWhiteSpace())
-            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(model.Query)));
+            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("public.mysearch", model.Query)));
         
         var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         
