@@ -17,9 +17,12 @@ public class NoteService : INoteService
 
     public int PageSize => DefaultPageSize;
     
-    public NoteService(DatabaseContext dataContext)
+    public AppOptions AppOptions { get;  }
+    
+    public NoteService(DatabaseContext dataContext, AppOptions appOptions)
     {
         DataContext = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+        AppOptions = appOptions ?? throw new ArgumentNullException(nameof(appOptions));
     }
 
     public async Task<SearchViewModel> SearchAsync(SearchViewModel model, bool withDelete)
@@ -27,7 +30,7 @@ public class NoteService : INoteService
         var query = CreateQuery(model.PeriodStart, model.PeriodEnd, SearchableDocumentTime.LastUpdate);
 
         if (!model.Query.IsNullOrWhiteSpace())
-            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery("public.mysearch", model.Query)));
+            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(AppOptions.FulltextConfig, model.Query)));
         
         var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         

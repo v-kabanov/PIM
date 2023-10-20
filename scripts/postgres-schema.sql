@@ -1,19 +1,19 @@
 CREATE TEXT SEARCH DICTIONARY public.russian_hunspell (
     TEMPLATE = ispell,
-    DictFile = ru_RU,
-    AffFile = ru_RU,
+    DictFile = ru_ru,
+    AffFile = ru_ru,
     Stopwords = russian);
     
 CREATE TEXT SEARCH DICTIONARY public.english_gb_hunspell (
     TEMPLATE = ispell,
-    DictFile = en_GB,
-    AffFile = en_GB,
+    DictFile = en_gb,
+    AffFile = en_gb,
     Stopwords = english);
 
 CREATE TEXT SEARCH DICTIONARY public.english_us_hunspell (
     TEMPLATE = ispell,
-    DictFile = en_US,
-    AffFile = en_US,
+    DictFile = en_us,
+    AffFile = en_us,
     Stopwords = english);
 ---------------------------------------------------------------
 -- DROP TEXT SEARCH CONFIGURATION public.mysearch
@@ -63,8 +63,6 @@ generated always	as (to_tsvector('public.mysearch', text)) stored;
 alter table public.note
 add constraint  pk_note
 primary key     (id);
-
-create text search configuration public.mysearch (copy = <language>);
 
 --create index "Note_SearchVector_idx" on public."Note" using gin (to_tsvector('public.mysearch', "Text"));
 
