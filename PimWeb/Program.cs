@@ -1,6 +1,8 @@
 using System.Reflection;
 using log4net;
 using log4net.Config;
+using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Pim.CommonLib;
@@ -34,6 +36,10 @@ builder.Services
 builder.Services.AddMvc(o => o.EnableEndpointRouting = false);
 
 builder.Services
+    .AddHttpLogging(o =>
+    {
+        o.LoggingFields = HttpLoggingFields.Request | HttpLoggingFields.RequestQuery;
+    })
     .AddLogging()
     .AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
     .AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
@@ -79,8 +85,10 @@ builder.Services.AddScoped<INoteService, NoteService>();
 
 builder.Logging.ClearProviders().AddLog4Net();
 
-
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+    app.UseHttpLogging();
 
 var ifSeed = "/seed".EqualsIgnoreCase(args.FirstOrDefault());
 if (ifSeed)
@@ -96,7 +104,24 @@ if (ifSeed)
     
     return; 
 }
-    
+
+var virtualPathBase = Environment.GetEnvironmentVariable("APP_VIRTUAL_PATH");
+Console.WriteLine("Using base virtual path '{0}'", virtualPathBase);
+if (!virtualPathBase.IsNullOrWhiteSpace())
+{
+    virtualPathBase = virtualPathBase.Trim().Trim('/');
+    if (!virtualPathBase.IsNullOrEmpty())
+    {
+        virtualPathBase = '/' + virtualPathBase;
+        Log.InfoFormat("Using base virtual path '{0}'", virtualPathBase);
+        app.UsePathBase(virtualPathBase);
+    }
+}
+
+// make it possible to run under reverse proxy  //XForwardedFor | ForwardedHeaders.XForwardedProto
+app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.All });
+
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -111,7 +136,7 @@ if (!app.Environment.IsDevelopment())
 app.MapDefaultControllerRoute();
 
 app
-    .UseHttpsRedirection()
+    //.UseHttpsRedirection()
     .UseStaticFiles()
     .UseRouting()
     .UseAuthentication()
