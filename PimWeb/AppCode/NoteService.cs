@@ -27,10 +27,17 @@ public class NoteService : INoteService
 
     public async Task<SearchViewModel> SearchAsync(SearchViewModel model, bool withDelete)
     {
-        var query = CreateQuery(model.PeriodStart, model.PeriodEnd, SearchableDocumentTime.LastUpdate);
-
+        IQueryable<Note> query = null;
+        
         if (!model.Query.IsNullOrWhiteSpace())
-            query = query.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(AppOptions.FulltextConfig, model.Query)));
+        {
+            if (model.Fuzzy)
+                query = DataContext.Notes.FromSql($"select id, text, last_update_time, create_time, integrity_version, search_vector from public.search({model.Query})");
+            else
+                query = DataContext.Notes.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(AppOptions.FulltextConfig, model.Query)));
+        }
+        
+        query = query.ApplyTimeFilter(model.PeriodStart, model.PeriodEnd, SearchableDocumentTime.LastUpdate);
         
         var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         
@@ -165,30 +172,5 @@ public class NoteService : INoteService
             result.NewNoteText = model.NewNoteText;
         
         return result;
-    }
-
-    private IQueryable<Note> CreateQuery(DateTime? start, DateTime? end, SearchableDocumentTime documentTime)
-    {
-        var query = DataContext.Notes.AsQueryable();
-        if (documentTime == SearchableDocumentTime.Creation)
-        {
-            if (start.HasValue)
-                query = query.Where(x => x.CreateTime >= start);
-            if (end.HasValue)
-                query = query.Where(x => x.CreateTime < end);
-
-            query = query.OrderByDescending(x => x.CreateTime);
-        }
-        else
-        {
-            if (start.HasValue)
-                query = query.Where(x => x.LastUpdateTime >= start);
-            if (end.HasValue)
-                query = query.Where(x => x.LastUpdateTime < end);
-            
-            query = query.OrderByDescending(x => x.LastUpdateTime);
-        }
-        
-        return query;
     }
 }
