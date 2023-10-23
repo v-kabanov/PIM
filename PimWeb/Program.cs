@@ -1,6 +1,7 @@
 using System.Reflection;
 using log4net;
 using log4net.Config;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -71,15 +72,34 @@ builder.Services.AddAuthorization();
 //        .Build();
 //});
 
-// to customize auth
-builder.Services.ConfigureApplicationCookie(o =>
+var virtualPathBase = appOptions.WebAppPath.IsNullOrWhiteSpace()
+    ? Environment.GetEnvironmentVariable("APP_VIRTUAL_PATH")
+    : appOptions.WebAppPath;
+
+Console.WriteLine("Using base virtual path '{0}'", virtualPathBase);
+if (!virtualPathBase.IsNullOrWhiteSpace())
 {
-    o.LoginPath = "/Account/Login";
-    o.AccessDeniedPath = "/Account/Login";
-    o.SlidingExpiration = true;
-    o.ExpireTimeSpan = TimeSpan.FromDays(1);
-    o.Cookie.Name = ".auth";
-});
+    virtualPathBase = virtualPathBase.Trim().Trim('/');
+    if (!virtualPathBase.IsNullOrEmpty())
+    {
+        virtualPathBase = '/' + virtualPathBase;
+        Log.InfoFormat("Using base virtual path '{0}'", virtualPathBase);
+    }
+}
+
+if (virtualPathBase.IsNullOrEmpty())
+    virtualPathBase = "/";
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.LoginPath = "/Account/Login";
+        o.AccessDeniedPath = "/Account/Login";
+        o.SlidingExpiration = true;
+        o.ExpireTimeSpan = TimeSpan.FromDays(1);
+        o.Cookie.Name = ".auth";
+    });
 
 builder.Services.AddScoped<INoteService, NoteService>();
 
@@ -105,22 +125,10 @@ if (ifSeed)
     return; 
 }
 
-var virtualPathBase = Environment.GetEnvironmentVariable("APP_VIRTUAL_PATH");
-Console.WriteLine("Using base virtual path '{0}'", virtualPathBase);
-if (!virtualPathBase.IsNullOrWhiteSpace())
-{
-    virtualPathBase = virtualPathBase.Trim().Trim('/');
-    if (!virtualPathBase.IsNullOrEmpty())
-    {
-        virtualPathBase = '/' + virtualPathBase;
-        Log.InfoFormat("Using base virtual path '{0}'", virtualPathBase);
-        app.UsePathBase(virtualPathBase);
-    }
-}
-
 // make it possible to run under reverse proxy  //XForwardedFor | ForwardedHeaders.XForwardedProto
-app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.All });
-
+app.UsePathBase(virtualPathBase)
+    .UseRouting()
+    .UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.All });
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -138,7 +146,6 @@ app.MapDefaultControllerRoute();
 app
     //.UseHttpsRedirection()
     .UseStaticFiles()
-    .UseRouting()
     .UseAuthentication()
     .UseAuthorization()
     // must come after UseAuthentication

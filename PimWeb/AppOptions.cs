@@ -2,6 +2,10 @@ public class AppOptions
 {
     public string FulltextConfig { get; set; }
     
+    /// <summary>
+    ///     Virtual root path under which the application is running; takes precedence over 'APP_VIRTUAL_PATH' env. variable.
+    /// </summary>
+    public string WebAppPath { get; set; }
     //public string DataPath { get; set; }
 }
 
