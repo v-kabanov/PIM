@@ -1,5 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
-@model PimWeb.Models.EditUserViewModel
+﻿@model PimWeb.Models.EditUserViewModel
 
 @{
     ViewBag.Title = $"Edit {Model.Name} account";
@@ -7,7 +6,7 @@
 
 @using (Html.BeginForm())
 {
-    @Html.AntiForgeryToken()
+    //@Html.AntiForgeryToken()
 
     <div class="form-horizontal">
         <div class="form-group">

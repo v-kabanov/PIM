@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using log4net;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -50,7 +49,8 @@ public class AccountController : Controller
     // POST: /Account/Login
     [HttpPost]
     [AllowAnonymous]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
     {
         if (!ModelState.IsValid)
@@ -88,7 +88,8 @@ public class AccountController : Controller
     // POST: /Account/Register
     [HttpPost]
     [AllowAnonymous]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> Register(RegisterViewModel model)
     {
         if (ModelState.IsValid)
@@ -143,7 +144,8 @@ public class AccountController : Controller
     // POST: /Account/ForgotPassword
     [HttpPost]
     [AllowAnonymous]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> ForgotPassword(ForgotPasswordViewModel model)
     {
         if (ModelState.IsValid)
@@ -187,7 +189,8 @@ public class AccountController : Controller
     // POST: /Account/ResetPassword
     [HttpPost]
     [AllowAnonymous]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> ResetPassword(ResetPasswordViewModel model)
     {
         if (!ModelState.IsValid)
@@ -220,12 +223,12 @@ public class AccountController : Controller
     //
     // POST: /Account/LogOff
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> LogOff()
     {
-        //await _signInManager.SignOutAsync();
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return LocalRedirect("/");
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        return RedirectToAction("Index", "Home");
     }
 
     // client is redirected here after successful password change
@@ -244,8 +247,9 @@ public class AccountController : Controller
 
     // change password page submits here
     [HttpPost]
-    [ValidateAntiForgeryToken]
     [Authorize]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> ChangePassword(ManageUserViewModel model)
     {
         var user = await UserManager.GetUserAsync(User);
@@ -303,7 +307,8 @@ public class AccountController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> Edit(EditUserViewModel model)
     {
         if (ModelState.IsValid)
@@ -332,8 +337,9 @@ public class AccountController : Controller
     }
 
     [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin")]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> DeleteConfirmed(string id)
     {
         var user = await UserManager.FindByIdAsync(id);
@@ -354,7 +360,8 @@ public class AccountController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    [ValidateAntiForgeryToken]
+    // under IIS this produces BadRequest
+    //[ValidateAntiForgeryToken]
     public async Task<ActionResult> UserRoles(SelectUserRolesViewModel model)
     {
         if (ModelState.IsValid)

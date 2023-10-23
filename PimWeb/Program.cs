@@ -83,19 +83,19 @@ if (!virtualPathBase.IsNullOrWhiteSpace())
     if (!virtualPathBase.IsNullOrEmpty())
     {
         virtualPathBase = '/' + virtualPathBase;
-        Log.InfoFormat("Using base virtual path '{0}'", virtualPathBase);
     }
 }
 
 if (virtualPathBase.IsNullOrEmpty())
     virtualPathBase = "/";
 
-builder.Services
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(o =>
+Log.InfoFormat("Using base virtual path '{0}'", virtualPathBase);
+
+builder.Services.ConfigureApplicationCookie(o =>
     {
         o.LoginPath = "/Account/Login";
         o.AccessDeniedPath = "/Account/Login";
+        o.LogoutPath = "/Account/LogOff";
         o.SlidingExpiration = true;
         o.ExpireTimeSpan = TimeSpan.FromDays(1);
         o.Cookie.Name = ".auth";
@@ -122,7 +122,7 @@ if (ifSeed)
     else
         Log.Warn("No data to seed found in the configuration.");
     
-    return; 
+    return;
 }
 
 // make it possible to run under reverse proxy  //XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -131,12 +131,12 @@ app.UsePathBase(virtualPathBase)
     .UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.All });
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
+//if (!app.Environment.IsDevelopment())
+//{
+    //app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
+    //app.UseHsts();
+//}
 
 //app.MapControllerRoute(
 //    name: "default",

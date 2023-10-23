@@ -21,13 +21,13 @@
         </div>
         <div class="col-md-auto my-2">
             <div class="row">
-                @Html.Label("", "Last update time from", new { @class = "col-form-label col-md-auto" })
+                @Html.LabelFor(x => x.PeriodStart, "Last update time from", new { @class = "col-form-label col-md-auto" })
                 @Html.TextBoxFor(m => m.PeriodStart, new { @class = "form-control datepicker", placeholder = "Optional" })
             </div>
         </div>
         <div class="col-md-auto my-2">
             <div class="row">
-                @Html.Label("", "to", new { @class = "col-form-label col-md-auto" })
+                @Html.LabelFor(x => x.PeriodEnd, "to", new { @class = "col-form-label col-md-auto" })
                 @Html.TextBoxFor(m => m.PeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
                 @Html.ValidationMessageFor(m => m.PeriodEnd)
             </div>
@@ -65,6 +65,9 @@
                 }
             }
         </div>
+        <p class="text-muted">
+            Counted @(Model.TotalCountedPageCount) pages
+        </p>
     }
     else
     {

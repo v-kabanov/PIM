@@ -6,8 +6,6 @@
 
 @using (Html.BeginForm("UserRoles", "Account", FormMethod.Post, new { encType = "multipart/form-data", name = "myform" }))
 {
-    @Html.AntiForgeryToken()
-
     <div class="form-horizontal">
         @Html.ValidationSummary(true)
         @Html.HiddenFor(m => m.UserId)
