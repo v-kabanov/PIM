@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using NpgsqlTypes;
 
@@ -13,11 +12,16 @@ public class Note : IEquatable<Note>
     [NotMapped]
     private int _hashCode;
 
+    public Note()
+    {
+        CreateTime = LastUpdateTime = DateTime.Now;
+    }
+
     public int Id { get; set; }
 
-    public DateTime CreateTime { get; set; } = DateTime.Now;
+    public DateTime CreateTime { get; set; }
 
-    public DateTime LastUpdateTime { get; set; } = DateTime.Now;
+    public DateTime LastUpdateTime { get; set; }
 
     /// <summary>
     ///     0 for unsaved, incremented every time it's updated in the storage
@@ -55,8 +59,6 @@ public class Note : IEquatable<Note>
         var result = new Note()
         {
             Text = text,
-            CreateTime = DateTime.Now,
-            LastUpdateTime = DateTime.Now,
             IntegrityVersion = 0
         };
 

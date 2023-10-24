@@ -12,17 +12,15 @@
                     url: conf.deleteNoteUrl,
                     triggers: [
                         {
-                            selector: conf.deleteNoteButtonSelector,
+                            selector: conf.deleteNoteSelector,
                             eventName: "click"
                         }],
-                    replacementSourceSelector: conf.divNoteListSelector,
-                    replacementTargetSelector: conf.divNoteListSelector,
                     confirmFunction: confirmDelete,
                     always: setupComponents,
                     getPostData: function (event) {
                         const target = $(event.target || event.srcElement);
                         const data = $(this.formSelector).serializeArray();
-                        data.push({ name: conf.buttonAttributeNameNoteId, value: target.attr(conf.buttonAttributeNameNoteId) });
+                        data.push({ name: conf.attributeNameNoteId, value: target.attr(conf.attributeNameNoteId) });
                         const postData = $.param(data);
                         return postData;
                     }
@@ -37,7 +35,7 @@
         }
 
         function confirmDelete(event) {
-            const noteName = $(event.target).parent().siblings("div[note-name]").find("a[note-name]").text();
+            const noteName = $(event.target).parent().find("a[note-name]").text();
             return confirm("Delete " + $.trim(noteName) + "?");
         }
     };

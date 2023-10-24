@@ -29,6 +29,9 @@ public class NoteService : INoteService
     {
         IQueryable<Note> query = null;
         
+        if (withDelete && model.NoteId > 0)
+            await DataContext.Notes.Where(x => x.Id == model.NoteId).ExecuteDeleteAsync();
+        
         if (!model.Query.IsNullOrWhiteSpace())
         {
             if (model.Fuzzy)
@@ -37,7 +40,7 @@ public class NoteService : INoteService
                 query = DataContext.Notes.Where(x => x.SearchVector.Matches(EF.Functions.WebSearchToTsQuery(AppOptions.FulltextConfig, model.Query)));
         }
         
-        query = query.ApplyTimeFilter(model.PeriodStart, model.PeriodEnd, SearchableDocumentTime.LastUpdate);
+        query = query.ApplyTimeFilter(model.LastUpdatePeriodStart, model.LastUpdatePeriodEnd, model.CreationPeriodStart, model.CreationPeriodEnd);
         
         var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         
@@ -161,7 +164,7 @@ public class NoteService : INoteService
         var created = !model.NewNoteText.IsNullOrWhiteSpace();
         if (created)
         {
-            var newNote = new Note { Text = model.NewNoteText };
+            var newNote = Note.Create(model.NewNoteText);
             await DataContext.AddAsync(newNote).ConfigureAwait(false);
             await DataContext.SaveChangesAsync().ConfigureAwait(false);
         }

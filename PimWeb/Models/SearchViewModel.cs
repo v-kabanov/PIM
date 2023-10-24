@@ -26,20 +26,28 @@ public class SearchViewModel
     {
         if (other == null) throw new ArgumentNullException(nameof(other));
         Query = other.Query;
-        PeriodStart = other.PeriodStart;
-        PeriodEnd = other.PeriodEnd;
+        LastUpdatePeriodStart = other.LastUpdatePeriodStart;
+        LastUpdatePeriodEnd = other.LastUpdatePeriodEnd;
     }
 
     [Required(AllowEmptyStrings = false)]
     public string Query { get; set; }
 
-    [DisplayName("Period start (inclusive):")]
+    [DisplayName("Last update time from:")]
     [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
-    public DateTime? PeriodStart { get; set; }
+    public DateTime? LastUpdatePeriodStart { get; set; }
 
-    [DisplayName("Period end (exclusive):")]
+    [DisplayName("to:")]
     [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
-    public DateTime? PeriodEnd { get; set; }
+    public DateTime? LastUpdatePeriodEnd { get; set; }
+
+    [DisplayName("Creation time from:")]
+    [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
+    public DateTime? CreationPeriodStart { get; set; }
+
+    [DisplayName("to:")]
+    [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
+    public DateTime? CreationPeriodEnd { get; set; }
 
     public int NoteId { get; set; }
 

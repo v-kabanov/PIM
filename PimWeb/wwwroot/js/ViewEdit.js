@@ -1,13 +1,13 @@
 ﻿(function ($pim, window, $) {
     $pim.pages.viewEdit = {};
-    var conf = $pim.config;
-    var page = $pim.pages.viewEdit;
+    const conf = $pim.config;
+    const page = $pim.pages.viewEdit;
 
     page.init = function (configData) {
         $.extend($pim.config, configData);
 
         $(document).ready(function () {
-            $(document).on("click", conf.deleteNoteButtonSelector, deleteNote);
+            $(document).on("click", conf.deleteNoteSelector, deleteNote);
 
             pim.features.autoAjax.init([
                 {

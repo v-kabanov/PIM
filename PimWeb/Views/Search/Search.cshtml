@@ -5,21 +5,23 @@
 
 @Html.Partial("SearchPartial", Model, ViewData)
 
+<script>
 @section Init
 {
-    var config = {
-    mainFormSelector: '#mainForm',
-    deleteNoteUrl: '@Url.Action("Delete")',
-    deleteNoteButtonSelector: '[delete-note-by-id]',
-    divInProgressSelector: '#progressIndicator',
-    buttonAttributeNameNoteId: "noteId",
-    divNoteListSelector: "#divNoteList",
+    const config = {
+        mainFormSelector: '#mainForm',
+        deleteNoteUrl: '@Url.Action("Delete")',
+        deleteNoteSelector: '[delete-note-by-id]',
+        divInProgressSelector: '#progressIndicator',
+        attributeNameNoteId: "noteId",
+        //divNoteListSelector: "#divNoteList",
     };
 
     (pim.pages.search)
     &&
     (pim.pages.search.init(config));
 }
+</script>
 
 <hr/>
 

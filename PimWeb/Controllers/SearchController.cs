@@ -27,8 +27,8 @@ public class SearchController : Controller
     public async Task<ActionResult> Search(SearchViewModel model)
     {
         var result = model;
-        if (model.PeriodStart >= model.PeriodEnd)
-            ModelState.AddModelError(nameof(model.PeriodEnd), "Period end date must be greater than start.");
+        if (model.LastUpdatePeriodStart >= model.LastUpdatePeriodEnd)
+            ModelState.AddModelError(nameof(model.LastUpdatePeriodEnd), "Period end date must be greater than start.");
         else if (ModelState.IsValid)
             result = await NoteService.SearchAsync(model, false);
 

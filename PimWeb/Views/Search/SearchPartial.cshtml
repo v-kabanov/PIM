@@ -3,7 +3,7 @@
 @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm"}))
 {
     <div class="row">
-        <div class="input-group col-md-offset-1 col-md-10">
+        <div class="offset-md-1 col-md-10">
             <div class="input-group w-100">
                 @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"})
                 <button type="submit" class="btn btn-primary">
@@ -13,23 +13,29 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-auto my-2">
+        <div class="col-sm-auto my-2">
             <div class="form-check form-switch form-control border-0">
                 @Html.CheckBoxFor(x => x.Fuzzy, new { @class = "form-check-input" })
                 @Html.LabelFor(x => x.Fuzzy, new { @class = "form-check-label" })
             </div>
         </div>
-        <div class="col-md-auto my-2">
+        <div class="col-sm-auto my-2">
             <div class="row">
-                @Html.LabelFor(x => x.PeriodStart, "Last update time from", new { @class = "col-form-label col-md-auto" })
-                @Html.TextBoxFor(m => m.PeriodStart, new { @class = "form-control datepicker", placeholder = "Optional" })
+                @Html.LabelFor(x => x.LastUpdatePeriodStart, new { @class = "col-form-label col-sm-auto" })
+                @Html.TextBoxFor(m => m.LastUpdatePeriodStart, new { @class = "form-control datepicker mr-2", placeholder = "Optional" })
+                @Html.LabelFor(x => x.LastUpdatePeriodEnd, new { @class = "col-form-label col-sm-auto" })
+                @Html.TextBoxFor(m => m.LastUpdatePeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
+                @Html.ValidationMessageFor(m => m.LastUpdatePeriodEnd)
             </div>
         </div>
-        <div class="col-md-auto my-2">
+        <div class="col-sm-auto my-2">
             <div class="row">
-                @Html.LabelFor(x => x.PeriodEnd, "to", new { @class = "col-form-label col-md-auto" })
-                @Html.TextBoxFor(m => m.PeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
-                @Html.ValidationMessageFor(m => m.PeriodEnd)
+                @Html.LabelFor(x => x.CreationPeriodStart, new { @class = "col-form-label col-sm-auto" })
+                @Html.TextBoxFor(m => m.CreationPeriodStart, new { @class = "form-control datepicker mr-2", placeholder = "Optional" })
+
+                @Html.LabelFor(x => x.CreationPeriodEnd, new { @class = "col-form-label col-sm-auto" })
+                @Html.TextBoxFor(m => m.CreationPeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
+                @Html.ValidationMessageFor(m => m.CreationPeriodEnd)
             </div>
         </div>
     </div>
