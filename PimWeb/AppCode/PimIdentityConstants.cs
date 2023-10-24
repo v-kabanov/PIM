@@ -1,6 +1,6 @@
 namespace PimWeb.AppCode;
 
-public static class IdentityConstants
+public static class PimIdentityConstants
 {
     public const string AdminRoleName = "Admin";
     public const string AdminUserName = "admin";

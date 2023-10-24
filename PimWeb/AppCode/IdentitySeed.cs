@@ -12,7 +12,7 @@ public static class IdentitySeed
     {
         var roleManager = serviceProvider.GetService<RoleManager<IdentityRole<int>>>();
 
-        foreach (var roleName in IdentityConstants.AllRoleNames)
+        foreach (var roleName in PimIdentityConstants.AllRoleNames)
             if (!await roleManager.RoleExistsAsync(roleName))
             {
                 var ir = await roleManager.CreateAsync(new IdentityRole<int>(roleName));

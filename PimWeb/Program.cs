@@ -1,7 +1,6 @@
 using System.Reflection;
 using log4net;
 using log4net.Config;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -58,6 +57,7 @@ builder.Services
             , RequireNonAlphanumeric = false
         };
     })
+    
     //.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<IdentityDbContext>()
     .AddDefaultTokenProviders()
@@ -97,7 +97,7 @@ builder.Services.ConfigureApplicationCookie(o =>
         o.AccessDeniedPath = "/Account/Login";
         o.LogoutPath = "/Account/LogOff";
         o.SlidingExpiration = true;
-        o.ExpireTimeSpan = TimeSpan.FromDays(1);
+        o.ExpireTimeSpan = TimeSpan.FromDays(30);
         o.Cookie.Name = ".auth";
     });
 

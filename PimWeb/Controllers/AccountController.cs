@@ -227,7 +227,7 @@ public class AccountController : Controller
     //[ValidateAntiForgeryToken]
     public async Task<ActionResult> LogOff()
     {
-        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        await SignInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
 
