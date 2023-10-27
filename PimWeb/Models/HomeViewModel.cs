@@ -17,21 +17,21 @@ public class HomeViewModel
 
     private const int TargetNoteTextSummaryLength = 200;
 
-    public List<Note> LastUpdatedNotes { get; set; }
+    public List<NoteViewModel> LastUpdatedNotes { get; set; }
 
 
     [Required(AllowEmptyStrings = false)]
     public string NewNoteText { get; set; }
 
-    public static string GetNoteTextSummary(Note note)
+    public static string GetNoteTextSummary(NoteViewModel note)
     {
         if (note == null) throw new ArgumentNullException(nameof(note));
 
-        if (note.Text == null)
+        if (note.NoteText == null)
             return null;
 
-        var bodyStartIndex = note.Text.IndexOf(note.Name, StringComparison.Ordinal) + note.Name.Length;
+        var bodyStartIndex = note.NoteText.IndexOf(note.Caption, StringComparison.Ordinal) + note.Caption.Length;
 
-        return note.Text.GetTextWithLimit(bodyStartIndex, TargetNoteTextSummaryLength);
+        return note.NoteText.GetTextWithLimit(bodyStartIndex, TargetNoteTextSummaryLength);
     }
 }

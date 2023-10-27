@@ -22,11 +22,11 @@ public class NoteViewModel
 
     [DisplayFormat(DataFormatString = "{0:f}")]
     [DisplayName("Creation Time")]
-    public DateTime? CreateTime { get; set; }
+    public DateTimeOffset? CreateTime { get; set; }
 
     [DisplayName("Last Update Time")]
     [DisplayFormat(DataFormatString = "{0:f}")]
-    public DateTime? LastUpdateTime { get; set; }
+    public DateTimeOffset? LastUpdateTime { get; set; }
 
     [DisplayName("Version")]
     public int? Version { get; set; }

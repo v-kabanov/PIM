@@ -63,7 +63,7 @@ public class SearchViewModel
     
     public bool HasMore { get; set; }
 
-    public List<Note> SearchResultPage { get; set; } = new ();
+    public List<NoteViewModel> SearchResultPage { get; set; } = new ();
     
     public bool Fuzzy { get; set; }
 }

@@ -60,7 +60,7 @@ public class NoteService : INoteService
         var pageCount = (int)Math.Ceiling((double)totalCount / PageSize);
         var result = new SearchViewModel(model)
         {
-            SearchResultPage = notes,
+            SearchResultPage = notes.Select(CreateModel).ToList(),
             TotalCountedPageCount = pageCount,
             HasMore = pageCount > (model.PageNumber + 1),
         };
@@ -76,7 +76,7 @@ public class NoteService : INoteService
             .ToListAsync()
             .ConfigureAwait(false);
         
-        return new HomeViewModel { LastUpdatedNotes = notes };
+        return new HomeViewModel { LastUpdatedNotes = notes.Select(CreateModel).ToList() };
     }
 
     /// <inheritdoc />
@@ -89,8 +89,8 @@ public class NoteService : INoteService
             result = new NoteViewModel
             {
                 NoteId = id,
-                CreateTime = note.CreateTime,
-                LastUpdateTime = note.LastUpdateTime,
+                CreateTime = note.CreateTime.ToLocalTime(),
+                LastUpdateTime = note.LastUpdateTime.ToLocalTime(),
                 NoteText = note.Text,
                 Caption = note.Name,
                 Version = note.IntegrityVersion,
@@ -117,7 +117,7 @@ public class NoteService : INoteService
             if (newText != note.Text)
             {
                 note.Text = model.NoteText;
-                note.LastUpdateTime = DateTime.Now;
+                note.LastUpdateTime = DateTime.UtcNow;
                 note.IntegrityVersion = (model.Version ?? 0) + 1;
             }
         }
@@ -129,15 +129,7 @@ public class NoteService : INoteService
         
         await DataContext.SaveChangesAsync().ConfigureAwait(false);
         
-        return new NoteViewModel
-        {
-            NoteId = note.Id,
-            NoteText = note.Text,
-            Caption = note.Name,
-            Version = note.IntegrityVersion,
-            CreateTime = note.CreateTime,
-            LastUpdateTime = note.LastUpdateTime,
-        };
+        return CreateModel(note);
     }
 
 
@@ -176,4 +168,14 @@ public class NoteService : INoteService
         
         return result;
     }
+    
+    private NoteViewModel CreateModel(Note note) => new ()
+        {
+            NoteId = note.Id,
+            NoteText = note.Text,
+            Caption = note.Name,
+            Version = note.IntegrityVersion,
+            CreateTime = note.CreateTime.ToLocalTime(),
+            LastUpdateTime = note.LastUpdateTime.ToLocalTime(),
+        };
 }

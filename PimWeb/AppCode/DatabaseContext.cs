@@ -31,8 +31,8 @@ public class DatabaseContext : DbContext
             b.Property(x => x.Id).HasColumnName("id").UseIdentityByDefaultColumn();
             b.Property(x => x.Text).HasColumnName("text").IsRequired().UsePropertyAccessMode(PropertyAccessMode.Property);
             b.Property(x => x.IntegrityVersion).HasColumnName("integrity_version").IsConcurrencyToken();
-            b.Property(x => x.CreateTime).HasColumnName("create_time").HasColumnType("timestamp without time zone");
-            b.Property(x => x.LastUpdateTime).HasColumnName("last_update_time").HasColumnType("timestamp without time zone");
+            b.Property(x => x.CreateTime).HasColumnName("create_time").HasColumnType("timestamp with time zone");
+            b.Property(x => x.LastUpdateTime).HasColumnName("last_update_time").HasColumnType("timestamp with time zone");
             b.HasGeneratedTsVectorColumn(
                     p => p.SearchVector,
                     AppOptions.FulltextConfig ?? "english",
@@ -40,7 +40,7 @@ public class DatabaseContext : DbContext
                 .HasIndex(p => p.SearchVector, IndexNameNoteSearch)
                 .HasMethod("gin"); // Index method on the search vector (GIN or GIST)
             
-            b.Property(p => p.SearchVector).HasColumnName("search_vector");
+            b.Property(p => p.SearchVector).HasColumnName("search_vector").IsGeneratedTsVectorColumn(AppOptions.FulltextConfig, nameof(Note.Text));
         });
     }
 }

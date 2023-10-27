@@ -21,18 +21,18 @@ public static class Extensions
         return query.OrderByDescending(x => x.LastUpdateTime);
     }
     
-    public static IQueryable<Note> ApplyTimeFilter(this IQueryable<Note> query, DateTime? lastUpdatePeriodStart, DateTime? lastUpdatePeriodEnd
-        , DateTime? creationPeriodStart, DateTime? creationPeriodEnd)
+    public static IQueryable<Note> ApplyTimeFilter(this IQueryable<Note> query, DateTimeOffset? lastUpdatePeriodStart, DateTimeOffset? lastUpdatePeriodEnd
+        , DateTimeOffset? creationPeriodStart, DateTimeOffset? creationPeriodEnd)
     {
         if (lastUpdatePeriodStart.HasValue)
-            query = query.Where(x => x.LastUpdateTime >= lastUpdatePeriodStart);
+            query = query.Where(x => x.LastUpdateTime >= lastUpdatePeriodStart.Value.UtcDateTime);
         if (lastUpdatePeriodEnd.HasValue)
-            query = query.Where(x => x.LastUpdateTime < lastUpdatePeriodEnd);
+            query = query.Where(x => x.LastUpdateTime < lastUpdatePeriodEnd.Value.UtcDateTime);
 
         if (creationPeriodStart.HasValue)
-            query = query.Where(x => x.CreateTime >= creationPeriodStart);
+            query = query.Where(x => x.CreateTime >= creationPeriodStart.Value.UtcDateTime);
         if (creationPeriodEnd.HasValue)
-            query = query.Where(x => x.CreateTime < creationPeriodEnd);
+            query = query.Where(x => x.CreateTime < creationPeriodEnd.Value.UtcDateTime);
         
         return query;
     }

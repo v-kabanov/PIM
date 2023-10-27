@@ -1,16 +1,16 @@
 ﻿@using PimWeb.Models
-@model ICollection<PimWeb.AppCode.Note>
+@model ICollection<NoteViewModel>
 
 @foreach (var note in Model)
 {
     <div class="row form-group">
         <div note-name class="col-md-11">
             <span class="text-muted small">@($"{note.LastUpdateTime:ddd dd-MMM-yy, HH:mm} ")</span>
-            <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">@note.Name</a>
-            <a delete-note-by-id class="ms-3" href="#" noteId="@note.Id">delete</a>
+            <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.NoteId})">@note.Caption</a>
+            <a delete-note-by-id class="ms-3" href="#" noteId="@note.NoteId">delete</a>
             <br/>
             @HomeViewModel.GetNoteTextSummary(note)
-            @if (System.Math.Abs((note.LastUpdateTime - note.CreateTime).TotalSeconds) > 1)
+            @if (note.LastUpdateTime.HasValue && note.CreateTime.HasValue && Math.Abs((note.LastUpdateTime.Value - note.CreateTime.Value).TotalSeconds) > 1)
             {
                 @:&nbsp; <span class="text-muted small">@($"(Created {note.CreateTime:ddd dd-MMM-yy, HH:mm})")</span>
             }

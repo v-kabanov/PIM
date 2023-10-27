@@ -14,14 +14,14 @@ public class Note : IEquatable<Note>
 
     public Note()
     {
-        CreateTime = LastUpdateTime = DateTime.Now;
+        CreateTime = LastUpdateTime = DateTime.UtcNow;
     }
 
     public int Id { get; set; }
 
-    public DateTime CreateTime { get; set; }
+    public DateTimeOffset CreateTime { get; set; }
 
-    public DateTime LastUpdateTime { get; set; }
+    public DateTimeOffset LastUpdateTime { get; set; }
 
     /// <summary>
     ///     0 for unsaved, incremented every time it's updated in the storage
