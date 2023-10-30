@@ -1,4 +1,7 @@
 using System.Reflection;
+using FluentNHibernate.Cfg;
+using FluentNHibernate.Cfg.Db;
+using FluentNHibernate.Conventions.Helpers;
 using log4net;
 using log4net.Config;
 using Microsoft.AspNetCore.HttpLogging;
@@ -35,14 +38,32 @@ builder.Services
 
 builder.Services.AddMvc(o => o.EnableEndpointRouting = false);
 
+var rawConfig = new NHibernate.Cfg.Configuration();
+rawConfig.SetNamingStrategy(new PostgreSqlNamingStrategy());
+                
+var configuration = Fluently.Configure(rawConfig)
+    .Database(PostgreSQLConfiguration.Standard.ConnectionString(connectionString).ShowSql)
+    .Mappings(m => m.FluentMappings
+        .AddFromAssembly(Assembly.GetExecutingAssembly())
+            .Conventions.Add(Table.Is(x => x.TableName.ToLower())));
+                
+var sessionFactory = configuration.BuildSessionFactory();
+
 builder.Services
+    .AddSingleton(sessionFactory)
+    .AddScoped(serviceProvider =>
+    {
+        var session = sessionFactory.OpenSession();
+        session.BeginTransaction();
+        return session;
+    })
     .AddHttpLogging(o =>
     {
         o.LoggingFields = HttpLoggingFields.Request | HttpLoggingFields.RequestQuery;
     })
     .AddLogging()
     .AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
-    .AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
+    //.AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
     .AddDatabaseDeveloperPageExceptionFilter()
     .AddIdentity<IdentityUser<int>, IdentityRole<int>>(options =>
     {
@@ -57,20 +78,12 @@ builder.Services
             , RequireNonAlphanumeric = false
         };
     })
-    
     //.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<IdentityDbContext>()
     .AddDefaultTokenProviders()
     .AddRoles<IdentityRole<int>>();
 
 builder.Services.AddAuthorization();
-
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-//        .RequireAuthenticatedUser()
-//        .Build();
-//});
 
 var virtualPathBase = appOptions.WebAppPath.IsNullOrWhiteSpace()
     ? Environment.GetEnvironmentVariable("APP_VIRTUAL_PATH")

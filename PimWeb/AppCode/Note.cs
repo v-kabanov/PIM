@@ -17,16 +17,22 @@ public class Note : IEquatable<Note>
         CreateTime = LastUpdateTime = DateTime.UtcNow;
     }
 
-    public int Id { get; set; }
+    public virtual int Id { get; set; }
 
-    public DateTimeOffset CreateTime { get; set; }
+    /// <summary>
+    ///     UTC
+    /// </summary>
+    public virtual DateTime CreateTime { get; set; }
 
-    public DateTimeOffset LastUpdateTime { get; set; }
+    /// <summary>
+    ///     UTC
+    /// </summary>
+    public virtual DateTime LastUpdateTime { get; set; }
 
     /// <summary>
     ///     0 for unsaved, incremented every time it's updated in the storage
     /// </summary>
-    public int IntegrityVersion { get; set; } = 1;
+    public virtual int IntegrityVersion { get; set; } = 1;
     
     //[Timestamp]
     //public byte[] Version { get; set; }
@@ -34,10 +40,10 @@ public class Note : IEquatable<Note>
     /// <summary>
     ///     Name is just cached first line of text; should not be persisted separately
     /// </summary>
-    [NotMapped]
-    public string Name { get; private set; }
+    //[NotMapped]
+    public virtual string Name { get; protected set; }
 
-    public string Text
+    public virtual string Text
     {
         get => _text;
         set
@@ -47,12 +53,12 @@ public class Note : IEquatable<Note>
         }
     }
     
-    public NpgsqlTsVector SearchVector { get; set; }
+    //public virtual NpgsqlTsVector SearchVector { get; set; }
 
     /// <summary>
     ///     Id is assigned after note is saved
     /// </summary>
-    public bool IsTransient => IntegrityVersion == 0;
+    public virtual bool IsTransient => IntegrityVersion == 0;
 
     public static Note Create(string text)
     {
@@ -71,7 +77,7 @@ public class Note : IEquatable<Note>
     /// <returns>
     ///     null if text contains any valid text (non-blank-space)
     /// </returns>
-    private static string ExtractName(string text)
+    public static string ExtractName(string text)
     {
         if (text == null)
             return null;
@@ -107,7 +113,7 @@ public class Note : IEquatable<Note>
         return _hashCode;
     }
 
-    public bool Equals(Note other)
+    public virtual bool Equals(Note other)
     {
         if (other == null)
             return false;

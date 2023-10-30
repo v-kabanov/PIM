@@ -30,6 +30,11 @@ public class NoteViewModel
 
     [DisplayName("Version")]
     public int? Version { get; set; }
+    
+    [DisplayName("Headline")]
+    public string SearchHeadline { get; set; }
 
+    public float? Rank { get; set; }
+    
     public bool NoteDeleted { get; set; }
 }

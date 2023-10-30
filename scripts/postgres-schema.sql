@@ -54,7 +54,7 @@ create table if not exists public.note (
 	integrity_version int not null
 );
 
-select
+select  id, extract(epoch from )
 
 alter table     public.note
 alter column    create_time type timestamp with time zone
@@ -67,8 +67,6 @@ on              public.note (create_time);
 
 create index    idx_note_last_update_time
 on              public.note (last_update_time);
-
-select * from note
 
 alter 		table public.note
 add column  search_vector tsvector
@@ -96,7 +94,7 @@ from 	note
 where	search_vector @@ websearch_to_tsquery('public.mysearch', 'главный тренер')
 		and last_update_time > timestamp'2023-09-29'
 
-select * from ts_debug('public.mysearch', 'source code')
+select * from ts_debug('public.mysearch', 'sacrificial animal')
 
 select * from note where search_vector @@ websearch_to_tsquery('public.mysearch', 'query');
 select * from note where search_vector @@ websearch_to_tsquery('query');
@@ -108,3 +106,6 @@ to be deleted during test') @@ websearch_to_tsquery('public.mysearch', 'sacrific
 select *, to_tsvector('public.mysearch', text) as recalced from note where text ilike '%sacrific%'
 
 update note set search_vector = default
+
+
+select * from public.search('barcode printers', true)

@@ -48,6 +48,11 @@ public class SearchViewModel
     [DisplayName("to:")]
     [DisplayFormat(DataFormatString = "{0:dd MMM yy}")]
     public DateTime? CreationPeriodEnd { get; set; }
+    
+    public bool HasTimeFilter => CreationPeriodStart.HasValue
+        || CreationPeriodEnd.HasValue
+        || LastUpdatePeriodStart.HasValue
+        || LastUpdatePeriodEnd.HasValue;
 
     public int NoteId { get; set; }
 
