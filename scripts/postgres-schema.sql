@@ -54,8 +54,6 @@ create table if not exists public.note (
 	integrity_version int not null
 );
 
-select  id, extract(epoch from )
-
 alter table     public.note
 alter column    create_time type timestamp with time zone
 

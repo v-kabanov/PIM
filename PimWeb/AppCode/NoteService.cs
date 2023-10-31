@@ -59,7 +59,7 @@ public class NoteService : INoteService
         
         var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         
-        var totalCountQuery = Session.CreateSQLQuery($"select count(*) from ({queryText} limit :maxNotesToCount)")
+        var totalCountQuery = Session.CreateSQLQuery($"select count(*) from ({queryText} limit :maxNotesToCount) s")
             .SetInt32("maxNotesToCount", maxNotesToCount);
         if (useSqlFunction)
             totalCountQuery
