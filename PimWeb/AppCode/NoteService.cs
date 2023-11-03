@@ -2,8 +2,11 @@
 // DO NOT REFERENCE!
 //using System.Data.Entity;
 
+using System;
 using System.Data.Entity.Core;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using NHibernate;
 using NHibernate.Linq;
 using NHibernate.Transform;

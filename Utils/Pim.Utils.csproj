@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Mono.Options" Version="5.3.0.1" />
+    <PackageReference Include="MySqlConnector" Version="2.2.7" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Pim.CommonLib\Pim.CommonLib.csproj" />

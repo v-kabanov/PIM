@@ -1,6 +1,7 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using log4net;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

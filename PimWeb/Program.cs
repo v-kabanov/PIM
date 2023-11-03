@@ -1,13 +1,22 @@
+using System;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
-using FluentNHibernate.Conventions.Helpers;
 using log4net;
 using log4net.Config;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NHibernate.AspNetCore.Identity;
+using NHibernate.NetCore;
+//using Microsoft.EntityFrameworkCore;
 using Pim.CommonLib;
 using PimWeb.AppCode;
 
@@ -39,13 +48,11 @@ builder.Services
 builder.Services.AddMvc(o => o.EnableEndpointRouting = false);
 
 var rawConfig = new NHibernate.Cfg.Configuration();
+
 rawConfig.SetNamingStrategy(new PostgreSqlNamingStrategy());
-                
+
 var configuration = Fluently.Configure(rawConfig)
-    .Database(PostgreSQLConfiguration.Standard.ConnectionString(connectionString).ShowSql)
-    .Mappings(m => m.FluentMappings
-        .AddFromAssembly(Assembly.GetExecutingAssembly())
-            .Conventions.Add(Table.Is(x => x.TableName.ToLower())));
+    .Database(PostgreSQLConfiguration.Standard.ConnectionString(connectionString).ShowSql);
                 
 var sessionFactory = configuration.BuildSessionFactory();
 
@@ -62,10 +69,10 @@ builder.Services
         o.LoggingFields = HttpLoggingFields.Request | HttpLoggingFields.RequestQuery;
     })
     .AddLogging()
-    .AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
+    //.AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
     //.AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
     .AddDatabaseDeveloperPageExceptionFilter()
-    .AddIdentity<IdentityUser<int>, IdentityRole<int>>(options =>
+    .AddIdentity<Microsoft.AspNetCore.Identity.IdentityUser<int>, Microsoft.AspNetCore.Identity.IdentityRole<int>>(options =>
     {
         options.SignIn.RequireConfirmedAccount = true;
         options.Password = new PasswordOptions
@@ -79,9 +86,12 @@ builder.Services
         };
     })
     //.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<IdentityDbContext>()
+    //.AddNHibernateStores(t => t.SetSessionAutoFlush(false))
+    .AddHibernateStores()
     .AddDefaultTokenProviders()
-    .AddRoles<IdentityRole<int>>();
+    .AddRoles<Microsoft.AspNetCore.Identity.IdentityRole<int>>();
+
+builder.Services.AddHibernate();
 
 builder.Services.AddAuthorization();
 
@@ -123,7 +133,9 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
     app.UseHttpLogging();
 
-var ifSeed = "/seed".EqualsIgnoreCase(args.FirstOrDefault());
+using var session = sessionFactory.OpenSession();
+
+var ifSeed = "/seed".EqualsIgnoreCase(args.FirstOrDefault()) || !session.Query<IdentityUser<int>>().Any();
 if (ifSeed)
 {
     Log.Info("Seeding identity");

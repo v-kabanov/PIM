@@ -1,13 +1,20 @@
 ﻿using FluentNHibernate.Mapping;
 
-namespace PimWeb.AppCode;
+namespace PimWeb.AppCode.Map;
 
-public class NoteMap : ClassMap<Note>
+public class ClassMapBase<T> : ClassMap<T>
+{
+    protected ClassMapBase()
+    {
+        Schema("public");
+    }
+}
+
+public class NoteMap : ClassMapBase<Note>
 {
     /// <inheritdoc />
     public NoteMap()
     {
-        Schema("public");
         //Table("note");
         Id(x => x.Id).GeneratedBy.Sequence("note_id_seq");
         Map(x => x.Text);
