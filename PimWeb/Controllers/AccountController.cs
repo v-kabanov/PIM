@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Pim.CommonLib;
+using PimWeb.AppCode.Identity;
 using PimWeb.Models;
 
 
@@ -16,12 +17,12 @@ public class AccountController : Controller
 {
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-    private readonly SignInManager<IdentityUser<int>> _signInManager;
-    private readonly UserManager<IdentityUser<int>> _userManager;
-    private readonly RoleManager<IdentityRole<int>> _roleManager;
+    private readonly SignInManager<AppUser> _signInManager;
+    private readonly UserManager<AppUser> _userManager;
+    private readonly RoleManager<AppRole> _roleManager;
 
-    public AccountController(UserManager<IdentityUser<int>> userManager, SignInManager<IdentityUser<int>> signInManager
-            , RoleManager<IdentityRole<int>> roleManager
+    public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager
+            , RoleManager<AppRole> roleManager
         )
     {
         Log.DebugFormat("Instantiating with provided dependencies.");
@@ -30,11 +31,11 @@ public class AccountController : Controller
         _roleManager = roleManager;
     }
 
-    public SignInManager<IdentityUser<int>> SignInManager => _signInManager;
+    public SignInManager<AppUser> SignInManager => _signInManager;
 
-    public UserManager<IdentityUser<int>> UserManager => _userManager;
+    public UserManager<AppUser> UserManager => _userManager;
 
-    public RoleManager<IdentityRole<int>> RoleManager => _roleManager;
+    public RoleManager<AppRole> RoleManager => _roleManager;
 
     //
     // GET: /Account/Login
@@ -95,7 +96,7 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            var user = new IdentityUser<int> { UserName = model.Name, Email = model.Name };
+            var user = new AppUser { UserName = model.Name, Email = model.Name };
             var result = await UserManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {

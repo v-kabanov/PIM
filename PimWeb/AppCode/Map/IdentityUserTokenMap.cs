@@ -1,8 +1,8 @@
-﻿using FluentNHibernate.AspNetCore.Identity;
+﻿using PimWeb.AppCode.Identity;
 
 namespace PimWeb.AppCode.Map;
 
-public class IdentityUserTokenMap : ClassMapBase<IdentityUserToken<int>>
+public class IdentityUserTokenMap : ClassMapBase<AppUserToken>
 {
     /// <inheritdoc />
     public IdentityUserTokenMap()

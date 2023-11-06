@@ -4,6 +4,8 @@
 // Comment		
 // **********************************************************************************************/
 
+using System.Collections.Generic;
+
 namespace PimWeb.AppCode;
 
 // http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode

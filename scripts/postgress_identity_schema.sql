@@ -51,7 +51,8 @@ create table if not exists public.aspnet_users
     phone_number character varying(32) collate pg_catalog."default",
     phone_number_confirmed boolean not null,
     two_factor_enabled boolean not null,
-    lockout_end_unix_time_seconds bigint,
+    --lockout_end_unix_time_seconds bigint,
+    lockout_end timestamp with time zone null,
     lockout_enabled boolean not null,
     access_failed_count integer not null,
     constraint pk_aspnet_users primary key (id),
@@ -68,8 +69,6 @@ create index if not exists ix_aspnet_users_email
     on public.aspnet_users using btree
     (normalized_email collate pg_catalog."default")
     tablespace pg_default;
-
--- index: ix_aspnet_users_user_name
 
 -- drop index public.ix_aspnet_users_user_name;
 
@@ -95,6 +94,19 @@ if not exists (
 ) then
     alter table public.aspnet_users
     alter column id set default (nextval('public.aspnet_identity_id_seq')::int);
+end if;
+
+if exists (
+        select  *
+        from    information_schema.columns
+                where table_name = 'aspnet_users'
+                and column_name = 'lockout_end_unix_time_seconds'
+) then
+    alter table public.aspnet_users
+    drop column lockout_end_unix_time_seconds;
+    
+    alter table public.aspnet_users
+    add column  lockout_end timestamp with time zone;
 end if;
 
 if not exists (
@@ -135,21 +147,12 @@ create table public.aspnet_role_claims
 alter table public.aspnet_role_claims
     owner to postgres;
     
--- index: ix_aspnet_role_claims_role_id
-
 -- drop index public.ix_aspnet_role_claims_role_id;
 
 create index if not exists ix_aspnet_role_claims_role_id
     on public.aspnet_role_claims using btree
-    (role_id collate pg_catalog."default")
+    (role_id)
     tablespace pg_default;
-
--- table: public.aspnet_users
-
-
--- table: public.aspnet_user_claims
-
--- drop table public.aspnet_user_claims;
 
 create table public.aspnet_user_claims
 (
@@ -171,10 +174,8 @@ alter table public.aspnet_user_claims
 
 create index ix_aspnet_user_claims_user_id
     on public.aspnet_user_claims using btree
-    (user_id collate pg_catalog."default")
+    (user_id)
     tablespace pg_default;
-
--- table: public.aspnet_user_logins
 
 -- drop table public.aspnet_user_logins;
 
@@ -198,10 +199,9 @@ alter table public.aspnet_user_logins
 
 create index ix_aspnet_user_logins_user_id
     on public.aspnet_user_logins using btree
-    (user_id collate pg_catalog."default")
+    (user_id)
     tablespace pg_default;
 
--- table: public.aspnet_user_tokens
 
 -- drop table public.aspnet_user_tokens;
 
@@ -225,10 +225,8 @@ alter table public.aspnet_user_tokens
 
 create index if not exists ix_aspnet_user_tokens_user_id
     on public.aspnet_user_tokens using btree
-    (user_id collate pg_catalog."default")
+    (user_id)
     tablespace pg_default;
-
--- table: public.aspnet_user_roles
 
 -- drop table public.aspnet_user_roles;
 
@@ -254,12 +252,21 @@ alter table public.aspnet_user_roles
 
 create index if not exists ix_aspnet_user_roles_role_id
     on public.aspnet_user_roles using btree
-    (role_id collate pg_catalog."default")
+    (role_id)
     tablespace pg_default;
 
 -- drop index public.ix_aspnet_user_roles_user_id;
 
 create index ix_aspnet_user_roles_user_id
     on public.aspnet_user_roles using btree
-    (user_id collate pg_catalog."default")
+    (user_id)
     tablespace pg_default;
+
+grant all on sequence public.aspnet_identity_id_seq to pimweb;
+grant insert, select, update, delete on table public.aspnet_users to pimweb;
+grant insert, select, update, delete on table public.aspnet_roles to pimweb;
+grant insert, select, update, delete on table public.aspnet_user_claims to pimweb;
+grant insert, select, update, delete on table public.aspnet_user_logins to pimweb;
+grant insert, select, update, delete on table public.aspnet_user_roles to pimweb;
+grant insert, select, update, delete on table public.aspnet_user_tokens to pimweb;
+grant insert, select, update, delete on table public.aspnet_role_claims to pimweb;

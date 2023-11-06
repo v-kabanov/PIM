@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using PimWeb.AppCode.Identity;
 
 namespace PimWeb.AppCode.Map;
 
-public class IdentityUserLoginMap : ClassMapBase<IdentityUserLogin<int>>
+public class IdentityUserLoginMap : ClassMapBase<AppUserLogin>
 {
     /// <inheritdoc />
     public IdentityUserLoginMap()

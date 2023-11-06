@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
+using FluentNHibernate.Conventions.Helpers;
 using log4net;
 using log4net.Config;
 using Microsoft.AspNetCore.Builder;
@@ -14,11 +15,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NHibernate.AspNetCore.Identity;
-using NHibernate.NetCore;
-//using Microsoft.EntityFrameworkCore;
 using Pim.CommonLib;
 using PimWeb.AppCode;
+using PimWeb.AppCode.Identity;
 
 var Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -49,15 +48,22 @@ builder.Services.AddMvc(o => o.EnableEndpointRouting = false);
 
 var rawConfig = new NHibernate.Cfg.Configuration();
 
+// comment out
+//rawConfig.AddIdentityMappings();
+
 rawConfig.SetNamingStrategy(new PostgreSqlNamingStrategy());
 
 var configuration = Fluently.Configure(rawConfig)
-    .Database(PostgreSQLConfiguration.Standard.ConnectionString(connectionString).ShowSql);
+    .Database(PostgreSQLConfiguration.Standard.ConnectionString(connectionString).ShowSql)
+    .Mappings(m => m.FluentMappings
+        .AddFromAssembly(Assembly.GetExecutingAssembly())
+        .Conventions.Add(Table.Is(x => x.TableName.ToLower())));
                 
 var sessionFactory = configuration.BuildSessionFactory();
 
 builder.Services
     .AddSingleton(sessionFactory)
+    .AddSingleton(configuration)
     .AddScoped(serviceProvider =>
     {
         var session = sessionFactory.OpenSession();
@@ -69,10 +75,7 @@ builder.Services
         o.LoggingFields = HttpLoggingFields.Request | HttpLoggingFields.RequestQuery;
     })
     .AddLogging()
-    //.AddDbContext<IdentityDbContext>(options => options.UseNpgsql(connectionString))
-    //.AddDbContext<DatabaseContext>(o => o.UseNpgsql(connectionString))
-    .AddDatabaseDeveloperPageExceptionFilter()
-    .AddIdentity<Microsoft.AspNetCore.Identity.IdentityUser<int>, Microsoft.AspNetCore.Identity.IdentityRole<int>>(options =>
+    .AddIdentity<AppUser, AppRole>(options =>
     {
         options.SignIn.RequireConfirmedAccount = true;
         options.Password = new PasswordOptions
@@ -87,11 +90,14 @@ builder.Services
     })
     //.AddDefaultIdentity<IdentityUser<int>>(options => options.SignIn.RequireConfirmedAccount = true)
     //.AddNHibernateStores(t => t.SetSessionAutoFlush(false))
-    .AddHibernateStores()
     .AddDefaultTokenProviders()
-    .AddRoles<Microsoft.AspNetCore.Identity.IdentityRole<int>>();
+    .AddRoles<AppRole>();
 
-builder.Services.AddHibernate();
+builder.Services
+    .AddScoped<IUserStore<AppUser>, AppUserStore>()
+    .AddScoped<IRoleStore<AppRole>, AppRoleStore>()
+    //.AddHibernate()
+    ;
 
 builder.Services.AddAuthorization();
 
@@ -135,8 +141,8 @@ if (app.Environment.IsDevelopment())
 
 using var session = sessionFactory.OpenSession();
 
-var ifSeed = "/seed".EqualsIgnoreCase(args.FirstOrDefault()) || !session.Query<IdentityUser<int>>().Any();
-if (ifSeed)
+var ifSeed = "/seed".EqualsIgnoreCase(args.FirstOrDefault());
+if (ifSeed || !session.Query<AppUser>().Any())
 {
     Log.Info("Seeding identity");
     using var scope = app.Services.CreateScope();
@@ -147,7 +153,10 @@ if (ifSeed)
     else
         Log.Warn("No data to seed found in the configuration.");
     
-    return;
+    //await scope.ServiceProvider.GetService<ISession>().GetCurrentTransaction().CommitAsync();
+    
+    if (ifSeed)
+        return;
 }
 
 // make it possible to run under reverse proxy  //XForwardedFor | ForwardedHeaders.XForwardedProto

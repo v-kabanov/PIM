@@ -52,7 +52,7 @@ public static class Extensions
         return query;
     }
 
-    public static NHibernate.IQuery AddOptionalFilterParameter([NotNull] this NHibernate.IQuery query, string parameterName, DateTime? value)
+    public static NHibernate.IQuery AddOptionalFilterParameter(this NHibernate.IQuery query, string parameterName, DateTime? value)
     {
         if (query == null) throw new ArgumentNullException(nameof(query));
         if (value.HasValue)

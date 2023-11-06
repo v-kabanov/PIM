@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using PimWeb.AppCode.Identity;
 
 namespace PimWeb.AppCode.Map;
 
-public class IdentityUserMap : ClassMapBase<IdentityUser<int>>
+public class IdentityUserMap : ClassMapBase<AppUser>
 {
     /// <inheritdoc />
     public IdentityUserMap()
@@ -47,5 +47,30 @@ public class IdentityUserMap : ClassMapBase<IdentityUser<int>>
         Map(x => x.TwoFactorEnabled);
         Map(x => x.SecurityStamp)
             .Length(64);
+        
+        HasManyToMany(x => x.Roles)
+            .Table("aspnet_user_roles")
+            .ParentKeyColumn("user_id")
+            .ChildKeyColumn("role_id")
+            .Cascade.None()
+            .Cache.ReadWrite();
+
+        HasMany(x => x.Claims)
+            .Inverse()
+            .Cascade.AllDeleteOrphan()
+            .KeyColumn("user_id")
+            .Cache.ReadWrite();
+
+        HasMany(x => x.Logins)
+            .Inverse()
+            .Cascade.AllDeleteOrphan()
+            .KeyColumn("user_id")
+            .Cache.ReadWrite();
+
+        HasMany(x => x.Tokens)
+            .Inverse()
+            .Cascade.AllDeleteOrphan()
+            .KeyColumn("user_id")
+            .Cache.ReadWrite();
     }
 }

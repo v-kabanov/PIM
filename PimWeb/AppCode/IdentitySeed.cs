@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using log4net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using PimWeb.AppCode.Identity;
 
 namespace PimWeb.AppCode;
 
@@ -13,17 +14,17 @@ public static class IdentitySeed
     
     public static async Task Seed(this IServiceProvider serviceProvider, SeedUsers users)
     {
-        var roleManager = serviceProvider.GetService<RoleManager<IdentityRole<int>>>();
+        var roleManager = serviceProvider.GetService<RoleManager<AppRole>>();
 
         foreach (var roleName in PimIdentityConstants.AllRoleNames)
             if (!await roleManager.RoleExistsAsync(roleName))
             {
-                var ir = await roleManager.CreateAsync(new IdentityRole<int>(roleName));
+                var ir = await roleManager.CreateAsync(new AppRole(roleName));
                 if (!ir.Succeeded)
                     Log.ErrorFormat("'{0}' role creation: {1}", roleName, ir);
             }
 
-        var userManager = serviceProvider.GetService<UserManager<IdentityUser<int>>>();
+        var userManager = serviceProvider.GetService<UserManager<AppUser>>();
         
         foreach (var seedUser in users.Users)
         {
@@ -35,7 +36,7 @@ public static class IdentitySeed
         }
     }
     
-    private static async Task<IdentityResult> AddToRoleInternalAsync(this UserManager<IdentityUser<int>> userManager, IdentityUser<int> user, string roleName)
+    private static async Task<IdentityResult> AddToRoleInternalAsync(this UserManager<AppUser> userManager, AppUser user, string roleName)
     {
         var ir = await userManager.AddToRoleAsync(user, roleName);
         if (!ir.Succeeded)
@@ -43,12 +44,12 @@ public static class IdentitySeed
         return ir;
     }
     
-    private static async Task<IdentityUser<int>> EnsureUser(this UserManager<IdentityUser<int>> userManager, string name, string email, string password)
+    private static async Task<AppUser> EnsureUser(this UserManager<AppUser> userManager, string name, string email, string password)
     {
         var user = await userManager.FindByNameAsync(name);
         if (user == null)
         {
-            user = new IdentityUser<int>
+            user = new AppUser
             {
                 UserName = name,
                 Email = email,

@@ -3,7 +3,7 @@
 //using System.Data.Entity;
 
 using System;
-using System.Data.Entity.Core;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;

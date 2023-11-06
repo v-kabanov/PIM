@@ -1,3 +1,5 @@
+using System;
+
 namespace PimWeb.Models;
 
 public class NoteSearchResult

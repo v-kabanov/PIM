@@ -1,9 +1,10 @@
 ﻿//using FluentNHibernate.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity;
+using PimWeb.AppCode.Identity;
 
 namespace PimWeb.AppCode.Map;
 
-public class IdentityRoleMap : ClassMapBase<IdentityRole<int>>
+public class IdentityRoleMap : ClassMapBase<AppRole>
 {
     /// <inheritdoc />
     public IdentityRoleMap()
@@ -22,5 +23,11 @@ public class IdentityRoleMap : ClassMapBase<IdentityRole<int>>
         
         Map(x => x.ConcurrencyStamp)
             .Length(36);
+
+        HasMany(x => x.Claims)
+            .Inverse()
+            .Cascade.AllDeleteOrphan()
+            .KeyColumn("role_id")
+            .Cache.ReadWrite();
     }
 }
