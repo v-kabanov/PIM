@@ -14,7 +14,7 @@
 
         <div class="form-check-inline">
             <label class="@labelClass ">
-                @Html.RadioButton("", item.Value ?? "", ifChecked, radioButtonHtmlAttributes) @item.Text
+                @Html.RadioButton($"{item.Value}", item.Value ?? "", ifChecked, radioButtonHtmlAttributes) @item.Text
             </label>
         </div>
     }
