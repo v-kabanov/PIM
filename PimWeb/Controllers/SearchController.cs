@@ -38,7 +38,7 @@ public class SearchController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<ActionResult> Delete(SearchViewModel model)
+    public async Task<PartialViewResult> Delete(SearchViewModel model)
     {
         var result = model;
         

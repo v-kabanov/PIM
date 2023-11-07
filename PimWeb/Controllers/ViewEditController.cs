@@ -28,18 +28,20 @@ public class ViewEditController : Controller
 
     [HttpGet]
     [Route("~/ViewEdit/{id}")]
-    public async Task<ActionResult> Index(int id)
+    public async Task<ActionResult> Index(int id, bool edit = false)
     {
         var model = await NoteService.GetAsync(id).ConfigureAwait(false);
+        ViewBag.Edit = edit;
 
         return View("ViewEdit", model);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<ActionResult> Update(NoteViewModel model)
+    public async Task<PartialViewResult> Update(NoteViewModel model)
     {
         ModelState[nameof(model.Version)].RawValue = null;
+        ViewBag.Edit = true;
         
         var result = model;
         try

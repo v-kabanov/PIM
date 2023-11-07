@@ -33,7 +33,7 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<ActionResult> DeleteNote(int noteId)
+    public async Task<PartialViewResult> DeleteNote(int noteId)
     {
         if (noteId > 0)
         {
@@ -51,7 +51,7 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<ActionResult> Create(HomeViewModel model)
+    public async Task<PartialViewResult> Create(HomeViewModel model)
     {
         var result = await NoteService.CreateAsync(model);
 
