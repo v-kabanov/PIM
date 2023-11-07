@@ -12,6 +12,9 @@ public class ClassMapBase<T> : ClassMap<T>
 
 public class NoteMap : ClassMapBase<Note>
 {
+    public const string ColumnNameLastUpdateTime = "last_update_time";
+    public const string ColumnNameCreationTime = "create_time";
+    
     /// <inheritdoc />
     public NoteMap()
     {

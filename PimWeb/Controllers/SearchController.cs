@@ -7,6 +7,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pim.CommonLib;
 using PimWeb.AppCode;
 using PimWeb.Models;
 
@@ -28,10 +29,14 @@ public class SearchController : Controller
     public async Task<ActionResult> Search(SearchViewModel model)
     {
         var result = model;
+        
+        if (model.Query.IsNullOrWhiteSpace() && model.SortProperty == SortProperty.SearchRank)
+            ModelState.AddModelError(nameof(model.SortProperty), "Search Rank is not available without query, sorting by Last Update Time.");
+
         if (model.LastUpdatePeriodStart >= model.LastUpdatePeriodEnd)
             ModelState.AddModelError(nameof(model.LastUpdatePeriodEnd), "Period end date must be greater than start.");
-        else if (ModelState.IsValid)
-            result = await NoteService.SearchAsync(model, false);
+        //else if (ModelState.IsValid)
+        result = await NoteService.SearchAsync(model, false);
 
         return View("Search", result);
     }

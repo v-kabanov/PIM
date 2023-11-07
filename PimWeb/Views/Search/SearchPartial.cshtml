@@ -1,4 +1,5 @@
-﻿@model PimWeb.Models.SearchViewModel
+﻿@using PimWeb.Models
+@model PimWeb.Models.SearchViewModel
 
 @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm"}))
 {
@@ -36,6 +37,21 @@
                 @Html.LabelFor(x => x.CreationPeriodEnd, new { @class = "col-form-label col-sm-auto" })
                 @Html.TextBoxFor(m => m.CreationPeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
                 @Html.ValidationMessageFor(m => m.CreationPeriodEnd)
+            </div>
+        </div>
+        <div class="col-sm-auto my-2">
+            <div class="row">
+                @Html.LabelFor(x => x.SortProperty, new { @class = "col-form-label col-sm-auto" })
+                @Html.DropDownListFor(m => m.SortProperty, Model.SortOptions, new { @class = "form-control mr-2 w-auto", placeholder = "Optional" })
+
+                @Html.EditorFor(x => x.SortAscending, "RadioGroup", new
+                {
+                    Items = new[] {new ListItem {Value = false, Text = "Desc"}, new ListItem {Value = true, Text = "Asc"}},
+                    Title = "Sort Order"
+                })
+
+                @Html.ValidationMessageFor(x => x.SortProperty)
+                @Html.ValidationMessageFor(x => x.SortAscending)
             </div>
         </div>
     </div>

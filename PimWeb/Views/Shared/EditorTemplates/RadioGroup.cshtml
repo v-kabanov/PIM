@@ -1,0 +1,21 @@
+﻿@using PimWeb.Models
+
+@{
+    var items = ViewData["Items"] as IList<ListItem> ?? new List<ListItem>();
+    var labelClass = ViewData["LabelClass"] as string ?? "form-check-label";
+    var radioButtonHtmlAttributes = ViewData["RadioButtonHtmlAttributes"] ?? new { data_cause_postback = true, @class = "form-check-input" };
+}
+
+<div class="w-auto col-form-label" title="@(ViewBag.Title)">
+    @for (var j = 0; j < items.Count; ++j)
+    {
+        var item = items[j];
+        var ifChecked = (bool)Equals(Model, item.Value);
+
+        <div class="form-check-inline">
+            <label class="@labelClass ">
+                @Html.RadioButton("", item.Value ?? "", ifChecked, radioButtonHtmlAttributes) @item.Text
+            </label>
+        </div>
+    }
+</div>

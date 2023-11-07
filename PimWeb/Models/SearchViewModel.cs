@@ -8,8 +8,17 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using PimWeb.AppCode;
 
 namespace PimWeb.Models;
+
+public enum SortProperty
+{
+    LastUpdateTime,
+    CreationTime,
+    SearchRank
+}
 
 public class SearchViewModel
 {
@@ -71,4 +80,12 @@ public class SearchViewModel
     public List<NoteViewModel> SearchResultPage { get; set; } = new ();
     
     public bool Fuzzy { get; set; }
+    
+    [DisplayName("Sort")]
+    public SortProperty? SortProperty { get; set; }
+
+    [DisplayName("Asc")]
+    public bool SortAscending { get; set; }
+    
+    public List<SelectListItem> SortOptions { get; set; } = new ();
 }

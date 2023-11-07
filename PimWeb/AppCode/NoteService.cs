@@ -3,18 +3,22 @@
 //using System.Data.Entity;
 
 using System;
-using System.Data;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NHibernate;
 using NHibernate.Linq;
 using NHibernate.Transform;
 using Pim.CommonLib;
+using PimWeb.AppCode.Map;
 using PimWeb.Models;
 using ISession = NHibernate.ISession;
 
 namespace PimWeb.AppCode;
+
+public record SortPropertyOption (SortProperty SortProperty, SelectListItem SelectListItem);
 
 public class NoteService : INoteService
 {
@@ -27,6 +31,16 @@ public class NoteService : INoteService
     public AppOptions AppOptions { get;  }
     
     private IQueryable<Note> Query => Session.Query<Note>();
+    
+    private static readonly List<SortPropertyOption> AllSortOptions;
+
+    static NoteService()
+    {
+        AllSortOptions = Enum.GetValues<SortProperty>()
+            .Select(x => (Value: x, Text: $"{x}"))
+            .Select(x => new SortPropertyOption(x.Value, new SelectListItem(Util.InsertDelimitersIntoPascalCaseString(x.Text), x.Text)))
+            .ToList();
+    }
     
     public NoteService(ISession session, AppOptions appOptions)
     {
@@ -41,9 +55,13 @@ public class NoteService : INoteService
         if (withDelete && model.NoteId > 0)
             await Query.Where(x => x.Id == model.NoteId).DeleteAsync().ConfigureAwait(false);
         
+        var sortProperty = model.SortProperty ?? SortProperty.LastUpdateTime;
+        
+        var sortAscending = model.SortAscending;
+        
         var whereClauseBuilder = new SqlWhereClauseBuilder()
-            .AddOptionalRangeParameters("last_update_time", model.LastUpdatePeriodStart, model.LastUpdatePeriodEnd)
-            .AddOptionalRangeParameters("last_update_time", model.CreationPeriodStart, model.CreationPeriodEnd);
+            .AddOptionalRangeParameters(NoteMap.ColumnNameLastUpdateTime, model.LastUpdatePeriodStart, model.LastUpdatePeriodEnd)
+            .AddOptionalRangeParameters(NoteMap.ColumnNameCreationTime, model.CreationPeriodStart, model.CreationPeriodEnd);
         
         var queryText = new StringBuilder();
         
@@ -52,13 +70,14 @@ public class NoteService : INoteService
         if (useSqlFunction)
             queryText.AppendLine("select id as \"Id\", text as \"Text\", last_update_time as \"LastUpdateTime\", create_time as \"CreateTime\", headline as \"Headline\", rank as \"Rank\" from public.search(:query, :fuzzy)");
         else
+        {
             queryText.AppendLine("select id as \"Id\", text as \"Text\", last_update_time as \"LastUpdateTime\", create_time as \"CreateTime\", cast(null as text) as \"Headline\", cast(null as real) as \"Rank\" from public.note");
+            if (sortProperty == SortProperty.SearchRank)
+                sortProperty = SortProperty.LastUpdateTime;
+        }
 
         if (!whereClauseBuilder.IsEmpty)
             queryText.Append("where     ").AppendLine(whereClauseBuilder.GetCombinedClause());
-
-        if (!useSqlFunction)
-            queryText.AppendLine("order by last_update_time desc, id desc");
         
         var maxNotesToCount = (model.PageNumber + 10) * PageSize;
         
@@ -69,10 +88,26 @@ public class NoteService : INoteService
                 .SetString("query", model.Query)
                 .SetBoolean("fuzzy", model.Fuzzy);
         whereClauseBuilder.SetParameterValues(totalCountQuery);
+
+
+        // the function sorts by rank, reorder only if different
+        if (!useSqlFunction || !(sortProperty == SortProperty.SearchRank && !sortAscending))
+        {
+            var columnName = sortProperty switch
+            {
+                SortProperty.CreationTime => NoteMap.ColumnNameCreationTime
+                , SortProperty.LastUpdateTime => NoteMap.ColumnNameLastUpdateTime
+                , SortProperty.SearchRank => nameof(NoteSearchResult.Rank)
+                , _ => throw new PostconditionException($"Unexpected sort property '{sortProperty}'.")
+            };
+            if (!columnName.IsNullOrEmpty())
+            {
+                var ascendance = sortAscending ? "asc" : "desc";
+                queryText.Append("order by ").Append(columnName).Append(' ').Append(ascendance).Append(", id ").AppendLine(ascendance);
+            }
+        }
         
         var noteCountFuture = totalCountQuery.FutureValue<long>();
-        
-        //queryText.AppendLine("offset    :offset").AppendLine("limit     :limit");
         
         query = Session.CreateSQLQuery(queryText.ToString())
             .ApplyPage(PageSize, model.PageNumber - 1);
@@ -99,6 +134,11 @@ public class NoteService : INoteService
             SearchResultPage = notes.Select(CreateModel).ToList(),
             TotalCountedPageCount = pageCount,
             HasMore = pageCount > (model.PageNumber + 1),
+            SortProperty = sortProperty,
+            SortAscending = sortAscending,
+            SortOptions = AllSortOptions.Select(x => new SelectListItem(x.SelectListItem.Text, x.SelectListItem.Value, x.SortProperty == sortProperty))
+                .ToList(),
+            PageNumber = model.PageNumber
         };
         
         return result;
