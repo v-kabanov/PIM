@@ -31,7 +31,6 @@ public class SearchViewModel
         LastUpdatePeriodEnd = other.LastUpdatePeriodEnd;
     }
 
-    [Required(AllowEmptyStrings = false)]
     public string Query { get; set; }
 
     [DisplayName("Last update time from:")]

@@ -25,7 +25,7 @@ public static class Extensions
         
         var take = takeOneExtra ? pageSize + 1 : pageSize;
         
-        return result.SetFetchSize(take);
+        return result.SetMaxResults(take);
     }
     
     public static IQueryable<Note> Sort(this IQueryable<Note> query, SearchableDocumentTime documentTime)
