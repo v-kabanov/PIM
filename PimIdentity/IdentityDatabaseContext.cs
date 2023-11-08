@@ -1,31 +1,62 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
-using AspNet.Identity.LiteDB;
-using LiteDB;
-using Microsoft.AspNet.Identity;
-using PimIdentity.Models;
+using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Data;
+using AspNetCore.Identity.LiteDB.Models;
+using JetBrains.Annotations;
+using Microsoft.AspNetCore.Identity;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
 public class IdentityDatabaseContext : IDisposable
 {
+    public LiteDbContext DbContext { get; }
 
-    public IdentityDatabaseContextFactory ContextFactory { get; }
-
-    public IdentityDatabaseContext(IdentityDatabaseContextFactory contextFactory)
+    public IdentityDatabaseContext([NotNull] LiteDbContext dbContext)
     {
-        Contract.Requires(contextFactory != null);
+        DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        
+        //Roles = database.GetCollection<IdentityRole>("roles");
+        //Users = database.GetCollection<ApplicationUser>("users");
 
-        ContextFactory = contextFactory;
+        RoleStore = new LiteDbRoleStore<IdentityRole>(DbContext);
+        UserStore = new PimUserStore<ApplicationUser, IdentityRole>(DbContext, RoleStore);
     }
 
-    public LiteCollection<ApplicationUser> Users => ContextFactory.Users;
+    //public ILiteCollection<ApplicationUser> Users { get; }
+    //public ILiteCollection<IdentityRole> Roles { get; }
 
-    public LiteCollection<IdentityRole> Roles => ContextFactory.Roles;
+    public IUserStore<ApplicationUser> UserStore { get; }
 
-    public IUserStore<ApplicationUser> UserStore => ContextFactory.UserStore;
+    public IRoleStore<IdentityRole> RoleStore { get; }
 
-    public IRoleStore<IdentityRole> RoleStore => ContextFactory.RoleStore;
 
-    public void Dispose() { }
+    private bool _disposedValue;
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                // dispose managed state (managed objects).
+                RoleStore?.Dispose();
+                UserStore?.Dispose();
+            }
+            _disposedValue = true;
+        }
+    }
+
+    // override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+    // ~IdentityDatabaseContextFactory() {
+    //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+    //   Dispose(false);
+    // }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        // uncomment the following line if the finalizer is overridden above.
+        // GC.SuppressFinalize(this);
+    }
 }

@@ -1,0 +1,103 @@
+﻿@{
+    Layout = "_BaseLayout";
+}
+
+<header>
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container-fluid">
+            <div class="d-md-flex justify-content-between w-100">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand" asp-area="" href="~/">MegaPatam PIM</a>
+                <div class="navbar-collapse collapse d-sm-inline-flex">
+                    <ul class="navbar-nav flex-grow-0">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" href="~/Home/About">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" href="~/Search" title="Search / browse">Search</a>
+                        </li>
+                    </ul>
+                    <div class="d-md-flex flex-grow-1 justify-content-end">
+                        <div class="w-100 mx-2 top-search">
+                            @using (Html.BeginForm("Search", "Search", FormMethod.Get, new { @class = "", role = "search" }))
+                            {
+                                <div class="input-group w-100" style="">
+                                    @Html.TextBox("query", null, new { id = "tbQuery", @class = "form-control", style = "background-color: lightgray;", title = "Search your notes" })
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-auto">
+                            @await Html.PartialAsync("_LoginPartial")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+    <div class="container-fluid">
+        @if (ViewBag.ShowPageCaption != false && !string.IsNullOrWhiteSpace(ViewBag.Title))
+        {
+            <div class="caption">
+                <h2>
+                    @ViewBag.Title
+                </h2>
+                <hr/>
+            </div>
+        }
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+        
+        <hr/>
+
+        <div id="formMessages">
+            @Html.ValidationSummary(true)
+        </div>
+
+        <div id="divInProgress" hidden="hidden">
+            <img src="~/image/bigrotation2.gif" />&nbsp;Work in progress
+        </div>
+    </div>
+
+    <footer class="border-top footer text-muted mx-2">
+        &copy; @DateTime.Now.Year - MegaPatam Inc
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-ui/jquery-ui.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/pim.js" asp-append-version="true"></script>
+    <script src="~/js/SeeLatestAndCreate.js" asp-append-version="true"></script>
+    <script src="~/js/Search.js" asp-append-version="true"></script>
+    <script src="~/js/ViewEdit.js" asp-append-version="true"></script>
+
+    @* @await RenderSectionAsync("Scripts", required: false) *@
+
+    @if (IsSectionDefined("Init"))
+    {
+        <script type="text/javascript">
+               
+            // init the root module
+            pim.init({
+                serverUrl: ('@Url.Content("~/")' === '/') ? '' : '@Url.Content("~/")'
+                ,$: jQuery
+            });
+
+
+            $(document).ready(function () {
+                //layout page init call
+                (pim.pages.layout) && pim.pages.layout.init();
+                //other child pages init call
+                @await RenderSectionAsync("Init", required:false);
+            });
+
+        </script>
+    }

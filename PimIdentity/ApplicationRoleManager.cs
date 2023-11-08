@@ -1,32 +1,36 @@
-﻿using System.Diagnostics.Contracts;
-using AspNet.Identity.LiteDB;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin;
+﻿using System;
+using System.Diagnostics.Contracts;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Pim.CommonLib;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
 public class ApplicationRoleManager : RoleManager<IdentityRole>
 {
-    public ApplicationRoleManager(IRoleStore<IdentityRole, string> store) : base(store)
+    public ApplicationRoleManager(IRoleStore<IdentityRole> store, IServiceProvider serviceProvider = null)
+        : base(
+            store
+            , new RoleValidator<IdentityRole>().WrapInList()
+            , new UpperInvariantLookupNormalizer()
+            , new IdentityErrorDescriber()
+            , serviceProvider?.GetService<ILoggerFactory>()?.CreateLogger<RoleManager<IdentityRole>>()
+              ?? new Logger<RoleManager<IdentityRole>>(new LoggerFactory()))
     {
     }
 
-    /// <param name="options">
-    ///     Optional
+    /// <param name="serviceProvider">
+    ///     Mandatory
     /// </param>
-    /// <param name="context">
-    ///     Optional
-    /// </param>
-    /// <returns></returns>
-    public static ApplicationRoleManager Create(IdentityFactoryOptions<ApplicationRoleManager> options, IOwinContext context)
+    public static ApplicationRoleManager Create(IServiceProvider serviceProvider)
     {
-        Contract.Requires(options != null);
-        Contract.Requires(context != null);
+        Contract.Requires(serviceProvider != null);
 
-        var dbContext = context.Get<IdentityDatabaseContext>();
-        var roleStore = new RoleStore<IdentityRole>(dbContext.Roles);
-        return new ApplicationRoleManager(roleStore);
+        var identityDatabaseContext = serviceProvider.GetRequiredService<IdentityDatabaseContext>();
+        
+        return new ApplicationRoleManager(identityDatabaseContext.RoleStore, serviceProvider);
     }
 
     public static ApplicationRoleManager CreateOutOfContext(IdentityDatabaseContextFactory databaseContextFactory)

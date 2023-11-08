@@ -29,7 +29,7 @@ public static class StringHelper
     /// <param name="addTrailingEllipsis">
     ///     Append '...' if truncating.
     /// </param>
-    public static string GetTextWithLimit(string text, int startIndex, int maxLength, bool addTrailingEllipsis = true)
+    public static string GetTextWithLimit(this string text, int startIndex, int maxLength, bool addTrailingEllipsis = true)
     {
         Check.DoRequireArgumentNotNull(text, nameof(text));
         Check.DoCheckArgument(startIndex >= 0, nameof(startIndex));

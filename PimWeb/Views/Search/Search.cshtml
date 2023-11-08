@@ -1,0 +1,30 @@
+﻿@model PimWeb.Models.SearchViewModel
+@{
+    ViewBag.Title = "Search";
+}
+
+@Html.Partial("SearchPartial", Model, ViewData)
+
+<script>
+@section Init
+{
+    const config = {
+        mainFormSelector: '#mainForm',
+        deleteNoteUrl: '@Url.Action("Delete")',
+        deleteNoteSelector: '[delete-note-by-id]',
+        divInProgressSelector: '#progressIndicator',
+        attributeNameNoteId: "noteId",
+        //divNoteListSelector: "#divNoteList",
+    };
+
+    (pim.pages.search)
+    &&
+    (pim.pages.search.init(config));
+}
+</script>
+
+<hr/>
+
+<div>
+    @Html.ActionLink("Back to home page", "Index", "Home")
+</div>

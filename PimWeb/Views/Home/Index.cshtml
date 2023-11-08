@@ -1,0 +1,36 @@
+﻿@model PimWeb.Models.HomeViewModel
+
+@{
+    ViewBag.Title = "Fulltext PIM";
+    ViewBag.ShowPageCaption = false;
+}
+
+<div class="caption">
+    <h2>
+        Create note
+    </h2>
+</div>
+
+@Html.Partial("IndexPartial", Model)
+
+<script>
+@section Init
+{
+    const config = {
+        mainFormSelector: '#mainForm',
+        createNoteUrl: '@Url.Action("Create", "Home")',
+        deleteNoteUrl: '@Url.Action("DeleteNote", "Home")',
+        createNoteButtonSelector: '#btnSubmit',
+        newNoteTextSelector: '#@Html.IdFor(m => m.NewNoteText)',
+        deleteNoteSelector: '[delete-note-by-id]',
+        openNoteLinkSelector: '#formMessages',
+        divInProgressSelector: '#progressIndicator',
+        attributeNameNoteId: "noteId",
+        divNoteListSelector: "#divNoteList",
+    };
+
+    (pim.pages.latestAndCreate)
+    &&
+    (pim.pages.latestAndCreate.init(config));
+}
+</script>

@@ -12,6 +12,12 @@ namespace Pim.CommonLib;
 
 public static class EnumerableExtensions
 {
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T> collection) => collection?.Where(x => x != null);
+    
+    public static IEnumerable<string> WhereNotEmpty(this IEnumerable<string> collection) => collection?.Where(x => !x.IsNullOrEmpty());
+    
+    public static IEnumerable<string> WhereNotWhiteSpace(this IEnumerable<string> collection) => collection?.Where(x => !x.IsNullOrWhiteSpace());
+    
     /// <summary>
     ///     Create hash set from collection
     /// </summary>

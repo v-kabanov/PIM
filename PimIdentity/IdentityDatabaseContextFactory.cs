@@ -6,37 +6,39 @@
 
 using System;
 using System.Diagnostics.Contracts;
-using AspNet.Identity.LiteDB;
 using LiteDB;
-using Microsoft.AspNet.Identity;
-using PimIdentity.Models;
+using AspNetCore.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Data;
+using AspNetCore.Identity.LiteDB.Models;
 
 namespace PimIdentity;
 
 public class IdentityDatabaseContextFactory : IDisposable
 {
+    public LiteDbContext DbContext { get; }
+    
     public IdentityDatabaseContextFactory(LiteDatabase database)
     {
         Contract.Requires(database != null);
+        DbContext = new LiteDbContext(database);
 
-        Roles = database.GetCollection<IdentityRole>("roles");
-        Users = database.GetCollection<ApplicationUser>("users");
+        //Roles = database.GetCollection<IdentityRole>("roles");
+        //Users = database.GetCollection<ApplicationUser>("users");
 
-        UserStore = new UserStore<ApplicationUser>(Users);
-        RoleStore = new RoleStore<IdentityRole>(Roles);
+        RoleStore = new LiteDbRoleStore<IdentityRole>(DbContext);
+        UserStore = new PimUserStore<ApplicationUser, IdentityRole>(DbContext, RoleStore);
     }
 
-    public LiteCollection<ApplicationUser> Users { get; }
+    //public ILiteCollection<ApplicationUser> Users { get; }
+    //public ILiteCollection<IdentityRole> Roles { get; }
 
-    public LiteCollection<IdentityRole> Roles { get; }
+    public LiteDbUserStore<ApplicationUser> UserStore { get; }
 
-    public IUserStore<ApplicationUser> UserStore { get; }
-
-    public IRoleStore<IdentityRole> RoleStore { get; }
+    public LiteDbRoleStore<IdentityRole> RoleStore { get; }
 
     public IdentityDatabaseContext Create()
     {
-        return new IdentityDatabaseContext(this);
+        return new IdentityDatabaseContext(DbContext);
     }
 
     private bool _disposedValue;

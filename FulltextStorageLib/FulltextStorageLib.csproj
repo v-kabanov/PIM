@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net472</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <!--embed source code into pdb-->
     <EmbedAllSources>true</EmbedAllSources>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

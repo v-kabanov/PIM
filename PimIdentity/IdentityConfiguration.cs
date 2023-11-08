@@ -7,9 +7,10 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
-using AspNet.Identity.LiteDB;
+using AspNetCore.Identity.LiteDB.Models;
+using JetBrains.Annotations;
 using Pim.CommonLib;
-using PimIdentity.Models;
+using IdentityRole = AspNetCore.Identity.LiteDB.IdentityRole;
 
 namespace PimIdentity;
 
@@ -25,7 +26,7 @@ public interface IIdentityConfiguration
     ///     Set new password directly, overriding current.
     /// </summary>
     /// <param name="userName">
-    ///     <see cref="IdentityUser.UserName"/>, mandatory
+    ///     <see cref="ApplicationUser.UserName"/>, mandatory
     /// </param>
     /// <param name="newPassword">
     ///     Mandatory, no complexity checks.
@@ -41,17 +42,16 @@ public class IdentityConfiguration : IIdentityConfiguration
     public const string AdminRoleName = "Admin";
     public const string AdminUserName = "admin";
     public const string DefaultAdminPassword = "password";
-    private const string ReaderRoleName = "Reader";
-    private const string WriterRoleName = "Writer";
+    public const string ReaderRoleName = "Reader";
+    public const string WriterRoleName = "Writer";
 
     private readonly ApplicationRoleManager _roleManager;
     private readonly ApplicationUserManager _userManager;
+    private readonly IdentityDatabaseContextFactory _contextFactory;
 
-    /// <inheritdoc />
-    public IdentityConfiguration(IdentityDatabaseContextFactory databaseContextFactory)
+    public IdentityConfiguration([NotNull] IdentityDatabaseContextFactory databaseContextFactory)
     {
-        Check.DoRequireArgumentNotNull(databaseContextFactory, nameof(databaseContextFactory));
-
+        _contextFactory = databaseContextFactory ?? throw new ArgumentNullException(nameof(databaseContextFactory));
         _roleManager = ApplicationRoleManager.CreateOutOfContext(databaseContextFactory);
         _userManager = ApplicationUserManager.CreateOutOfContext(databaseContextFactory);
     }
@@ -67,8 +67,8 @@ public class IdentityConfiguration : IIdentityConfiguration
         if (user == null)
             throw new ArgumentException($"User with name '{userName}' does not exist.");
 
-        await _userManager.RemovePasswordAsync(user.Id);
-        await _userManager.AddPasswordAsync(user.Id, newPassword);
+        await _userManager.RemovePasswordAsync(user);
+        await _userManager.AddPasswordAsync(user, newPassword);
     }
 
     public async Task EnsureDefaultUsersAndRolesAsync()
@@ -80,8 +80,8 @@ public class IdentityConfiguration : IIdentityConfiguration
         await EnsureRoleAsync(AdminRoleName);
 
         var admin = await EnsureUserAsync(AdminUserName, "admin@megapatam.com", DefaultAdminPassword);
-
-        await _userManager.AddToRoleAsync(admin.Id, AdminUserName);
+        
+        await _userManager.AddToRoleAsync(admin, AdminRoleName);
     }
 
     private async Task EnsureRoleAsync(string name)

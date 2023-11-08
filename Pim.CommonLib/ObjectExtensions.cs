@@ -4,6 +4,7 @@
 // Comment  
 // **********************************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -41,7 +42,13 @@ public static class ObjectExtensions
     {
         return Enumerable.Repeat(value, 1).ToHashSet(comparer);
     }
+    
+    public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);
+    
+    public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
+    public static bool EqualsIgnoreCase(this string value, string other) => string.Equals(value, other, StringComparison.OrdinalIgnoreCase);
+    
     [SourceTemplate]
     public static void CheckArgNotNull(this object value)
     {

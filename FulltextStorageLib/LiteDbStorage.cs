@@ -4,6 +4,7 @@
 // Comment  
 // **********************************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using LiteDB;
 using Pim.CommonLib;
@@ -57,13 +58,13 @@ public class LiteDbStorage<TDoc> : IDocumentStorage<TDoc, string>
     /// <inheritdoc />
     public void SaveOrUpdate(params TDoc[] docs)
     {
-        using (var tran = _database.BeginTrans())
-        {
-            foreach (var doc in docs)
-                SaveOrUpdate(doc);
+        // if(!_database.BeginTrans())
+        //     throw new InvalidOperationException("Transaction is outstanding.");
 
-            tran.Commit();
-        }
+        foreach (var doc in docs)
+            SaveOrUpdate(doc);
+
+       // _database.Commit();
     }
 
     /// <inheritdoc />

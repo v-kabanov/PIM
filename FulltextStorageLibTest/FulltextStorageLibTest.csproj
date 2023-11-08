@@ -13,7 +13,7 @@
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="NUnit" Version="3.6.1" />
-    <PackageReference Include="Remotion.Linq" Version="1.15.9" />
+    <PackageReference Include="Remotion.Linq" Version="2.2.0" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />

@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
-using Microsoft.AspNet.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace PimIdentity;
-
+/*
 public class EmailService : IIdentityMessageService
 {
     public Task SendAsync(IdentityMessage message)
@@ -11,7 +11,7 @@ public class EmailService : IIdentityMessageService
         return Task.FromResult(0);
     }
 }
-
+*/
 // Configure the application user manager used in this application. UserManager is defined in ASP.NET Identity and is used by the application.
 
 // Configure the application sign-in manager which is used in this application.

@@ -1,0 +1,97 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>PimWeb-B4252337-DDA2-45EF-A5C5-8B5D791166D7</UserSecretsId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="7.1.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="FluentNHibernate" Version="3.3.0" />
+    <PackageReference Include="FontAwesome" Version="4.7.0" />
+    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Cryptography.Internal" Version="7.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="7.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="6.1.0" />
+    <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+    <PackageReference Include="NHibernate" Version="5.4.6" />
+    <PackageReference Include="NHibernate.NetCore" Version="7.0.9" />
+    <PackageReference Include="Npgsql" Version="7.0.6" />
+  </ItemGroup>
+
+
+
+  <ItemGroup>
+    <AdditionalFiles Include="Views\Account\ChangePassword.cshtml" />
+    <AdditionalFiles Include="Views\Account\ConfirmEmail.cshtml" />
+    <AdditionalFiles Include="Views\Account\Delete.cshtml" />
+    <AdditionalFiles Include="Views\Account\Edit.cshtml" />
+    <AdditionalFiles Include="Views\Account\ForgotPassword.cshtml" />
+    <AdditionalFiles Include="Views\Account\ForgotPasswordConfirmation.cshtml" />
+    <AdditionalFiles Include="Views\Account\Login.cshtml" />
+    <AdditionalFiles Include="Views\Account\Manage.cshtml" />
+    <AdditionalFiles Include="Views\Account\Register.cshtml" />
+    <AdditionalFiles Include="Views\Account\ResetPassword.cshtml" />
+    <AdditionalFiles Include="Views\Account\ResetPasswordConfirmation.cshtml" />
+    <AdditionalFiles Include="Views\Account\UserRoles.cshtml" />
+    <AdditionalFiles Include="Views\Account\_ChangePasswordPartial.cshtml" />
+    <AdditionalFiles Include="Views\Account\_SetPasswordPartial.cshtml" />
+    <AdditionalFiles Include="Views\Home\About.cshtml" />
+    <AdditionalFiles Include="Views\Home\Index.cshtml" />
+    <AdditionalFiles Include="Views\Home\IndexPartial.cshtml" />
+    <AdditionalFiles Include="Views\Search\Search.cshtml" />
+    <AdditionalFiles Include="Views\Search\SearchPartial.cshtml" />
+    <AdditionalFiles Include="Views\Shared\NoteList.cshtml" />
+    <AdditionalFiles Include="Views\Shared\_Layout.cshtml" />
+    <AdditionalFiles Include="Views\Shared\_ValidationScriptsPartial.cshtml" />
+    <AdditionalFiles Include="Views\ViewEdit\ViewEdit.cshtml" />
+    <AdditionalFiles Include="Views\ViewEdit\ViewEditPartial.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\Account\ChangePassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\ConfirmEmail.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\Delete.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\Edit.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\ForgotPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\ForgotPasswordConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\Manage.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\Register.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\ResetPassword.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\ResetPasswordConfirmation.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\UserRoles.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\_ChangePasswordPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Account\_SetPasswordPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\ViewEdit\ViewEdit.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\ViewEdit\ViewEditPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\NoteList.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\_Layout.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\_LoginPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Shared\_ValidationScriptsPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Search\Search.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Search\SearchPartial.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Error.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\Privacy.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\_ViewImports.cshtml" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pim.CommonLib\Pim.CommonLib.csproj" />
+  </ItemGroup>
+
+</Project>

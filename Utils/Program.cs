@@ -2,16 +2,16 @@
 using System.IO;
 using System.Reflection;
 using log4net;
-using LiteDB;
 using Mono.Options;
+using MySqlConnector;
 using Pim.CommonLib;
-using PimIdentity;
+//using PimIdentity;
 
 namespace Pim.Utils;
 
 class MyArguments
 {
-    const string OperationResetAdminPassword = "ResetAdmin";
+    //const string OperationResetAdminPassword = "ResetAdmin";
 
     public string Operation { get; set; }
 
@@ -21,8 +21,10 @@ class MyArguments
 
     public string DatabasePassword { get; set; } = string.Empty;
 
-    public bool IsOperationResetAdmin => OperationResetAdminPassword.Equals(Operation, StringComparison.OrdinalIgnoreCase);
+    //public bool IsOperationResetAdmin => OperationResetAdminPassword.Equals(Operation, StringComparison.OrdinalIgnoreCase);
 
+    public bool IsEmptyCommand => true;
+    
     public OptionSet OptionSet { get; set; }
 }
 
@@ -80,35 +82,13 @@ class Program
     {
         Check.DoRequireArgumentNotNull(arguments, nameof(arguments));
 
-        if (arguments.IsOperationResetAdmin)
+        if (arguments.IsEmptyCommand)
         {
-            CheckCommandLineArgument(!string.IsNullOrWhiteSpace(arguments.IdentityDatabasePath), "Identity database path is required.");
-            CheckCommandLineArgument(!string.IsNullOrWhiteSpace(arguments.NewPassword), "New password is required.");
-
-            var database = new LiteDatabase($"Filename={arguments.IdentityDatabasePath}; Password={arguments.DatabasePassword};");
-            var contextFactory = new IdentityDatabaseContextFactory(database);
-            var identityConfig = new IdentityConfiguration(contextFactory);
-
-            identityConfig.EnsureDefaultUsersAndRolesAsync().GetAwaiter().GetResult();
-
-            Console.WriteLine("Resetting admin password in {0} to {1}", arguments.IdentityDatabasePath, arguments.NewPassword);
-            identityConfig.ResetPasswordAsync(IdentityConfiguration.AdminUserName, arguments.NewPassword)
-                .GetAwaiter()
-                .GetResult();
-            var userManager = ApplicationUserManager.CreateOutOfContext(contextFactory);
-            var adminUser = userManager.FindByNameAsync(IdentityConfiguration.AdminUserName)
-                .GetAwaiter().GetResult();
-            Console.WriteLine("Admin user locked: {0}; end date: {1}, has password: {2}", adminUser?.LockoutEnabled, adminUser?.LockoutEndDateUtc, adminUser?.HasPassword());
-            if (adminUser != null)
-            {
-                if (adminUser.LockoutEnabled)
-                {
-                    Console.WriteLine("Unlocking admin");
-                    userManager.ResetAccessFailedCountAsync(adminUser.Id);
-                    userManager.SetLockoutEnabledAsync(adminUser.Id, false);
-                }
-            }
-
+            //CheckCommandLineArgument(!string.IsNullOrWhiteSpace(arguments.IdentityDatabasePath), "Identity database path is required.");
+            //CheckCommandLineArgument(!string.IsNullOrWhiteSpace(arguments.NewPassword), "New password is required.");
+            using var connection = new MySqlConnection("Server=127.0.0.1;Database=local");
+            connection.Open();
+            using var command = new MySqlCommand("insert into pim (id, text) values (3, 'Combined arms warfare');", connection);
         }
         else
         {
