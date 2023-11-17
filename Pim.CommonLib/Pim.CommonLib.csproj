@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net472</TargetFrameworks>
+    <TargetFrameworks>net6.0;</TargetFrameworks>
     <!--embed source code into pdb-->
     <EmbedAllSources>true</EmbedAllSources>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -12,5 +12,6 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="PDFsharp" Version="6.0.0" />
   </ItemGroup>
 </Project>
