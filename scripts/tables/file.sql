@@ -4,17 +4,17 @@ alter sequence public.file_id_seq owner to postgres;
 grant all on sequence public.file_id_seq to pimweb;
 grant all on sequence public.file_id_seq to postgres;
 
-drop table if exists public.file
-
+--drop table if exists public.file cascade
 create table if not exists public.file (
 	id int not null,
     relative_path varchar(8000) not null,
-    hash bytea not null,
-	description varchar not null,
+    content_hash bytea not null,
+    title varchar(100) not null,
+	description varchar null,
     extracted_text varchar,
 	create_time timestamp with time zone not null,
 	last_update_time timestamp with time zone not null,
-    search_vector tsvector generated always as (to_tsvector('public.mysearch', coalesce(description, '') || ' ' || coalesce(extracted_text, ''))) stored,
+    search_vector tsvector generated always as (to_tsvector('public.mysearch', relative_path || ' ' || coalesce(title, '') || ' ' || coalesce(description, '') || ' ' || coalesce(extracted_text, ''))) stored,
 	integrity_version int not null
 );
 
@@ -28,7 +28,7 @@ create index if not exists  idx_file_last_update_time
 on                          public.file (last_update_time);
 
 create index if not exists  idx_file_hash
-on                          public.file (hash);
+on                          public.file (content_hash);
 
 if not exists (
         select  *
@@ -53,7 +53,5 @@ if not exists (
 end if;
 
 create index if not exists file_search_vector_idx on public.file using gin (search_vector);
-
-
 
 end $$;

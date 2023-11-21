@@ -37,7 +37,7 @@ public class HomeController : Controller
     {
         if (noteId > 0)
         {
-            var note = await NoteService.DeleteAsync(new NoteViewModel { NoteId = noteId }, true);
+            var note = await NoteService.DeleteAsync(new NoteViewModel { Id = noteId }, true);
 
             ViewBag.Message = note == null
                 ? $"Note {noteId} was not found"

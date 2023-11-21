@@ -2,11 +2,10 @@
 // DO NOT REFERENCE!
 //using System.Data.Entity;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using log4net;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NHibernate;
 using NHibernate.Linq;
@@ -22,6 +21,8 @@ public record SortPropertyOption (SortProperty SortProperty, SelectListItem Sele
 
 public class NoteService : INoteService
 {
+    private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+    
     public const int DefaultPageSize = 20;
     
     public ISession Session { get; }
@@ -32,7 +33,21 @@ public class NoteService : INoteService
     
     private IQueryable<Note> Query => Session.Query<Note>();
     
+    private IQueryable<File> FileQuery => Session.Query<File>();
+    
     private static readonly List<SortPropertyOption> AllSortOptions;
+
+    private static readonly KeyValuePair<string, string>[] AdditionalColumnsForFileSearch = new Dictionary<string, string>()
+    {
+        {"relative_path", nameof(FileSearchResult.RelativePath)}
+        , {"title", nameof(FileSearchResult.Title)}
+        , {"description", nameof(FileSearchResult.Description)}
+    }.ToArray();
+
+    private static readonly KeyValuePair<string, string>[] AdditionalColumnsForNoteSearch = new Dictionary<string, string>()
+    {
+        {"text", nameof(NoteSearchResult.Text)}
+    }.ToArray();
 
     static NoteService()
     {
@@ -97,7 +112,7 @@ public class NoteService : INoteService
             {
                 SortProperty.CreationTime => NoteMap.ColumnNameCreationTime
                 , SortProperty.LastUpdateTime => NoteMap.ColumnNameLastUpdateTime
-                , SortProperty.SearchRank => nameof(NoteSearchResult.Rank)
+                , SortProperty.SearchRank => nameof(SearchResultBase.Rank)
                 , _ => throw new PostconditionException($"Unexpected sort property '{sortProperty}'.")
             };
             if (!columnName.IsNullOrEmpty())
@@ -144,6 +159,127 @@ public class NoteService : INoteService
         return result;
     }
     
+    public async Task<FileSearchViewModel> SearchAsync(FileSearchViewModel model, bool withDelete)
+    {
+        if (withDelete && model.FileId > 0)
+            await FileQuery.Where(x => x.Id == model.FileId).DeleteAsync().ConfigureAwait(false);
+
+        var genericResult = await SearchAsync<FileSearchResult>(model, "file", "search_files", AdditionalColumnsForFileSearch);
+        
+        var result = new FileSearchViewModel(genericResult.Model)
+        {
+            SearchResultPage = genericResult.Results.Select(CreateModel).ToList()
+        };
+        
+        return result;
+    }
+
+    private async Task<(SearchModelBase Model, List<TBean> Results)> SearchAsync<TBean>(SearchModelBase model, string tableName, string searchFunctionName, params KeyValuePair<string, string>[] additionalColumns)
+    {
+        IQuery query = null;
+        
+        var sortProperty = model.SortProperty ?? SortProperty.LastUpdateTime;
+        
+        var sortAscending = model.SortAscending;
+        
+        var whereClauseBuilder = new SqlWhereClauseBuilder()
+            .AddOptionalRangeParameters(NoteMap.ColumnNameLastUpdateTime, model.LastUpdatePeriodStart, model.LastUpdatePeriodEnd)
+            .AddOptionalRangeParameters(NoteMap.ColumnNameCreationTime, model.CreationPeriodStart, model.CreationPeriodEnd);
+        
+        var queryText = new StringBuilder();
+        
+        var useSqlFunction = !model.Query.IsNullOrWhiteSpace();
+        
+        void AddColumns()
+        {
+            foreach(var c in additionalColumns)
+                queryText.Append(", ").Append(c.Key).Append(" as \"").Append(c.Value).Append('\"');
+        }
+        
+        if (useSqlFunction)
+        {
+            queryText.Append("select id as \"Id\", last_update_time as \"LastUpdateTime\", create_time as \"CreateTime\", headline as \"Headline\", rank as \"Rank\"");
+            AddColumns();
+            queryText.AppendLine().AppendLine(" from public.").Append(searchFunctionName).AppendLine("(:query, :fuzzy)");
+        }
+        else
+        {
+            queryText.Append("select id as \"Id\", last_update_time as \"LastUpdateTime\", create_time as \"CreateTime\", cast(null as text) as \"Headline\", cast(null as real) as \"Rank\"");
+            AddColumns();
+            queryText.AppendLine().Append(" from public.").AppendLine(tableName);
+            
+            if (sortProperty == SortProperty.SearchRank)
+                sortProperty = SortProperty.LastUpdateTime;
+        }
+
+        if (!whereClauseBuilder.IsEmpty)
+            queryText.Append("where     ").AppendLine(whereClauseBuilder.GetCombinedClause());
+        
+        var maxRowsToCount = (model.PageNumber + 10) * PageSize;
+        
+        var totalCountQuery = Session.CreateSQLQuery($"select count(*) from ({queryText} limit :maxRowsToCount) s")
+            .SetInt32("maxRowsToCount", maxRowsToCount);
+        if (useSqlFunction)
+            totalCountQuery
+                .SetString("query", model.Query)
+                .SetBoolean("fuzzy", model.Fuzzy);
+        whereClauseBuilder.SetParameterValues(totalCountQuery);
+
+
+        // the function sorts by rank, reorder only if different
+        if (!useSqlFunction || !(sortProperty == SortProperty.SearchRank && !sortAscending))
+        {
+            var columnName = sortProperty switch
+            {
+                SortProperty.CreationTime => NoteMap.ColumnNameCreationTime
+                , SortProperty.LastUpdateTime => NoteMap.ColumnNameLastUpdateTime
+                , SortProperty.SearchRank => nameof(SearchResultBase.Rank)
+                , _ => throw new PostconditionException($"Unexpected sort property '{sortProperty}'.")
+            };
+            if (!columnName.IsNullOrEmpty())
+            {
+                var ascendance = sortAscending ? "asc" : "desc";
+                queryText.Append("order by ").Append(columnName).Append(' ').Append(ascendance).Append(", id ").AppendLine(ascendance);
+            }
+        }
+        
+        var countFuture = totalCountQuery.FutureValue<long>();
+        
+        query = Session.CreateSQLQuery(queryText.ToString())
+            .ApplyPage(PageSize, model.PageNumber - 1);
+        
+        whereClauseBuilder.SetParameterValues(query);
+        
+        if (useSqlFunction)
+            query
+                .SetString("query", model.Query)
+                .SetBoolean("fuzzy", model.Fuzzy);
+        
+        query.SetResultTransformer(Transformers.AliasToBean(typeof(TBean)));
+        
+        var results = (await query.Future<TBean>().GetEnumerableAsync().ConfigureAwait(false))
+            .ToList();
+
+        var totalCount = countFuture.Value;
+        
+        if (results.Count > PageSize)
+            results.RemoveAt(results.Count - 1);
+
+        var pageCount = (int)Math.Ceiling((double)totalCount / PageSize);
+        var processedSearchModel = new SearchModelBase(model)
+        {
+            TotalCountedPageCount = pageCount,
+            HasMore = pageCount > (model.PageNumber + 1),
+            SortProperty = sortProperty,
+            SortAscending = sortAscending,
+            SortOptions = AllSortOptions.Select(x => new SelectListItem(x.SelectListItem.Text, x.SelectListItem.Value, x.SortProperty == sortProperty))
+                .ToList(),
+            PageNumber = model.PageNumber
+        };
+        
+        return (model, results);
+    }
+    
     public async Task<HomeViewModel> GetLatestAsync()
     {
         var notes = await Query
@@ -171,7 +307,7 @@ public class NoteService : INoteService
     /// <inheritdoc />
     public async Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model)
     {
-        var note = await Session.GetAsync<Note>(model.NoteId).ConfigureAwait(false);
+        var note = await Session.GetAsync<Note>(model.Id).ConfigureAwait(false);
         
         var newText = model.NoteText?.Trim();
         
@@ -198,11 +334,10 @@ public class NoteService : INoteService
         return CreateModel(note);
     }
 
-
     /// <inheritdoc />
     public async Task<Note> DeleteAsync(NoteViewModel model, bool skipConcurrencyCheck)
     {
-        var note = await Session.GetAsync<Note>(model.NoteId).ConfigureAwait(false);
+        var note = await Session.GetAsync<Note>(model.Id).ConfigureAwait(false);
         
         if (note != null)
         {
@@ -235,9 +370,137 @@ public class NoteService : INoteService
         return result;
     }
     
+    public async Task<File> SaveFile(string fileName, byte[] content)
+    {
+        if (fileName == null) throw new ArgumentNullException(nameof(fileName));
+        if (content == null) throw new ArgumentNullException(nameof(content));
+        if (content.Length == 0) throw new ArgumentException("File is empty", nameof(content));
+
+        var existingFiles = await GetExistingFiles(content).ConfigureAwait(false);
+        if (existingFiles.Files.Count > 0)
+        {
+            Log.WarnFormat("File '{0}' already exists as {1} (#{2})", fileName, existingFiles.Files[0].RelativePath, existingFiles.Files[0].Id);
+            return existingFiles.Files[0];
+        }
+        
+        var hash = existingFiles.Hash;
+
+        var now = DateTime.UtcNow;
+        
+        var relativeDir = GetFileStorageDirectoryRelativePath(now);
+        var relativePath = Path.Combine(relativeDir, fileName);
+        relativePath = MakeUniqueRelativeFileStoragePath(relativePath);
+        
+        var fullPath = Path.Combine(AppOptions.FileStoragePath, relativePath);
+        
+        Log.InfoFormat("Saving file '{0}'", fullPath);
+        
+        await System.IO.File.WriteAllBytesAsync(fullPath, content)
+            .ConfigureAwait(false);
+
+        using var memoryStream = new MemoryStream(content, false);
+        
+        var file = new File
+        {
+            RelativePath = relativePath,
+            Title = fileName,
+            ContentHash = hash,
+            ExtractedText = TextExtractor.Extract(fileName, memoryStream)
+        };
+       
+        await Session.SaveAsync(file).ConfigureAwait(false);
+        await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
+        
+        return file;
+    }
+
+    /// <inheritdoc />
+    public async Task<FileViewModel> UpdateAsync(FileViewModel model)
+    {
+        var entity = await Session.GetAsync<File>(model.Id).ConfigureAwait(false);
+
+        if (entity == null) throw new ArgumentException($"File #{model.Id} does not exist.");
+
+        if (entity.IntegrityVersion != model.Version)
+            throw new OptimisticConcurrencyException($"Version mismatch: updating {model.Version ?? 0} while server has {entity.IntegrityVersion}.");
+        
+        var newDescription = model.Description?.Trim();
+        var newTitle = model.Title?.Trim();
+
+        if (newDescription != entity.Description || newTitle != entity.Title)
+        {
+            entity.Title = newTitle;
+            entity.Description = newDescription;
+            entity.LastUpdateTime = DateTime.UtcNow;
+
+            await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
+        }
+
+        return CreateModel(entity);
+
+    }
+    
+    private async Task<(List<File> Files, byte[] Hash)> GetExistingFiles(byte[] content)
+    {
+        var hash = await CalculateHash(content)
+            .ConfigureAwait(false);
+        
+        var filesWithSameHash = await Session.Query<File>()
+            .Where(x => x.ContentHash == hash)
+            .ToListAsync()
+            .ConfigureAwait(false);
+        
+        var result = new List<File>();
+        foreach (var file in filesWithSameHash)
+        {
+            var fullPath = Path.Combine(AppOptions.FileStoragePath, file.RelativePath);
+            
+            if (!System.IO.File.Exists(fullPath))
+            {
+                Log.ErrorFormat("File #{0} ({1}) does not exist", file.Id, fullPath);
+            }
+            else
+            {
+                var currentFileContent = await System.IO.File.ReadAllBytesAsync(fullPath).ConfigureAwait(false);
+                if (content.Length == currentFileContent.Length && content.SequenceEqual(currentFileContent))
+                    result.Add(file);
+            }
+        }
+        
+        return (result, hash);
+    }
+    
+    private string MakeUniqueRelativeFileStoragePath(string path)
+    {
+        if (!System.IO.File.Exists(Path.Combine(AppOptions.FileStoragePath, path)))
+            return path;
+        
+        var dir = Path.GetDirectoryName(path);
+        var name = Path.GetFileNameWithoutExtension(path);
+        var extension = Path.GetExtension(path);
+        
+        var i = 1;
+
+        do
+        {
+            path = Path.Combine(dir, $"{name}-{i}{extension}");
+        }
+        while (System.IO.File.Exists(Path.Combine(AppOptions.FileStoragePath, path)));
+        
+        return path;
+    }
+    
+    private async Task<byte[]> CalculateHash(byte[] content)
+    {
+        using var hasher = new SHA256Managed();
+        return await hasher.ComputeHashAsync(new MemoryStream(content, false)).ConfigureAwait(false);
+    }
+    
+    private string GetFileStorageDirectoryRelativePath(DateTime time) => $"{time:yyyy/MM-MMM}";
+    
     private NoteViewModel CreateModel(Note note) => new ()
         {
-            NoteId = note.Id,
+            Id = note.Id,
             NoteText = note.Text,
             Caption = note.Name,
             Version = note.IntegrityVersion,
@@ -247,12 +510,36 @@ public class NoteService : INoteService
 
     private NoteViewModel CreateModel(NoteSearchResult note) => new ()
     {
-        NoteId = note.Id,
+        Id = note.Id,
         NoteText = note.Text,
         Caption = Note.ExtractName(note.Text),
         SearchHeadline = note.Headline,
         Rank = note.Rank,
         CreateTime = note.CreateTime.ToLocalTime(),
         LastUpdateTime = note.LastUpdateTime.ToLocalTime(),
+    };
+
+    private FileViewModel CreateModel(FileSearchResult x) => new ()
+    {
+        Id = x.Id,
+        Title = x.Title,
+        Description = x.Description,
+        RelativePath = x.RelativePath,
+        FullPath = Path.Combine(AppOptions.FileStoragePath, x.RelativePath),
+        SearchHeadline = x.Headline,
+        Rank = x.Rank,
+        CreateTime = x.CreateTime.ToLocalTime(),
+        LastUpdateTime = x.LastUpdateTime.ToLocalTime(),
+    };
+
+    private FileViewModel CreateModel(File x) => new ()
+    {
+        Id = x.Id,
+        Title = x.Title,
+        Description = x.Description,
+        RelativePath = x.RelativePath,
+        FullPath = Path.Combine(AppOptions.FileStoragePath, x.RelativePath),
+        CreateTime = x.CreateTime.ToLocalTime(),
+        LastUpdateTime = x.LastUpdateTime.ToLocalTime(),
     };
 }

@@ -1,45 +1,3 @@
-CREATE TEXT SEARCH DICTIONARY public.russian_hunspell (
-    TEMPLATE = ispell,
-    DictFile = ru_ru,
-    AffFile = ru_ru,
-    Stopwords = russian);
-    
-CREATE TEXT SEARCH DICTIONARY public.english_gb_hunspell (
-    TEMPLATE = ispell,
-    DictFile = en_gb,
-    AffFile = en_gb,
-    Stopwords = english);
-
-CREATE TEXT SEARCH DICTIONARY public.english_us_hunspell (
-    TEMPLATE = ispell,
-    DictFile = en_us,
-    AffFile = en_us,
-    Stopwords = english);
----------------------------------------------------------------
--- DROP TEXT SEARCH CONFIGURATION public.mysearch
-
-CREATE TEXT SEARCH CONFIGURATION public.mysearch (
-	PARSER = default
-);
-ALTER TEXT SEARCH CONFIGURATION public.mysearch alter MAPPING FOR asciihword WITH public.english_gb_hunspell, public.english_us_hunspell, english_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch alter MAPPING FOR asciiword WITH public.english_gb_hunspell, public.english_us_hunspell, english_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR email WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR file WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR float WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR host WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR hword WITH public.russian_hunspell, russian_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch alter MAPPING FOR hword_asciipart WITH public.english_gb_hunspell, public.english_us_hunspell, english_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR hword_numpart WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR hword_part WITH public.russian_hunspell, russian_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR int WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR numhword WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR numword WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR sfloat WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR uint WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR url WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR url_path WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR version WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR word WITH public.russian_hunspell, russian_stem;
 -------------------------------------------------------------
 
 --drop table if exists public.note;
@@ -72,7 +30,6 @@ generated always	as (to_tsvector('public.mysearch', text)) stored;
 
 --alter table note drop column search_vector;
 
-
 alter table public.note
 add constraint  pk_note
 primary key     (id);
@@ -80,7 +37,7 @@ primary key     (id);
 --create index "Note_SearchVector_idx" on public."Note" using gin (to_tsvector('public.mysearch', "Text"));
 
 --drop index note_search_vector_idx;
-create index note_search_vector_idx on public.note using gin (search_vector);
+create index if not exists note_search_vector_idx on public.note using gin (search_vector);
 
 grant insert, select, update, delete on table public.note to pimweb;
 grant all on sequence public.note_id_seq to pimweb;
@@ -96,13 +53,9 @@ drop table if exists public."__EFMigrationsHistory" cascade;
 
 create sequence if not exists public.file_id_seq;
 
-
-
 ALTER SEQUENCE public.note_id_seq
     OWNER TO postgres;
-
 GRANT ALL ON SEQUENCE public.note_id_seq TO pimweb;
-
 GRANT ALL ON SEQUENCE public.note_id_seq TO postgres;
 
 create table if not exists public.file (
@@ -170,8 +123,14 @@ if not exists (
                 and c2.ordinal_position = 2
                 and c2.column_name = 'file_id'
 ) then
+    alter table public.note_file
+    add constraint  pk_note_file
+    primary key     (note_id, file_id);
+end if;
 
-alter table public.note_file
-add constraint
+create index if not exists  idx_note_file__file_id
+on                          public.note_file (file_id);
+
+
 
 end $$;

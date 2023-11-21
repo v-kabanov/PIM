@@ -4,7 +4,22 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace PimWeb.AppCode;
 
-public class Note : IEquatable<Note>
+public class EntityBase
+{
+    public virtual int Id { get; set; }
+
+    /// <summary>
+    ///     0 for unsaved, incremented every time it's updated in the storage
+    /// </summary>
+    public virtual int IntegrityVersion { get; set; } = 1;
+
+    /// <summary>
+    ///     Id is assigned after note is saved
+    /// </summary>
+    public virtual bool IsTransient => IntegrityVersion == 0;
+}
+
+public class Note : EntityBase, IEquatable<Note>
 {
     [NotMapped]
     private string _text;
@@ -17,8 +32,6 @@ public class Note : IEquatable<Note>
         CreateTime = LastUpdateTime = DateTime.UtcNow;
     }
 
-    public virtual int Id { get; set; }
-
     /// <summary>
     ///     UTC
     /// </summary>
@@ -29,11 +42,6 @@ public class Note : IEquatable<Note>
     /// </summary>
     public virtual DateTime LastUpdateTime { get; set; }
 
-    /// <summary>
-    ///     0 for unsaved, incremented every time it's updated in the storage
-    /// </summary>
-    public virtual int IntegrityVersion { get; set; } = 1;
-    
     //[Timestamp]
     //public byte[] Version { get; set; }
 
@@ -53,12 +61,9 @@ public class Note : IEquatable<Note>
         }
     }
     
+    public virtual ISet<File> Files { get; set; } = new HashSet<File>();
+    
     //public virtual NpgsqlTsVector SearchVector { get; set; }
-
-    /// <summary>
-    ///     Id is assigned after note is saved
-    /// </summary>
-    public virtual bool IsTransient => IntegrityVersion == 0;
 
     public static Note Create(string text)
     {

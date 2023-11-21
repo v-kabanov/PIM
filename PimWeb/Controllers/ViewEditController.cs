@@ -64,7 +64,7 @@ public class ViewEditController : Controller
         
         if (node == null)
         {
-            ModelState.AddModelError("", $"Note #{model.NoteId} does not exist.");
+            ModelState.AddModelError("", $"Note #{model.Id} does not exist.");
 
             return View("Error");
         }

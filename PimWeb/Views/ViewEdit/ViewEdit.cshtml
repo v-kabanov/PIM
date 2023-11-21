@@ -16,7 +16,7 @@
     @if (Model.Version.HasValue)
     {
         @: |
-        <a href="@Url.Action("Index", new {id = Model.NoteId, edit = !edit})">@altModeLinkText</a>
+        <a href="@Url.Action("Index", new {id = Model.Id, edit = !edit})">@altModeLinkText</a>
     }
 </div>
 

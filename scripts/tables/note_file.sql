@@ -3,6 +3,9 @@ create table if not exists public.note_file (
     file_id     int not null
 );
 
+do
+$$ begin
+
 if not exists (
         select  *
         from    information_schema.key_column_usage c1
@@ -23,3 +26,5 @@ end if;
 
 create index if not exists  idx_note_file__file_id
 on                          public.note_file (file_id);
+
+end $$;
