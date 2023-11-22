@@ -12,6 +12,10 @@ namespace Pim.CommonLib;
 
 public static class TextExtractor
 {
+    private const string PdfFileNameExtension = ".pdf";
+    private const string DocxFileNameExtension = ".docx";
+    private static readonly string[] TextFileExtensions = {".txt", ".log", ".md"};
+    
     public static string Extract(string filePath)
     {
         var textCollector = new StringBuilder(64 * 1024);
@@ -39,13 +43,20 @@ public static class TextExtractor
         
         var extension = Path.GetExtension(filePath);
         
-        if (".pdf".EqualsIgnoreCase(extension))
+        if (PdfFileNameExtension.EqualsIgnoreCase(extension))
         {
             using var doc = PdfReader.Open(filePath, PdfDocumentOpenMode.ReadOnly);
             result = ExtractText(doc, textCollector);
         }
-        else if (".docx".EqualsIgnoreCase(extension))
+        else if (DocxFileNameExtension.EqualsIgnoreCase(extension))
             result = ExtractFromDocx(filePath, textCollector);
+        else if (extension.InIgnoreCase(TextFileExtensions))
+        {
+            var text = File.ReadAllText(filePath).Trim();
+            result = !text.IsNullOrEmpty();
+            if (result)
+                textCollector.AppendLine(text);
+        }
         
         return result;
     }
@@ -59,13 +70,20 @@ public static class TextExtractor
         
         var extension = Path.GetExtension(fileName);
         
-        if (".pdf".EqualsIgnoreCase(extension))
+        if (PdfFileNameExtension.EqualsIgnoreCase(extension))
         {
             using var doc = PdfReader.Open(content, PdfDocumentOpenMode.ReadOnly);
             result = ExtractText(doc, textCollector);
         }
-        else if (".docx".EqualsIgnoreCase(extension))
+        else if (DocxFileNameExtension.EqualsIgnoreCase(extension))
             result = ExtractFromDocx(content, textCollector);
+        else if (extension.InIgnoreCase(TextFileExtensions))
+        {
+            var text = new StreamReader(content).ReadToEnd().Trim();
+            result = !text.IsNullOrEmpty();
+            if (result)
+                textCollector.AppendLine(text);
+        }
         
         return result;
     }

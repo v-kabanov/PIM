@@ -18,6 +18,11 @@ public static class ObjectExtensions
         return values.Contains(value);
     }
 
+    public static bool InIgnoreCase(this string value, params string[] values)
+    {
+        return values.Contains(value, StringComparer.OrdinalIgnoreCase);
+    }
+
     public static bool In<T>(this T value, IEnumerable<T> values)
     {
         return values.Contains(value);

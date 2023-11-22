@@ -30,7 +30,7 @@ public class ViewEditController : Controller
     [Route("~/ViewEdit/{id}")]
     public async Task<ActionResult> Index(int id, bool edit = false)
     {
-        var model = await NoteService.GetAsync(id).ConfigureAwait(false);
+        var model = await NoteService.GetNoteAsync(id).ConfigureAwait(false);
         ViewBag.Edit = edit;
 
         return View("ViewEdit", model);

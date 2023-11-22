@@ -26,7 +26,7 @@ public class HomeController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public async Task<ActionResult> Index()
     {
-        var model = await NoteService.GetLatestAsync();
+        var model = await NoteService.GetLatestNotesAsync();
 
         return View(model);
     }
@@ -44,7 +44,7 @@ public class HomeController : Controller
                 : $"Note {noteId} successfully deleted";
         }
 
-        var model = await NoteService.GetLatestAsync();
+        var model = await NoteService.GetLatestNotesAsync();
 
         return PartialView("IndexPartial", model);
     }
@@ -53,7 +53,7 @@ public class HomeController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public async Task<PartialViewResult> Create(HomeViewModel model)
     {
-        var result = await NoteService.CreateAsync(model);
+        var result = await NoteService.CreateNoteAsync(model);
 
         return PartialView("IndexPartial", result);
     }

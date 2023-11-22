@@ -16,5 +16,7 @@ public class FileViewModel : SearchableEntityViewModelBase
     
     public string ExtractedText { get; set; }
     
-    public byte[] ContentHash { get; set; }
+    //public byte[] ContentHash { get; set; }
+    
+    public bool ExistsOnDisk { get; set; }
 }

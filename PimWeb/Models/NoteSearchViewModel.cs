@@ -6,9 +6,9 @@
 
 namespace PimWeb.Models;
 
-public class SearchViewModel : SearchModelBase
+public class NoteSearchViewModel : SearchModelBase
 {
-    public SearchViewModel()
+    public NoteSearchViewModel()
     {
     }
 
@@ -18,7 +18,7 @@ public class SearchViewModel : SearchModelBase
     /// <param name="other">
     ///     Mandatory
     /// </param>
-    public SearchViewModel(SearchModelBase other)
+    public NoteSearchViewModel(SearchModelBase other)
         :base(other)
     {
     }

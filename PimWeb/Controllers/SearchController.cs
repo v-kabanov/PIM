@@ -26,16 +26,12 @@ public class SearchController : Controller
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]
     [Route("~/Search")]
-    public async Task<ActionResult> Search(SearchViewModel model)
+    public async Task<ActionResult> Search(NoteSearchViewModel model)
     {
         var result = model;
-        
-        if (model.Query.IsNullOrWhiteSpace() && model.SortProperty == SortProperty.SearchRank)
-            ModelState.AddModelError(nameof(model.SortProperty), "Search Rank is not available without query, sorting by Last Update Time.");
 
-        if (model.LastUpdatePeriodStart >= model.LastUpdatePeriodEnd)
-            ModelState.AddModelError(nameof(model.LastUpdatePeriodEnd), "Period end date must be greater than start.");
-        //else if (ModelState.IsValid)
+        Validate(model);
+
         result = await NoteService.SearchAsync(model, false);
 
         return View("Search", result);
@@ -43,7 +39,7 @@ public class SearchController : Controller
 
     [HttpPost]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<PartialViewResult> Delete(SearchViewModel model)
+    public async Task<PartialViewResult> Delete(NoteSearchViewModel model)
     {
         var result = model;
         
@@ -51,5 +47,43 @@ public class SearchController : Controller
             result = await NoteService.SearchAsync(model, true);
 
         return PartialView("SearchPartial", result);
+    }
+    
+    [HttpGet]
+    [Authorize(Roles = "Admin,Reader,Writer")]
+    [Route("~/files/{id}")]
+    public async Task<ActionResult> GetFile(int id)
+    {
+        var model = await NoteService.GetFileAsync(id);
+        if (!model.ExistsOnDisk)
+        {
+            ModelState.AddModelError("", "File does not exist");
+            return View("Error");
+        }
+        
+        return File(new FileStream(model.FullPath, FileMode.Open), model.MimeType);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin,Reader,Writer")]
+    [Route("~/files")]
+    public async Task<ActionResult> SearchFiles(FileSearchViewModel model)
+    {
+        var result = model;
+
+        Validate(model);
+        
+        result = await NoteService.SearchAsync(model, false);
+
+        return View("Search", result);
+    }
+    
+    private void Validate(SearchModelBase model)
+    {
+        if (model.Query.IsNullOrWhiteSpace() && model.SortProperty == SortProperty.SearchRank)
+            ModelState.AddModelError(nameof(model.SortProperty), "Search Rank is not available without query, sorting by Last Update Time.");
+
+        if (model.LastUpdatePeriodStart >= model.LastUpdatePeriodEnd)
+            ModelState.AddModelError(nameof(model.LastUpdatePeriodEnd), "Period end date must be greater than start.");
     }
 }

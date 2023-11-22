@@ -1,6 +1,6 @@
---drop function search
+drop function if exists public.search;
 
-create or replace function public.search(searchQuery varchar(200), fuzzy boolean)
+create or replace function public.search_notes(searchQuery varchar(200), fuzzy boolean)
 returns table (id integer, text varchar, last_update_time timestamp with time zone, create_time timestamp with time zone, headline text, rank real) as $$
 begin
     if (fuzzy) then

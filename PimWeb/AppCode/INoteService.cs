@@ -14,19 +14,26 @@ public enum SearchableDocumentTime
 
 public interface INoteService
 {
-    Task<SearchViewModel> SearchAsync(SearchViewModel model, bool withDelete);
+    Task<NoteSearchViewModel> SearchAsync(NoteSearchViewModel model, bool withDelete);
     
     Task<FileSearchViewModel> SearchAsync(FileSearchViewModel model, bool withDelete);
     
-    Task<NoteViewModel> GetAsync(int id);
+    Task<NoteViewModel> GetNoteAsync(int id);
+    
+    Task<FileViewModel> GetFileAsync(int id);
     
     Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model);
     
     Task<Note> DeleteAsync(NoteViewModel model, bool skipConcurrencyCheck);
     
-    Task<HomeViewModel> GetLatestAsync();
+    /// <summary>
+    ///     Delete from disk and database, remove all links from Notes if any.
+    /// </summary>
+    Task<FileViewModel> DeleteAsync(FileViewModel model);
     
-    Task<HomeViewModel> CreateAsync(HomeViewModel model);
+    Task<HomeViewModel> GetLatestNotesAsync();
+    
+    Task<HomeViewModel> CreateNoteAsync(HomeViewModel model);
     
     /// <summary>
     ///     Save new uploaded file in the repository or return reference to first existing one if duplicate by content.
