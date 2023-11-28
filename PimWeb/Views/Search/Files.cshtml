@@ -1,4 +1,4 @@
-﻿@model PimWeb.Models.NoteSearchViewModel
+﻿@model PimWeb.Models.FileSearchViewModel
 @{
     ViewBag.Title = "Files";
 }
@@ -13,7 +13,7 @@
         deleteNoteUrl: '@Url.Action("Delete")',
         deleteNoteSelector: '[delete-file-by-id]',
         divInProgressSelector: '#progressIndicator',
-        attributeNameNoteId: "noteId",
+        attributeNameNoteId: "fileId",
         //divNoteListSelector: "#divNoteList",
     };
 

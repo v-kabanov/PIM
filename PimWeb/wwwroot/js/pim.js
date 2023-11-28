@@ -3,7 +3,106 @@
         config: {
             serverUrl: "",
         },
-        features: {},
+        features: {
+            setUpStandardFileUpload: function(divSelector) {
+                const $div = $(divSelector);
+                //const $fuInput = $div.find("input[type=file]");
+                const $keyInput = $div.find("input[type=hidden][file-key]");
+                const $errDiv = $div.find('div[upload-error]');
+                $div.fileupload({
+                    url: $div.attr("upload-url"),
+                    dataType: 'html',
+                    dropZone: $div,
+                    pasteZone: $div,
+                    paramName: "file",
+                    // suppress additional form data
+                    formData: { },
+                    send: function(e, data) {
+                        pim.features.modalProgress.show("Uploading...");
+                    },
+                    fail: function (e, data) {
+                        if ($errDiv.length)
+                            $errDiv.text(data.textStatus + " " + data.errorThrown + " " + data.jqXHR);
+                        else
+                            alert(data);
+                    },
+                    always: function (e, data) {
+                        pim.features.modalProgress.hide();
+                    },
+                    done: function(e, response) {
+                        
+                    },
+                    progress: function (e, data) {
+                        const progress = parseInt(data.loaded / data.total * 100, 10);
+                        pim.features.modalProgress.progress(progress);
+                    }
+                });
+            },
+            modalProgress: (function(conf, $) {
+                const modalDiv = $('<div class="modal fade center-screen" id="waitWithProgressDialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                    + '<div class="modal-dialog">'
+                    + '<div class="modal-content">'
+                    + '<div class="modal-header">'
+                    + '<h1 id="progressHeader">Working...</h1>'
+                    + '</div>'
+                    + '<div class="modal-body">'
+                    + '<div class="progress">'
+                    + '<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 0%">'
+                    + '<span class="sr-only">40% Complete (success)</span>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>');
+
+                const progressBar = modalDiv.find("div.progress div.progress-bar");
+                const headerElem = modalDiv.find("#progressHeader");
+                let asyncInProgress;
+                // if 'show' is pending, only single 'hide' could be queued
+                const queuedCalls = [];
+
+                const finishEventHandler = function (e) {
+                    asyncInProgress = null;
+                    if (queuedCalls.length) {
+                        queuedCalls.shift()();
+                    }
+                };
+
+                modalDiv.on("shown.bs.modal", finishEventHandler);
+                modalDiv.on("hidden.bs.modal", finishEventHandler);
+
+                const showImpl = function (headerText) {
+                    headerElem.text(headerText || "Working...");
+                    asyncInProgress = "show";
+                    modalDiv.modal("show");
+                };
+                const hideImpl = function () {
+                    asyncInProgress = "hide";
+                    modalDiv.modal("hide");
+                };
+
+                return {
+                    show: function(headerText) {
+                        if (asyncInProgress)
+                            queuedCalls.push(function () { showImpl(headerText); });
+                        else
+                            showImpl(headerText);
+                    },
+                    hide: function() {
+                        if (asyncInProgress)
+                            queuedCalls.push(hideImpl);
+                        else
+                            hideImpl();
+                    },
+                    // progress is 1..100 
+                    progress: function(progress) {
+                        progressBar.css("width", progress + "%");
+                        progressBar.attr("aria-valuenow", progress);
+                    }
+                };
+            })(this.config, $),
+        },
         pages: {},
         init: function (config) {
             $.extend(this.config, config);

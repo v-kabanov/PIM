@@ -51,8 +51,8 @@ public class SearchController : Controller
     
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]
-    [Route("~/files/{id}")]
-    public async Task<ActionResult> GetFile(int id)
+    [Route("~/files/{id}/download")]
+    public async Task<ActionResult> DownloadFile(int id)
     {
         var model = await NoteService.GetFileAsync(id);
         if (!model.ExistsOnDisk)
@@ -61,13 +61,15 @@ public class SearchController : Controller
             return View("Error");
         }
         
-        return File(new FileStream(model.FullPath, FileMode.Open), model.MimeType);
+        var suggestedFileName = Path.ChangeExtension(model.Title, Path.GetExtension(model.RelativePath));
+        
+        return File(new FileStream(model.FullPath, FileMode.Open), model.MimeType, suggestedFileName);
     }
 
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]
     [Route("~/files")]
-    public async Task<ActionResult> SearchFiles(FileSearchViewModel model)
+    public async Task<ActionResult> Files(FileSearchViewModel model)
     {
         var result = model;
 
@@ -75,7 +77,7 @@ public class SearchController : Controller
         
         result = await NoteService.SearchAsync(model, false);
 
-        return View("Search", result);
+        return View(result);
     }
     
     private void Validate(SearchModelBase model)

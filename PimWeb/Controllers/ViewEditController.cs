@@ -5,7 +5,6 @@
 // **********************************************************************************************/
 // 
 
-using System.Threading.Tasks;
 using PimWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -60,9 +59,9 @@ public class ViewEditController : Controller
     [Authorize(Roles = "Admin,Writer")]
     public async Task<ActionResult> Delete(NoteViewModel model)
     {
-        var node = await NoteService.DeleteAsync(model, false);
+        var note = await NoteService.DeleteAsync(model, false);
         
-        if (node == null)
+        if (note == null)
         {
             ModelState.AddModelError("", $"Note #{model.Id} does not exist.");
 
@@ -70,5 +69,24 @@ public class ViewEditController : Controller
         }
 
         return RedirectToAction("Index", "Home");
+    }
+    
+    [HttpGet("~/file/{id}")]
+    [Authorize(Roles = "Admin,Reader,Writer")]
+    public async Task<ActionResult> File(int id, bool edit = false)
+    {
+        var model = await NoteService.GetFileAsync(id).ConfigureAwait(false);
+        ViewBag.Edit = edit;
+
+        return View(model);
+    }
+    
+    [HttpPost("~/ViewEdit/{noteId}/upload-file")]
+    public async Task<ActionResult> UploadFileForNote(int noteId, IFormFile file)
+    {
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var result = await NoteService.SaveFileAsync(file.FileName, ms.ToArray());
+        return new ObjectResult(new {status = "success"});
     }
 }

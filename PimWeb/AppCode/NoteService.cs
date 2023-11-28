@@ -210,7 +210,7 @@ public class NoteService : INoteService
             .ToListAsync()
             .ConfigureAwait(false);
         
-        return new HomeViewModel { LastUpdatedNotes = notes.Select(CreateModel).ToList() };
+        return new HomeViewModel { LastUpdatedNotes = notes.Select(x => CreateModel(x, false)).ToList() };
     }
 
     /// <inheritdoc />
@@ -229,6 +229,12 @@ public class NoteService : INoteService
         var file = await Session.GetAsync<File>(id).ConfigureAwait(false);
         
         var result = file != null ? CreateModel(file) : new FileViewModel();
+        
+        if (result.ExistsOnDisk)
+        {
+            var currentContentHash = await CalculateHashAsync(System.IO.File.ReadAllBytes(result.FullPath)).ConfigureAwait(false);
+            result.ContentHashMismatch = currentContentHash.Length != file.ContentHash?.Length || currentContentHash.SequenceEqual(file.ContentHash);
+        }
         
         return result;
     }
@@ -326,7 +332,7 @@ public class NoteService : INoteService
         return result;
     }
     
-    public async Task<File> SaveFile(string fileName, byte[] content)
+    public async Task<File> SaveFileAsync(string fileName, byte[] content)
     {
         if (fileName == null) throw new ArgumentNullException(nameof(fileName));
         if (content == null) throw new ArgumentNullException(nameof(content));
@@ -398,7 +404,7 @@ public class NoteService : INoteService
     
     private async Task<(List<File> Files, byte[] Hash)> GetExistingFiles(byte[] content)
     {
-        var hash = await CalculateHash(content)
+        var hash = await CalculateHashAsync(content)
             .ConfigureAwait(false);
         
         var filesWithSameHash = await Session.Query<File>()
@@ -448,7 +454,7 @@ public class NoteService : INoteService
         return path;
     }
     
-    private async Task<byte[]> CalculateHash(byte[] content)
+    private async Task<byte[]> CalculateHashAsync(byte[] content)
     {
         using var hasher = new SHA256Managed();
         return await hasher.ComputeHashAsync(new MemoryStream(content, false)).ConfigureAwait(false);
@@ -456,7 +462,7 @@ public class NoteService : INoteService
     
     private string GetFileStorageDirectoryRelativePath(DateTime time) => $"{time:yyyy/MM-MMM}";
 
-    private NoteViewModel CreateModel(Note note) => new ()
+    private NoteViewModel CreateModel(Note note, bool populateFiles = true) => new ()
         {
             Id = note.Id,
             NoteText = note.Text,
@@ -464,6 +470,7 @@ public class NoteService : INoteService
             Version = note.IntegrityVersion,
             CreateTime = note.CreateTime.ToLocalTime(),
             LastUpdateTime = note.LastUpdateTime.ToLocalTime(),
+            Files = populateFiles ? note.Files.Select(x => CreateModel(x, false)).ToList(): new List<FileViewModel>()
         };
 
     private NoteViewModel CreateModel(NoteSearchResult note) => new ()
@@ -496,7 +503,7 @@ public class NoteService : INoteService
         return result;
     }
 
-    private FileViewModel CreateModel(File x)
+    private FileViewModel CreateModel(File x, bool populateNotes = true)
     {
         var result = new FileViewModel
         {
@@ -511,6 +518,7 @@ public class NoteService : INoteService
             //, ContentHash = x.ContentHash
             , Version = x.IntegrityVersion
             , MimeType = GetMimeTypeFromFileName(x.RelativePath)
+            , Notes = populateNotes ? x.Notes.Select(x => CreateModel(x, false)).ToList(): new List<NoteViewModel>()
         };
         result.ExistsOnDisk = System.IO.File.Exists(result.FullPath);
         return result;

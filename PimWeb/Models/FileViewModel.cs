@@ -16,7 +16,9 @@ public class FileViewModel : SearchableEntityViewModelBase
     
     public string ExtractedText { get; set; }
     
-    //public byte[] ContentHash { get; set; }
+    public bool ContentHashMismatch { get; set; }
     
     public bool ExistsOnDisk { get; set; }
+    
+    public List<NoteViewModel> Notes { get; set; } = new ();
 }

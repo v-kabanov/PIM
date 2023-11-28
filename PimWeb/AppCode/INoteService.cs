@@ -47,7 +47,7 @@ public interface INoteService
     /// <returns>
     ///     First identical existing file if already exists. Otherwise new persistent entity.
     /// </returns>
-    Task<File> SaveFile(string fileName, byte[] content);
+    Task<File> SaveFileAsync(string fileName, byte[] content);
     
     /// <summary>
     ///     Update title or description of an existing file. Content is read only.

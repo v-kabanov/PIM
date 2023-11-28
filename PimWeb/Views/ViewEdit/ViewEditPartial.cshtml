@@ -64,5 +64,33 @@
                 </div>
             </div>
         }
+        
+        <div class="card my-2">
+            <div class="card-header">
+                Files
+            </div>
+            <div class="card-body">
+                @foreach(var file in Model.Files)
+                {
+                    <div class="row">
+                        <a href="@Url.Action("File", new {id = file.Id})" title="@file.Description">@file.Title</a>
+                        <br/>
+                        <sup>
+                            Uploaded @(file.CreateTime.Value.LocalDateTime.ToString("dd-MMM-yyyy HH:mm")).
+                        </sup>
+                        @if (file.ExistsOnDisk)
+                        {
+                            <sup><a href="@Url.Action("DownloadFile", "Search", new {id = file.Id})">content</a></sup>
+                        }
+                        else
+                        {
+                            <label class="text-warning">missing</label>
+                        }
+                    </div>
+                }
+                <br/>
+                <div genericupload class=""
+            </div>
+        </div>
     }
 }

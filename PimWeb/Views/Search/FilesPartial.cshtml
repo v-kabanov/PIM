@@ -61,7 +61,7 @@
     if (Model.SearchResultPage?.Count > 0)
     {
         <div id="divNoteList" class="">
-            @Html.Partial("NoteList", Model.SearchResultPage)
+            @Html.Partial("FileList", Model.SearchResultPage)
 
             @if (Model.TotalCountedPageCount > 1)
             {

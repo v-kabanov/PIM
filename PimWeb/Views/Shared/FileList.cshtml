@@ -3,26 +3,41 @@
 @using PimWeb.Models
 @model ICollection<FileViewModel>
 
-@foreach (var item in Model)
-{
-    <div class="row form-group">
-        <div note-name class="col-md-11">
-            <span class="text-muted small">@($"{item.LastUpdateTime:ddd dd-MMM-yy, HH:mm} ")</span>
-            <a file-title href="@Url.Action("Index", "ViewEdit", new {id = item.Id})">@item.Title</a>
-            <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id">delete</a>
-            <br/>
-            @if (!item.SearchHeadline.IsNullOrWhiteSpace())
-            {
-                @Html.Raw(item.SearchHeadline) @:(@($"{item.Rank:F2}"))
-            }
-            else
-            {
-                item.Description?.GetTextWithLimit(0, 200);
-            }
-            @if (item.LastUpdateTime.HasValue && item.CreateTime.HasValue && Math.Abs((item.LastUpdateTime.Value - item.CreateTime.Value).TotalSeconds) > 1)
-            {
-                @:&nbsp; <span class="text-muted small">@($"(Created {item.CreateTime:ddd dd-MMM-yy, HH:mm})")</span>
-            }
+@* displays a list of files not caring about where it comes from and can upload file by posting it to specified url *@
+@* and receiving replacement html *@
+
+<div id="divFiles" upload-url="@ViewBag.UploadUrl">
+    
+    @foreach (var item in Model)
+    {
+        <div class="row">
+            <div note-name class="col-md-11">
+                <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
+                <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})" title="@item.Description">@item.Title</a>
+                <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id" delete-url="@ViewBag.DeleteUrl">delete</a>
+                <br/>
+                @if (!item.SearchHeadline.IsNullOrWhiteSpace())
+                {
+                    @Html.Raw(item.SearchHeadline) @:(@($"{item.Rank:F2}"))
+                }
+                else
+                {
+                    item.Description?.GetTextWithLimit(0, 200);
+                }
+            </div>
         </div>
-    </div>
-}
+    }
+
+    @if (ViewBag.DisableUpload != true)
+    {
+        <div genericupload class="my-2">
+            <input type="file" class="form-control" />
+        </div>
+        @if (ViewBag.UploadError != null)
+        {
+            <div class="text-danger">@ViewBag.UploadError</div>
+        }
+        <div upload-error class="text-danger"></div>
+    }
+
+</div>
