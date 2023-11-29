@@ -19,5 +19,5 @@ public class FileSearchViewModel : SearchModelBase
 
     public int FileId { get; set; }
 
-    public List<FileViewModel> SearchResultPage { get; set; } = new ();
+    public FileListViewModel SearchResultPage { get; set; } = new ();
 }

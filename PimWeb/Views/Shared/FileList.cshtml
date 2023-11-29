@@ -1,14 +1,14 @@
 ﻿@using Pim.CommonLib
 @using PimWeb.AppCode
 @using PimWeb.Models
-@model ICollection<FileViewModel>
+@model FileListViewModel
 
 @* displays a list of files not caring about where it comes from and can upload file by posting it to specified url *@
 @* and receiving replacement html *@
 
-<div id="divFiles" upload-url="@ViewBag.UploadUrl">
+<div id="divFiles">
     
-    @foreach (var item in Model)
+    @foreach (var item in Model.Files)
     {
         <div class="row">
             <div note-name class="col-md-11">
@@ -30,14 +30,22 @@
 
     @if (ViewBag.DisableUpload != true)
     {
-        <div genericupload class="my-2">
+        <div genericupload class="my-2" upload-url="@ViewBag.UploadUrl">
             <input type="file" class="form-control" />
         </div>
         @if (ViewBag.UploadError != null)
         {
             <div class="text-danger">@ViewBag.UploadError</div>
         }
-        <div upload-error class="text-danger"></div>
+        
+        <div upload-error class="text-danger">
+            @Html.ValidationSummary(true)
+        </div>
     }
-
+    
+    @if (!Model.StatusMessage.IsNullOrWhiteSpace())
+    {
+        var styleClass = Model.StatusSuccess ? "text-info" : "text-danger";
+        <div class="@styleClass">@Model.StatusMessage</div>
+    }
 </div>

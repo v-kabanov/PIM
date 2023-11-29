@@ -82,11 +82,22 @@ public class ViewEditController : Controller
     }
     
     [HttpPost("~/ViewEdit/{noteId}/upload-file")]
-    public async Task<ActionResult> UploadFileForNote(int noteId, IFormFile file)
+    [Authorize(Roles = "Admin,Writer")]
+    public async Task<PartialViewResult> UploadFileForNote(int noteId, IFormFile file)
     {
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
-        var result = await NoteService.SaveFileAsync(file.FileName, ms.ToArray());
-        return new ObjectResult(new {status = "success"});
+        var result = await NoteService.UploadFileForNote(noteId, file.FileName, ms.ToArray());
+
+        return PartialView("FileList", result);
+    }
+
+    [HttpPost("~/ViewEdit/{noteId}/unlink-file")]
+    [Authorize(Roles = "Admin,Writer")]
+    public async Task<PartialViewResult> UnlinkFile(int noteId, int fileId)
+    {
+        var result = await NoteService.UnlinkFileFromNote(noteId, fileId);
+
+        return PartialView("FileList", result);
     }
 }

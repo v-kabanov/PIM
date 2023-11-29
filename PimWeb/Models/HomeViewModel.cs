@@ -11,6 +11,27 @@ using PimWeb.AppCode;
 
 namespace PimWeb.Models;
 
+public class FileUploadResultViewModel : FileListViewModel
+{
+    public FileViewModel UploadedFile { get; set; } = new ();
+    
+    public bool Duplicate { get; set; }
+}
+
+public class NoteFileUnlinkResultViewModel : FileListViewModel
+{
+    public FileViewModel File { get; set; } = new ();
+}
+
+public class FileListViewModel
+{
+    public List<FileViewModel> Files { get; set; } = new ();
+
+    public string StatusMessage { get; set; }
+
+    public bool StatusSuccess { get; set; }
+}
+
 public class HomeViewModel
 {
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

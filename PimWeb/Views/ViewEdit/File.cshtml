@@ -10,7 +10,7 @@
 
 
 
-@Html.Partial("ViewEditPartial", Model)
+@await Html.PartialAsync("FilePartial", Model)
 
 <div>
     @Html.ActionLink("Back to home page", "Index", "Home")
@@ -27,16 +27,12 @@
 {
     const config = {
         mainFormSelector: '#mainForm',
-        updateNoteUrl: '@Url.Action("Update")',
-        createNoteButtonSelector: '#btnSubmit',
-        newNoteTextSelector: '#@Html.IdFor(m => m.NoteText)',
-        deleteNoteSelector: '#btnDelete',
-        updateNoteButtonSelector: '#btnUpdate',
+        updateUrl: '@Url.Action("Update")',
+        deleteButtonSelector: '#btnDelete',
+        updateButtonSelector: '#btnUpdate',
         divInProgressSelector: '#progressIndicator',
     };
 
-    (pim.pages.viewEdit)
-    &&
-    (pim.pages.viewEdit.init(config));
+    (pim.pages.file && pim.pages.file.init(config));
 }
 </script>

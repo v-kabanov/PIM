@@ -24,6 +24,18 @@ public interface INoteService
     
     Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model);
     
+    /// <summary>
+    ///     Does not delete associated files.
+    /// </summary>
+    /// <param name="model">
+    ///     Mandatory
+    /// </param>
+    /// <param name="skipConcurrencyCheck">
+    ///     Force delete even note has been updaed since note details were presented to the user.
+    /// </param>
+    /// <returns>
+    ///     Deleted note.
+    /// </returns>
     Task<Note> DeleteAsync(NoteViewModel model, bool skipConcurrencyCheck);
     
     /// <summary>
@@ -34,6 +46,16 @@ public interface INoteService
     Task<HomeViewModel> GetLatestNotesAsync();
     
     Task<HomeViewModel> CreateNoteAsync(HomeViewModel model);
+    
+    Task<FileUploadResultViewModel> UploadFileForNote(int noteId, string fileName, byte[] content);
+    
+    /// <summary>
+    ///     Remove association between a note and a file without removing the file.
+    /// </summary>
+    /// <param name="noteId"></param>
+    /// <param name="fileId"></param>
+    /// <returns></returns>
+    Task<NoteFileUnlinkResultViewModel> UnlinkFileFromNote(int noteId, int fileId);
     
     /// <summary>
     ///     Save new uploaded file in the repository or return reference to first existing one if duplicate by content.
@@ -47,7 +69,7 @@ public interface INoteService
     /// <returns>
     ///     First identical existing file if already exists. Otherwise new persistent entity.
     /// </returns>
-    Task<File> SaveFileAsync(string fileName, byte[] content);
+    Task<(File File, bool Duplicate)> SaveFileAsync(string fileName, byte[] content);
     
     /// <summary>
     ///     Update title or description of an existing file. Content is read only.

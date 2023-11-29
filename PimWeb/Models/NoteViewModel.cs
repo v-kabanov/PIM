@@ -18,5 +18,5 @@ public class NoteViewModel : SearchableEntityViewModelBase
     
     public string Caption { get; set; }
     
-    public List<FileViewModel> Files { get; set; } = new ();
+    public FileListViewModel Files { get; set; } = new ();
 }

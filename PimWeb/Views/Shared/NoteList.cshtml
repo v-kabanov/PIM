@@ -4,7 +4,7 @@
 
 @foreach (var note in Model)
 {
-    <div class="row form-group">
+    <div class="row">
         <div note-name class="col-md-11">
             <span class="text-muted small">@($"{note.LastUpdateTime:ddd dd-MMM-yy, HH:mm} ")</span>
             <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">@note.Caption</a>

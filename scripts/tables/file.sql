@@ -55,3 +55,5 @@ end if;
 create index if not exists file_search_vector_idx on public.file using gin (search_vector);
 
 end $$;
+
+grant insert, select, update, delete on table public.file to pimweb;

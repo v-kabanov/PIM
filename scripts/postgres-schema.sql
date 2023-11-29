@@ -13,10 +13,10 @@ create table if not exists public.note (
 );
 
 alter table     public.note
-alter column    create_time type timestamp with time zone
+alter column    create_time type timestamp with time zone;
 
 alter table     public.note
-alter column    last_update_time type timestamp with time zone
+alter column    last_update_time type timestamp with time zone;
 
 create index    idx_note_create_time
 on              public.note (create_time);

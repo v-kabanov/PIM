@@ -1,6 +1,7 @@
-﻿@model PimWeb.Models.NoteViewModel
+﻿@using Pim.CommonLib
+@model PimWeb.Models.FileViewModel
 
-@using (Html.BeginForm("Delete", "ViewEdit", FormMethod.Post, new { id = "mainForm", @class = "" }))
+@using (Html.BeginForm("", "ViewEdit", FormMethod.Post, new { id = "mainForm", @class = "" }))
 {
     @Html.HiddenFor(x => x.Version)
     if (Model.IfDeleted)
@@ -19,13 +20,13 @@
             <div class="col-md-12">
                 @if (ViewBag.Edit == true)
                 {
-                    @Html.TextAreaFor(model => model.NoteText, new { @class = "form-control", style = "height: 20em" })
-                    @Html.ValidationMessageFor(model => model.NoteText, "", new { @class = "text-danger" })
+                    @Html.TextAreaFor(model => model.Description, new { @class = "form-control", style = "height: 20em" })
+                    @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
                 }
                 else
                 {
                     <div style="white-space: pre-wrap; overflow-x: auto" class="border border-1 border-secondary rounded-1 p-1">
-                        @Model.NoteText
+                        @Model.Description
                     </div>
                 }
             </div>
@@ -67,15 +68,27 @@
         
         <div class="card my-2">
             <div class="card-header">
-                Files
+                Associated Notes
             </div>
             <div class="card-body">
-                @await Html.PartialAsync("FileList", Model.Files, new ViewDataDictionary (ViewData)
-                {
-                    {"UploadUrl", Url.Action("UploadFileForNote", new {noteId = Model.Id})}
-                    , {"DeleteUrl", Url.Action("UnlinkFile", new {noteId = Model.Id})}
-                })
+                @await Html.PartialAsync("NoteList", Model.Notes)
             </div>
         </div>
+
+        @if (Model.ExistsOnDisk)
+        {
+            @Html.ActionLink("Download/view", "DownloadFile", "Search", new {id = Model.Id})
+        }
+        else
+        {
+            <p class="text-danger">Missing from storage</p>
+        }
+        
+        @if (!Model.ExtractedText.IsNullOrWhiteSpace())
+        {
+            <div style="white-space: pre-wrap; overflow-x: auto" class="text-muted small my-2">
+                @Model.ExtractedText
+            </div>
+        }
     }
 }

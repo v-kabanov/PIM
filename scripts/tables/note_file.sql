@@ -28,3 +28,6 @@ create index if not exists  idx_note_file__file_id
 on                          public.note_file (file_id);
 
 end $$;
+
+grant insert, select, update, delete on table public.note_file to pimweb;
+

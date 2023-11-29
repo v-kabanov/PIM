@@ -103,6 +103,20 @@
                 };
             })(this.config, $),
         },
+        util: {
+            parseBool: function (val, treatNullAsTrue) {
+                if (typeof val === "boolean")
+                    return val;
+
+                if (val == null && treatNullAsTrue)
+                    return true;
+
+                if (typeof val === "string")
+                    return (/^true$/i).test(val);
+
+                return Boolean(val);
+            },
+        },
         pages: {},
         init: function (config) {
             $.extend(this.config, config);
@@ -300,10 +314,11 @@
                             if (postbackConf.getAdditionalPostData)
                                 $.extend(postData, postbackConf.getAdditionalPostData());
 
+                            const sourceSelector = postbackConf.replacementSourceSelector ? postbackConf.replacementSourceSelector : "form";
+                            const targetSelector = postbackConf.replacementTargetSelector ? postbackConf.replacementTargetSelector : postbackConf.formSelector;
+
                             return $.post(postbackConf.url, postData, function (result) {
                                 const $result = $(result);
-                                const sourceSelector = postbackConf.replacementSourceSelector ? postbackConf.replacementSourceSelector : "form";
-                                const targetSelector = postbackConf.replacementTargetSelector ? postbackConf.replacementTargetSelector : postbackConf.formSelector;
 
                                 const source = $result.find(sourceSelector).add($result.filter(sourceSelector));
                                 $(targetSelector).html(source.html());
@@ -330,7 +345,7 @@
                                 const formMessageElem = $(postbackConf.messageSelector);
                                 formMessageElem.append($("<p>").addClass("field-validation-error").text("Error: " + data));
                             }).always(function (data) {
-                                pim.features.elementHelper.loadTooltipWithValidation();
+                                pim.features.elementHelper.applyDefaultExtensions(targetSelector);
                                 $(postbackConf.inProgressSelector).hide();
                             });
                         };
@@ -435,11 +450,14 @@
                     //target element (element with tooltip) must have data-toggle="tooltip"
                     // in case of validation, based on data-validation-result-type, which can be Warning or Info, suitable
                     // css class will be assigned to target element.
-                    loadTooltipWithValidation: function () {
-                        $('[data-toggle="tooltip"]').tooltip();
-                        $("[data-validation-result-type=\"Warning\"").addClass("validation-result-type-warning");
-                        $("[data-validation-result-type=\"Info\"").addClass("validation-result-type-info");
-                        $("[data-validation-result-type=\"Error\"").addClass("validation-result-type-error");
+                    loadTooltipWithValidation: function (containerSelector) {
+                        containerSelector = containerSelector || "form";
+                        const $container = $(containerSelector);
+
+                        $container.find('[data-toggle="tooltip"]').tooltip();
+                        $container.find("[data-validation-result-type=\"Warning\"]").addClass("validation-result-type-warning");
+                        $container.find("[data-validation-result-type=\"Info\"]").addClass("validation-result-type-info");
+                        $container.find("[data-validation-result-type=\"Error\"]").addClass("validation-result-type-error");
                     },
                     applyValidationAttributes: function (replaceErrors) {
                         $('[data-toggle="tooltip"]').tooltip();
@@ -476,6 +494,102 @@
                             return $elem.is(":checked");
 
                         return $elem.val();
+                    },
+                    setUpPreconfiguredFileUploads: function(containerSelector) {
+                        containerSelector = containerSelector || "form";
+                        const container = $(containerSelector);
+                        const targetElements = container.find("div[genericupload]");
+                        targetElements.each(function (ind, val) {
+                            pim.features.setUpStandardFileUpload(val);
+                        });
+                    },
+                    extendInputWithDateTimePicker : function(inputSelector, format) {
+                        const inputElement = $(inputSelector);
+                        if (inputElement.length &&
+                            inputElement.is(":visible") &&
+                            !inputElement.is(":disabled") &&
+                            inputElement.closest(":disabled").length === 0) {
+
+                            inputElement.datetimepicker({
+                                sideBySide: false,
+                                format: format || "D MMM YYYY HH:mm:ss",
+                                showClose: true,
+                                closeOnDateSelection: false,
+                                allowInputToggle: true,
+                                //focusOnShow: true
+                            }).data("DateTimePicker");
+                        }
+                    },
+                    makeMarkedSelectsSearchable : function(containerSelector) {
+                        containerSelector = containerSelector || "form";
+                        const container = $(containerSelector);
+                        let elementsToExtend = container.find("select[searchable]:visible:not(:disabled)");
+                        elementsToExtend.each(function(ind, val) {
+                            pim.features.elementHelper.makeSelectSearchable2(val);
+                        });
+                    },
+                    // selectSelector is either selector string or jQuery object
+                    // not expanding disabled selects because the substitute controls are not disabled
+                    makeSelectSearchable2 : function (selectSelector) {
+                        const $selectElement = $(selectSelector);
+
+                        if ($selectElement.length && $selectElement.is(":visible") && !$selectElement.is(":disabled")
+                            && $selectElement.closest(":disabled").length === 0) {
+
+                            const ifDisabled = pim.util.parseBool($selectElement.attr("data-disabled"));
+
+                            const options = {
+                                minimumResultsForSearch: 3,
+                                theme: $selectElement.attr("data-theme") || "bootstrap",
+                                disabled: ifDisabled
+                            };
+
+                            $selectElement.select2(options);
+
+                            const title = $selectElement.attr("title");
+
+                            const s2Container = $selectElement.next(".select2-container");
+
+                            if (title) {
+                                // apply tooltip as set on original select element
+                                $.each(["toggle", "html", "placement", "placeholder"], function (ind, sfx) {
+                                    let attrName = "data-" + sfx;
+                                    let attrValue = $selectElement.attr(attrName);
+                                    s2Container.attr(attrName, attrValue);
+                                });
+                                s2Container.attr("title", title);
+
+                                const $selectionSpan = s2Container.find("span.select2-selection");
+                                // select2 copies title to the selection span, but we move it to container
+                                $selectionSpan.attr("title", "");
+                                $selectElement.attr("title", "");
+                                $selectElement.attr("data-toggle", "");
+                            }
+
+                            const classesString = $selectElement.attr("class");
+
+                            if (classesString) {
+                                const classes = classesString.split(" ");
+
+                                let validationClasses = "";
+
+                                for (let j = 0; j < classes.length; ++j) {
+                                    if (classes[j].indexOf("validation") >= 0) {
+                                        validationClasses += (classes[j] + " ");
+                                    }
+                                }
+
+                                if (validationClasses)
+                                    s2Container.addClass(validationClasses);
+                            }
+                        }
+                    },
+                    applyDefaultExtensions: function(containerSelector) {
+                        containerSelector = containerSelector || document;
+                        const hlp = pim.features.elementHelper;
+                        hlp.loadTooltipWithValidation();
+                        hlp.makeMarkedSelectsSearchable(containerSelector);
+                        hlp.setUpPreconfiguredFileUploads(containerSelector);
                     },
                     // After whole form ajax call, works as the default browser behavior. 
                     // In case of error: * it focuses on the first element with error otherwise next element (circular) 
@@ -581,6 +695,13 @@
                 };
 
             })(this.config, $);
+
+            // apply extensions after all registered document.ready handlers are executed - allow to e.g. set selected value in DDLs.
+            $(function() {
+                $(function() {
+                    pim.features.elementHelper.applyDefaultExtensions(document);
+                });
+            });
         }
     };
 }(window, jQuery));

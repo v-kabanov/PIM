@@ -91,7 +91,11 @@ public class NoteService : INoteService
         
         var result = new FileSearchViewModel(genericResult.Model)
         {
-            SearchResultPage = genericResult.Results.Select(CreateModel).ToList()
+            SearchResultPage = new FileListViewModel
+            {
+                Files = genericResult.Results.Select(CreateModel).ToList(),
+                StatusSuccess = true
+            } 
         };
         
         return result;
@@ -332,7 +336,83 @@ public class NoteService : INoteService
         return result;
     }
     
-    public async Task<File> SaveFileAsync(string fileName, byte[] content)
+    public async Task<FileUploadResultViewModel> UploadFileForNote(int noteId, string fileName, byte[] content)
+    {
+        var saveResult = await SaveFileAsync(fileName, content).ConfigureAwait(false);
+        
+        var note = await Query
+            .Where(x => x.Id == noteId)
+            .FetchMany(x => x.Files)
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+        
+        if (note == null)
+            return new FileUploadResultViewModel
+            {
+                UploadedFile = CreateModel(saveResult.File, false),
+                StatusMessage = $"Note #{noteId} does not exist."
+            };
+        
+        note.Files.Add(saveResult.File);
+        
+        var files = note.Files
+            .OrderBy(x => x.Title)
+            .ThenBy(x => x.Id)
+            .ToList();
+        
+        var result = new FileUploadResultViewModel
+        {
+            UploadedFile = CreateModel(saveResult.File, false),
+            Files = files.Select(x => CreateModel(x, false)).ToList(),
+            Duplicate = saveResult.Duplicate,
+            StatusSuccess = true,
+            StatusMessage = saveResult.Duplicate
+                ? $"Duplicate file detected; '{saveResult.File.Title}' (#{saveResult.File.Id}) linked instead"
+                : $"File '{saveResult.File.Title}' uploaded and linked."
+        };
+        
+        return result;
+    }
+    
+    public async Task<NoteFileUnlinkResultViewModel> UnlinkFileFromNote(int noteId, int fileId)
+    {
+        var fileFuture = FileQuery.Where(x => x.Id == fileId).ToFutureValue();
+
+        var note = await Query.Where(x => x.Id == noteId)
+            .FetchMany(x => x.Files)
+            .ToFutureValue()
+            .GetValueAsync()
+            .ConfigureAwait(false);
+        
+        if (note == null || fileFuture.Value == null)
+        {
+            return new NoteFileUnlinkResultViewModel
+            {
+                StatusMessage = note == null
+                    ? $"Note #{noteId} does not exist."
+                    : $"File #{fileId} does not exist.",
+            };
+        }
+        
+        var unlinked = note.Files.Remove(fileFuture.Value);
+        
+        if (unlinked)
+            await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
+        
+        var result = new NoteFileUnlinkResultViewModel
+        {
+            File = CreateModel(fileFuture.Value, false),
+            Files = note.Files.OrderBy(x => x.Title).ThenBy(x => x.Id).Select(x => CreateModel(x, false)).ToList(),
+            StatusSuccess = true,
+            StatusMessage = unlinked
+                ? $"Association with file '{fileFuture.Value.Title}' removed."
+                : $"File '{fileFuture.Value.Title}' was not associated with note '{note.Name}' (#{note.Id})."
+        };
+        
+        return result;
+    }
+    
+    public async Task<(File File, bool Duplicate)> SaveFileAsync(string fileName, byte[] content)
     {
         if (fileName == null) throw new ArgumentNullException(nameof(fileName));
         if (content == null) throw new ArgumentNullException(nameof(content));
@@ -342,7 +422,7 @@ public class NoteService : INoteService
         if (existingFiles.Files.Count > 0)
         {
             Log.WarnFormat("File '{0}' already exists as {1} (#{2})", fileName, existingFiles.Files[0].RelativePath, existingFiles.Files[0].Id);
-            return existingFiles.Files[0];
+            return (existingFiles.Files[0], true);
         }
         
         var hash = existingFiles.Hash;
@@ -356,6 +436,8 @@ public class NoteService : INoteService
         var fullPath = GetFullFilePathInStorage(relativePath);
         
         Log.InfoFormat("Saving file '{0}'", fullPath);
+        
+        Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
         
         await System.IO.File.WriteAllBytesAsync(fullPath, content)
             .ConfigureAwait(false);
@@ -373,7 +455,7 @@ public class NoteService : INoteService
         await Session.SaveAsync(file).ConfigureAwait(false);
         await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
         
-        return file;
+        return (file, false);
     }
 
     /// <inheritdoc />
@@ -456,7 +538,7 @@ public class NoteService : INoteService
     
     private async Task<byte[]> CalculateHashAsync(byte[] content)
     {
-        using var hasher = new SHA256Managed();
+        using var hasher = SHA256.Create();
         return await hasher.ComputeHashAsync(new MemoryStream(content, false)).ConfigureAwait(false);
     }
     
@@ -470,7 +552,11 @@ public class NoteService : INoteService
             Version = note.IntegrityVersion,
             CreateTime = note.CreateTime.ToLocalTime(),
             LastUpdateTime = note.LastUpdateTime.ToLocalTime(),
-            Files = populateFiles ? note.Files.Select(x => CreateModel(x, false)).ToList(): new List<FileViewModel>()
+            Files = new FileListViewModel
+            {
+                Files = populateFiles ? note.Files.Select(x => CreateModel(x, false)).ToList(): new List<FileViewModel>(),
+                StatusSuccess = true
+            }
         };
 
     private NoteViewModel CreateModel(NoteSearchResult note) => new ()
@@ -505,6 +591,9 @@ public class NoteService : INoteService
 
     private FileViewModel CreateModel(File x, bool populateNotes = true)
     {
+        if (x == null)
+            return new ();
+        
         var result = new FileViewModel
         {
             Id = x.Id
