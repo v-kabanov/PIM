@@ -23,10 +23,23 @@ public class NoteFileUnlinkResultViewModel : FileListViewModel
     public FileViewModel File { get; set; } = new ();
 }
 
-public class FileListViewModel
+public class FileNoteUnlinkResultViewModel : NoteListViewModel
+{
+    public NoteViewModel Note { get; set; } = new ();
+}
+
+public class FileListViewModel : StatusViewModel
 {
     public List<FileViewModel> Files { get; set; } = new ();
+}
 
+public class NoteListViewModel : StatusViewModel
+{
+    public List<NoteViewModel> Notes { get; set; } = new ();
+}
+
+public class StatusViewModel
+{
     public string StatusMessage { get; set; }
 
     public bool StatusSuccess { get; set; }
@@ -53,6 +66,6 @@ public class HomeViewModel
 
         var bodyStartIndex = note.NoteText.IndexOf(note.Caption, StringComparison.Ordinal) + note.Caption.Length;
 
-        return note.NoteText.GetTextWithLimit(bodyStartIndex, TargetNoteTextSummaryLength);
+        return note.NoteText.Ellipsify(bodyStartIndex, TargetNoteTextSummaryLength);
     }
 }

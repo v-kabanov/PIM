@@ -1,9 +1,10 @@
-using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PimWeb.Models;
 
 public class FileViewModel : SearchableEntityViewModelBase
 {
+    [Required]
     public string Title { get; set; }
     
     public string RelativePath { get; set; }

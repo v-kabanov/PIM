@@ -22,7 +22,7 @@
                 }
                 else
                 {
-                    item.Description?.GetTextWithLimit(0, 200);
+                    item.Description?.Ellipsify(0, 200);
                 }
             </div>
         </div>
@@ -30,7 +30,7 @@
 
     @if (ViewBag.DisableUpload != true)
     {
-        <div genericupload class="my-2" upload-url="@ViewBag.UploadUrl">
+        <div genericupload class="my-2" upload-url="@ViewBag.UploadUrl" response-element-selector="#divFiles" response-is-file-details="@ViewBag.UploadResponseIsFileDetails">
             <input type="file" class="form-control" />
         </div>
         @if (ViewBag.UploadError != null)

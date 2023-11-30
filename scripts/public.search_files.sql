@@ -23,12 +23,12 @@ begin
         order by rank desc;
     else
         return query
-        select  n.id
-                , n.relative_path
-                , n.title
-                , n.description
-                , n.last_update_time
-                , n.create_time
+        select  x.id
+                , x.relative_path
+                , x.title
+                , x.description
+                , x.last_update_time
+                , x.create_time
                 , ts_headline('public.mysearch', x.relative_path || ' ' || coalesce(x.title, '') || ' ' || coalesce(x.description, '') || ' ' || coalesce(x.extracted_text, ''), websearch_to_tsquery('public.mysearch', searchQuery)) as headline
                 , ts_rank_cd(x.search_vector, websearch_to_tsquery('public.mysearch', searchQuery)) as rank
         from    file x

@@ -29,6 +29,7 @@ public class SearchModelBase
         Query = other.Query;
         LastUpdatePeriodStart = other.LastUpdatePeriodStart;
         LastUpdatePeriodEnd = other.LastUpdatePeriodEnd;
+        SortOptions = other.SortOptions;
     }
 
     public string Query { get; set; }

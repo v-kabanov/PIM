@@ -1,7 +1,7 @@
 ﻿@using PimWeb.Models
 @model PimWeb.Models.FileSearchViewModel
 
-@using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm"}))
+@using (Html.BeginForm("Files", "Search", FormMethod.Get, new {id = "mainForm"}))
 {
     <div class="row">
         <div class="offset-md-1 col-md-10">
@@ -61,7 +61,12 @@
     if (Model.SearchResultPage.Files.Count > 0)
     {
         <div id="divNoteList" class="">
-            @Html.Partial("FileList", Model.SearchResultPage)
+            @Html.Partial("FileList", Model.SearchResultPage, new ViewDataDictionary (ViewData)
+            {
+                {"UploadUrl", Url.Action("UploadFile", "ViewEdit")}
+                , {"DeleteUrl", Url.Action("DeleteFilePermanently", "ViewEdit")}
+                , {"UploadResponseIsFileDetails", "true"}
+            })
 
             @if (Model.TotalCountedPageCount > 1)
             {

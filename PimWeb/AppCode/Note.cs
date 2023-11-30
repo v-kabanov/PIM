@@ -90,7 +90,7 @@ public class Note : EntityBase, IEquatable<Note>
         var firstLine = StringHelper.ExtractFirstLine(text);
 
         if (firstLine?.Length > 150)
-            return firstLine.GetTextWithLimit(0, 100, false);
+            return firstLine.Ellipsify(0, 100, false);
 
         return firstLine;
     }

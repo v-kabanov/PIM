@@ -2,26 +2,28 @@
 @using PimWeb.Models
 @model ICollection<NoteViewModel>
 
-@foreach (var note in Model)
-{
-    <div class="row">
-        <div note-name class="col-md-11">
-            <span class="text-muted small">@($"{note.LastUpdateTime:ddd dd-MMM-yy, HH:mm} ")</span>
-            <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">@note.Caption</a>
-            <a delete-note-by-id class="ms-3" href="#" noteId="@note.Id">delete</a>
-            <br/>
-            @if (!note.SearchHeadline.IsNullOrWhiteSpace())
-            {
-                @Html.Raw(note.SearchHeadline) @:(@($"{note.Rank:F2}"))
-            }
-            else
-            {
-                @HomeViewModel.GetNoteTextSummary(note)
-            }
-            @if (note.LastUpdateTime.HasValue && note.CreateTime.HasValue && Math.Abs((note.LastUpdateTime.Value - note.CreateTime.Value).TotalSeconds) > 1)
-            {
-                @:&nbsp; <span class="text-muted small">@($"(Created {note.CreateTime:ddd dd-MMM-yy, HH:mm})")</span>
-            }
+<div id="divNotes">
+    @foreach (var note in Model)
+    {
+        <div class="row">
+            <div note-name class="col-md-11">
+                <span class="text-muted small">@($"{note.LastUpdateTime:ddd dd-MMM-yy, HH:mm} ")</span>
+                <a note-name href="@Url.Action("Index", "ViewEdit", new {id = note.Id})">@note.Caption</a>
+                <a delete-note-by-id class="ms-3" href="#" noteId="@note.Id">delete</a>
+                <br/>
+                @if (!note.SearchHeadline.IsNullOrWhiteSpace())
+                {
+                    @Html.Raw(note.SearchHeadline) @:(@($"{note.Rank:F2}"))
+                }
+                else
+                {
+                    @HomeViewModel.GetNoteTextSummary(note)
+                }
+                @if (note.LastUpdateTime.HasValue && note.CreateTime.HasValue && Math.Abs((note.LastUpdateTime.Value - note.CreateTime.Value).TotalSeconds) > 1)
+                {
+                    @:&nbsp; <span class="text-muted small">@($"(Created {note.CreateTime:ddd dd-MMM-yy, HH:mm})")</span>
+                }
+            </div>
         </div>
-    </div>
-}
+    }
+</div>

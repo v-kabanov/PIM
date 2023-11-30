@@ -17,7 +17,10 @@
                             <a class="nav-link text-dark" asp-area="" href="~/Home/About">About</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" href="~/Search" title="Search / browse">Search</a>
+                            <a class="nav-link text-dark" asp-area="" href="~/Search" title="Search / browse notes">Notes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" href="~/files" title="Search / browse files">Files</a>
                         </li>
                     </ul>
                     <div class="d-md-flex flex-grow-1 justify-content-end">
@@ -80,6 +83,7 @@
     <script src="~/js/SeeLatestAndCreate.js" asp-append-version="true"></script>
     <script src="~/js/Search.js" asp-append-version="true"></script>
     <script src="~/js/ViewEdit.js" asp-append-version="true"></script>
+    <script src="~/js/File.js" asp-append-version="true"></script>
 
     @if (IsSectionDefined("Init"))
     {

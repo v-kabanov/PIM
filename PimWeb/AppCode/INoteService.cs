@@ -47,15 +47,17 @@ public interface INoteService
     
     Task<HomeViewModel> CreateNoteAsync(HomeViewModel model);
     
-    Task<FileUploadResultViewModel> UploadFileForNote(int noteId, string fileName, byte[] content);
+    Task<FileUploadResultViewModel> UploadFileForNoteAsync(int noteId, string fileName, byte[] content);
     
     /// <summary>
     ///     Remove association between a note and a file without removing the file.
     /// </summary>
-    /// <param name="noteId"></param>
-    /// <param name="fileId"></param>
-    /// <returns></returns>
     Task<NoteFileUnlinkResultViewModel> UnlinkFileFromNote(int noteId, int fileId);
+    
+    /// <summary>
+    ///     Remove association between a file and a note without removing the file.
+    /// </summary>
+    Task<FileNoteUnlinkResultViewModel> UnlinkNoteFromFile(int fileId, int noteId);
     
     /// <summary>
     ///     Save new uploaded file in the repository or return reference to first existing one if duplicate by content.

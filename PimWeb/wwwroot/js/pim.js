@@ -6,9 +6,10 @@
         features: {
             setUpStandardFileUpload: function(divSelector) {
                 const $div = $(divSelector);
-                //const $fuInput = $div.find("input[type=file]");
-                const $keyInput = $div.find("input[type=hidden][file-key]");
-                const $errDiv = $div.find('div[upload-error]');
+                const $errDiv = $('div[upload-error]');
+                const responseSelector = $div.attr("response-element-selector");
+                // response is a json object with saved file details {int Id, bool IfDuplicate, string Url}
+                const isResponseFileDetails = pim.util.parseBool($div.attr("response-is-file-details"));
                 $div.fileupload({
                     url: $div.attr("upload-url"),
                     dataType: 'html',
@@ -30,7 +31,17 @@
                         pim.features.modalProgress.hide();
                     },
                     done: function(e, response) {
-                        
+                        if (isResponseFileDetails && response.result) {
+                            let jsonResult = $.parseJSON(response.result);
+                            if (jsonResult.url && !jsonResult.ifDuplicate) {
+                                window.location = response.result.Url;
+                            }
+                        }
+                        else if (responseSelector) {
+                            const replacement = $(response).find(responseSelector);
+                            const target = $(responseSelector);
+                            target.html(replacement.html());
+                        }
                     },
                     progress: function (e, data) {
                         const progress = parseInt(data.loaded / data.total * 100, 10);
@@ -611,7 +622,7 @@
                         eventToCapture: "change typeahead:change",
                         //will not be in any search for inputs
                         //further excluding filtering on the form
-                        //Default: Extra elemets by select2 and typeahead are removed
+                        //Default: Extra elements by select2 and typeahead are removed
                         excludeSelectors: [".tt-hint", "[class*=select2-hidden]"],
                         //focus on element (not using lastFocusedSelector)
                         //common use: when element has an error, that element must be focused

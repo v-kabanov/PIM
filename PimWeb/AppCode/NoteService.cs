@@ -127,7 +127,7 @@ public class NoteService : INoteService
         {
             queryText.Append("select id as \"Id\", last_update_time as \"LastUpdateTime\", create_time as \"CreateTime\", headline as \"Headline\", rank as \"Rank\"");
             AddColumns();
-            queryText.AppendLine().AppendLine(" from public.").Append(searchFunctionName).AppendLine("(:query, :fuzzy)");
+            queryText.AppendLine().Append(" from public.").Append(searchFunctionName).AppendLine("(:query, :fuzzy)");
         }
         else
         {
@@ -237,7 +237,7 @@ public class NoteService : INoteService
         if (result.ExistsOnDisk)
         {
             var currentContentHash = await CalculateHashAsync(System.IO.File.ReadAllBytes(result.FullPath)).ConfigureAwait(false);
-            result.ContentHashMismatch = currentContentHash.Length != file.ContentHash?.Length || currentContentHash.SequenceEqual(file.ContentHash);
+            result.ContentHashMismatch = currentContentHash.Length != file.ContentHash?.Length || !currentContentHash.SequenceEqual(file.ContentHash);
         }
         
         return result;
@@ -336,7 +336,8 @@ public class NoteService : INoteService
         return result;
     }
     
-    public async Task<FileUploadResultViewModel> UploadFileForNote(int noteId, string fileName, byte[] content)
+    /// <inheritdoc />
+    public async Task<FileUploadResultViewModel> UploadFileForNoteAsync(int noteId, string fileName, byte[] content)
     {
         var saveResult = await SaveFileAsync(fileName, content).ConfigureAwait(false);
         
@@ -353,12 +354,17 @@ public class NoteService : INoteService
                 StatusMessage = $"Note #{noteId} does not exist."
             };
         
+        if (Session.GetCurrentTransaction() == null)
+            Session.BeginTransaction();
+        
         note.Files.Add(saveResult.File);
         
         var files = note.Files
             .OrderBy(x => x.Title)
             .ThenBy(x => x.Id)
             .ToList();
+        
+        await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
         
         var result = new FileUploadResultViewModel
         {
@@ -374,6 +380,46 @@ public class NoteService : INoteService
         return result;
     }
     
+    /// <inheritdoc />
+    public async Task<FileNoteUnlinkResultViewModel> UnlinkNoteFromFile(int fileId, int noteId)
+    {
+        var noteFuture = Query.Where(x => x.Id == noteId).ToFutureValue();
+
+        var file = await FileQuery.Where(x => x.Id == fileId)
+            .FetchMany(x => x.Notes)
+            .ToFutureValue()
+            .GetValueAsync()
+            .ConfigureAwait(false);
+        
+        if (file == null || noteFuture.Value == null)
+        {
+            return new FileNoteUnlinkResultViewModel
+            {
+                StatusMessage = noteFuture.Value == null
+                    ? $"Note #{noteId} does not exist."
+                    : $"File #{fileId} does not exist.",
+            };
+        }
+        
+        var unlinked = file.Notes.Remove(noteFuture.Value);
+        
+        if (unlinked)
+            await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
+        
+        var result = new FileNoteUnlinkResultViewModel
+        {
+            Note = CreateModel(noteFuture.Value, false),
+            Notes = file.Notes.OrderBy(x => x.Name).ThenBy(x => x.Id).Select(x => CreateModel(x, false)).ToList(),
+            StatusSuccess = true,
+            StatusMessage = unlinked
+                ? $"Association with file '{noteFuture.Value.Name}' removed."
+                : $"Note '{noteFuture.Value.Name}' was not associated with file '{file.Title}' (#{file.Id})."
+        };
+        
+        return result;
+    }
+    
+    /// <inheritdoc />
     public async Task<NoteFileUnlinkResultViewModel> UnlinkFileFromNote(int noteId, int fileId)
     {
         var fileFuture = FileQuery.Where(x => x.Id == fileId).ToFutureValue();
