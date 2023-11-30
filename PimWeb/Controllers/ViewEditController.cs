@@ -103,6 +103,15 @@ public class ViewEditController : Controller
         return Json(new {Id = result.File.Id, IfDuplicate = result.Duplicate, Url = Url.Action("File", new {id = result.File.Id})});
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Admin,Writer")]
+    public async Task<JsonResult> DeleteFile(int id)
+    {
+        var result = await NoteService.DeleteAsync(new FileViewModel {Id = id});
+
+        return Json(new {success = true});
+    }
+
     [HttpPost("~/file/{id:int}")]
     [Authorize(Roles = "Admin,Writer")]
     public async Task<PartialViewResult> UpdateFile(FileViewModel model)
@@ -136,8 +145,7 @@ public class ViewEditController : Controller
             return View("Error");
         }
 
-        //todo: replace with files browsing page 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Files", "Search");
     }
 
     [HttpPost("~/ViewEdit/{noteId}/unlink-file", Name = "UnlinkFileFromNote", Order = 2)]
