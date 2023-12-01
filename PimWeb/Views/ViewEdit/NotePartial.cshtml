@@ -71,10 +71,11 @@
             </div>
             <div class="card-body">
                 @await Html.PartialAsync("FileList", Model.Files, new ViewDataDictionary (ViewData)
-                {
-                    {"UploadUrl", ViewBag.Edit == true ? Url.Action("UploadFileForNote", new {noteId = Model.Id}) : null}
-                    , {"DeleteUrl", ViewBag.Edit == true ? Url.Action("UnlinkFile", new {noteId = Model.Id}) : null}
-                })
+                       {
+                           {"UploadUrl", ViewBag.Edit == true ? Url.Action("UploadFileForNote", new {noteId = Model.Id}) : null}
+                           , {"DisableDelete", ViewBag.Edit != true}
+                           //, {"DeleteUrl", ViewBag.Edit == true ? Url.Action("UnlinkFileFromNote", new {noteId = Model.Id}) : null}
+                       })
             </div>
         </div>
     }

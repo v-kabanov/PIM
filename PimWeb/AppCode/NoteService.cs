@@ -106,8 +106,6 @@ public class NoteService : INoteService
 
     private async Task<(SearchModelBase Model, List<TBean> Results)> SearchAsync<TBean>(SearchModelBase model, string tableName, string searchFunctionName, params KeyValuePair<string, string>[] additionalColumns)
     {
-        IQuery query;
-        
         var sortProperty = model.SortProperty ?? SortProperty.LastUpdateTime;
         
         var sortAscending = model.SortAscending;
@@ -174,7 +172,7 @@ public class NoteService : INoteService
         
         var countFuture = totalCountQuery.FutureValue<long>();
         
-        query = Session.CreateSQLQuery(queryText.ToString())
+        var query = Session.CreateSQLQuery(queryText.ToString())
             .ApplyPage(PageSize, model.PageNumber - 1);
         
         whereClauseBuilder.SetParameterValues(query);

@@ -56,8 +56,6 @@
     <AdditionalFiles Include="Views\Shared\NoteList.cshtml" />
     <AdditionalFiles Include="Views\Shared\_Layout.cshtml" />
     <AdditionalFiles Include="Views\Shared\_ValidationScriptsPartial.cshtml" />
-    <AdditionalFiles Include="Views\ViewEdit\ViewEdit.cshtml" />
-    <AdditionalFiles Include="Views\ViewEdit\ViewEditPartial.cshtml" />
   </ItemGroup>
 
   <ItemGroup>

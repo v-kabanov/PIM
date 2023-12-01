@@ -15,8 +15,6 @@ namespace PimWeb.Controllers;
 [Authorize(Roles = "Admin,Writer,Reader")]
 public class ViewEditController : Controller
 {
-    private const string PartialViewName = "ViewEditPartial";
-
     // ReSharper disable once MemberCanBePrivate.Global
     public INoteService NoteService { get; }
 
@@ -25,19 +23,18 @@ public class ViewEditController : Controller
         NoteService = noteService;
     }
 
-    [HttpGet]
-    [Route("~/ViewEdit/{id}")]
-    public async Task<ActionResult> Index(int id, bool edit = false)
+    [HttpGet("~/note/{id:int}")]
+    public async Task<ActionResult> Note(int id, bool edit = false)
     {
         var model = await NoteService.GetNoteAsync(id).ConfigureAwait(false);
         ViewBag.Edit = edit;
 
-        return View("ViewEdit", model);
+        return View("Note", model);
     }
 
-    [HttpPost]
+    [HttpPost("~/note")]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<PartialViewResult> Update(NoteViewModel model)
+    public async Task<PartialViewResult> Update([FromBody]NoteViewModel model)
     {
         ModelState[nameof(model.Version)].RawValue = null;
         ViewBag.Edit = true;
@@ -52,7 +49,7 @@ public class ViewEditController : Controller
             ModelState.AddModelError("", "Concurrent update detected, save your changes elsewhere, refresh the form and merge.");
         }
 
-        return PartialView(PartialViewName, result);
+        return PartialView("NotePartial", result);
     }
 
     [HttpPost]
@@ -167,10 +164,9 @@ public class ViewEditController : Controller
         return RedirectToAction("Files", "Search");
     }
 
-    [HttpPost("~/ViewEdit/{noteId}/unlink-file", Name = "UnlinkFileFromNote", Order = 2)]
-    [HttpPost("~/file/{fileId}/unlink-note", Name = "UnlinkNoteFromFile", Order = 2)]
+    [HttpPost("~/note/{noteId:int}/unlink-file")]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<PartialViewResult> UnlinkFile(int noteId, int fileId)
+    public async Task<PartialViewResult> UnlinkFileFromNote(int noteId, int fileId)
     {
         var result = await NoteService.UnlinkFileFromNote(noteId, fileId);
 
@@ -178,7 +174,7 @@ public class ViewEditController : Controller
     }
     
 
-    [HttpPost("~/file/{fileId}/unlink-note")]
+    [HttpPost("~/file/{fileId:int}/unlink-note")]
     [Authorize(Roles = "Admin,Writer")]
     public async Task<PartialViewResult> UnlinkNoteFromFile(int noteId, int fileId)
     {

@@ -49,8 +49,7 @@
         }
 
         function confirmDeleteLinkToNote(e) {
-            if (!confirm("Delete association with the note?"))
-                e.preventDefault();
+            return confirm("Delete association with the note?");
         }
     };
 })(pim, window, jQuery);

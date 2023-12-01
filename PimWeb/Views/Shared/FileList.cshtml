@@ -14,9 +14,9 @@
             <div note-name class="col-md-11">
                 <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
                 <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})">@item.Title</a>
-                @if (!(ViewBag.DeleteUrl as string).IsNullOrEmpty())
+                @if (ViewBag.DisableDelete != true)
                 {
-                    <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id" delete-url="@ViewBag.DeleteUrl">delete</a> 
+                    <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id">delete</a> 
                 }
                 <br/>
                 @if (!item.SearchHeadline.IsNullOrWhiteSpace())

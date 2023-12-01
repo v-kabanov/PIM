@@ -8,7 +8,7 @@
     var altModeLinkText = edit ? "View read only" : "Edit";
 }
 
-@Html.Partial("ViewEditPartial", Model)
+@Html.Partial("NotePartial", Model)
 
 <div>
     @Html.ActionLink("Back to home page", "Index", "Home")
@@ -16,7 +16,7 @@
     @if (Model.Version.HasValue)
     {
         @: |
-        <a href="@Url.Action("Index", new {id = Model.Id, edit = !edit})">@altModeLinkText</a>
+        <a href="@Url.Action("Note", new {id = Model.Id, edit = !edit})">@altModeLinkText</a>
     }
 </div>
 
@@ -31,10 +31,14 @@
         deleteNoteSelector: '#btnDelete',
         updateNoteButtonSelector: '#btnUpdate',
         divInProgressSelector: '#progressIndicator',
+        fileListSelector: '#divFiles',
+        deleteAssociationWithFileLinkSelector: 'a[delete-file-by-id]',
+        deleteAssociationWithFileUrl: '@Url.Action("UnlinkFileFromNote", "ViewEdit", new {noteId = Model.Id})',
+        attributeNameFileId: 'fileId'
     };
 
-    (pim.pages.viewEdit)
+    (pim.pages.note)
     &&
-    (pim.pages.viewEdit.init(config));
+    (pim.pages.note.init(config));
 }
 </script>
