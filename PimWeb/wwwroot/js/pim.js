@@ -34,7 +34,7 @@
                         if (isResponseFileDetails && response.result) {
                             let jsonResult = $.parseJSON(response.result);
                             if (jsonResult.url && !jsonResult.ifDuplicate) {
-                                window.location = response.result.Url;
+                                window.location = jsonResult.url;
                             }
                         }
                         else if (responseSelector) {

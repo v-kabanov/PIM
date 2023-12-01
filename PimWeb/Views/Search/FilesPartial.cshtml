@@ -58,45 +58,44 @@
  
     <br/>
 
-    if (Model.SearchResultPage.Files.Count > 0)
-    {
-        <div id="divNoteList" class="">
-            @Html.Partial("FileList", Model.SearchResultPage, new ViewDataDictionary (ViewData)
-            {
-                {"UploadUrl", Url.Action("UploadFile", "ViewEdit")}
-                , {"DeleteUrl", Url.Action("DeleteFilePermanently", "ViewEdit")}
-                , {"UploadResponseIsFileDetails", "true"}
-            })
+    <div id="divNoteList" class="">
+        @Html.Partial("FileList", Model.SearchResultPage, new ViewDataDictionary (ViewData)
+        {
+            {"UploadUrl", Url.Action("UploadFile", "ViewEdit")}
+            , {"DeleteUrl", Url.Action("DeleteFilePermanently", "ViewEdit")}
+            , {"UploadResponseIsFileDetails", "true"}
+        })
 
-            @if (Model.TotalCountedPageCount > 1)
+        @if (Model.TotalCountedPageCount > 1)
+        {
+            var startPage = 1;
+            if (Model.PageNumber > 11)
+                startPage = Model.PageNumber - 10;
+            
+            var endPage = Model.TotalCountedPageCount;
+            if (endPage > Model.PageNumber + 10)
+                endPage = Model.PageNumber + 10;
+            
+            for (var i = startPage; i <= endPage; ++i)
             {
-                var startPage = 1;
-                if (Model.PageNumber > 11)
-                    startPage = Model.PageNumber - 10;
-                
-                var endPage = Model.TotalCountedPageCount;
-                if (endPage > Model.PageNumber + 10)
-                    endPage = Model.PageNumber + 10;
-                
-                for (var i = startPage; i <= endPage; ++i)
+                if (i == Model.PageNumber)
                 {
-                    if (i == Model.PageNumber)
-                    {
-                        @: @i
-                    }
-                    else
-                    {
-                        @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
-                    }
-                    @:&nbsp;
+                    @: @i
                 }
+                else
+                {
+                    @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
+                }
+                @:&nbsp;
             }
-        </div>
-        <p class="text-muted">
-            Counted @(Model.TotalCountedPageCount) pages
-        </p>
-    }
-    else
+        }
+    </div>
+
+    <p class="text-muted">
+        Counted @(Model.TotalCountedPageCount) pages
+    </p>
+    
+    if (Model.SearchResultPage.Files.Count == 0)
     {
         @: No results to display
     }
