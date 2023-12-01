@@ -578,6 +578,7 @@ public class NoteService : INoteService
         do
         {
             path = Path.Combine(dir, $"{name}-{i}{extension}");
+            ++i;
         }
         while (System.IO.File.Exists(GetFullFilePathInStorage(path)));
         
