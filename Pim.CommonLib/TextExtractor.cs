@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using DocumentFormat.OpenXml.Packaging;
@@ -154,6 +156,20 @@ public class TextExtractor : ITextExtractor
         
         try
         {
+            if (value.EnumerateRunes().Any(x => Rune.GetUnicodeCategory(x) >= UnicodeCategory.Control))
+            {
+                var buf = new StringBuilder(value.Length);
+                
+                foreach (var rune in value.EnumerateRunes())
+                {
+                    var cat = Rune.GetUnicodeCategory(rune);
+                    if (cat < UnicodeCategory.Control)
+                        buf.Append(rune.ToString());
+                    else if (buf.Length == 0 || buf[buf.Length - 1] != ' ')
+                        buf.Append(' ');
+                }
+                value = buf.ToString();
+            }
             return _utfEncoding.GetString(_utfEncoding.GetBytes(value));
         }
         catch
