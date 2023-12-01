@@ -10,13 +10,30 @@
     
     @foreach (var item in Model.Files)
     {
+        var statusClass = item.ContentHashMismatch ? "text-danger" : "";
+        var title = item.ContentHashMismatch ? "Hash mismatch - file was modified after upload!" : ""; 
+
         <div class="row my-1"> 
             <div note-name class="col-md-11">
                 <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
                 <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})">@item.Title</a>
+                |
+                @Html.ActionLink("download", "DownloadFile", "ViewEdit", new { id = item.Id, viewInBrowser = false }
+                    , new
+                    {
+                        @class = statusClass,
+                        title = title
+                    }) 
+                |
+                @Html.ActionLink("view", "DownloadFile", "ViewEdit", new { id = item.Id, viewInBrowser = true }
+                    , new
+                    {
+                        @class = statusClass,
+                        title = title
+                    })
                 @if (ViewBag.DisableDelete != true)
                 {
-                    <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id">delete</a> 
+                    @:| <a delete-file-by-id href="#" fileId="@item.Id">delete</a> 
                 }
                 <br/>
                 @if (!item.SearchHeadline.IsNullOrWhiteSpace())

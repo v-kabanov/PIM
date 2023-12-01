@@ -38,9 +38,10 @@
                             }
                         }
                         else if (responseSelector) {
-                            const replacement = $(response).find(responseSelector);
-                            const target = $(responseSelector);
-                            target.html(replacement.html());
+                            const $result = $(response.result);
+                            const replacement = $result.find(responseSelector).add($result.filter(responseSelector));
+                            const $target = $(responseSelector);
+                            $target.html(replacement.html());
                         }
                     },
                     progress: function (e, data) {

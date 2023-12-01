@@ -344,7 +344,8 @@ public class NoteService : INoteService
         
         var note = await Query
             .Where(x => x.Id == noteId)
-            .FetchMany(x => x.Files)
+            //saving 1 roundtrip in this way prohibits the use of simple 'FirstOrDefault' as it applies to database rows rather than parent entities
+            //.FetchMany(x => x.Files)
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
         
