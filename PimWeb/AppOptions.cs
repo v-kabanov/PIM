@@ -9,6 +9,8 @@ public class AppOptions
     public string WebAppPath { get; set; }
     
     public string FileStoragePath { get; set; }
+    
+    public List<string> TextFileExtensions { get; set; }
 }
 
 public record SeedUser

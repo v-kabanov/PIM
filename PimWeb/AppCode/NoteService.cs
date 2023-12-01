@@ -32,6 +32,8 @@ public class NoteService : INoteService
     
     public AppOptions AppOptions { get;  }
     
+    public ITextExtractor TextExtractor { get;  }
+    
     private IQueryable<Note> Query => Session.Query<Note>();
     
     private IQueryable<File> FileQuery => Session.Query<File>();
@@ -50,7 +52,7 @@ public class NoteService : INoteService
         {"text", nameof(NoteSearchResult.Text)}
     }.ToArray();
 
-    private static readonly FileExtensionContentTypeProvider FileExtensionContentTypeProvider = new FileExtensionContentTypeProvider();
+    private static readonly FileExtensionContentTypeProvider FileExtensionContentTypeProvider = new ();
 
     static NoteService()
     {
@@ -60,10 +62,11 @@ public class NoteService : INoteService
             .ToList();
     }
     
-    public NoteService(ISession session, AppOptions appOptions)
+    public NoteService(ISession session, AppOptions appOptions, ITextExtractor textExtractor)
     {
         Session = session ?? throw new ArgumentNullException(nameof(session));
         AppOptions = appOptions ?? throw new ArgumentNullException(nameof(appOptions));
+        TextExtractor = textExtractor ?? new TextExtractor();
     }
 
     public async Task<NoteSearchViewModel> SearchAsync(NoteSearchViewModel model, bool withDelete)

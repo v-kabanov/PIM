@@ -10,13 +10,30 @@ using PdfSharp.Pdf.IO;
 
 namespace Pim.CommonLib;
 
-public static class TextExtractor
+public interface ITextExtractor
+{
+    string Extract(string filePath);
+    
+    string Extract(string fileName, Stream content);
+}
+
+public class TextExtractor : ITextExtractor
 {
     private const string PdfFileNameExtension = ".pdf";
     private const string DocxFileNameExtension = ".docx";
-    private static readonly string[] TextFileExtensions = {".txt", ".log", ".md"};
+    private static readonly string[] DefaultTextFileExtensions = {".txt", ".log", ".md", ".xml", ".sql", ".cs", ".htm", ".html", ".text", ".py"};
     
-    public static string Extract(string filePath)
+    
+    private string[] TextFileExtensions { get; }
+
+    public TextExtractor(string[] textFileExtensions = null)
+    {
+        TextFileExtensions = textFileExtensions == null || textFileExtensions.Length == 0
+            ? DefaultTextFileExtensions
+            : textFileExtensions;
+    }
+
+    public string Extract(string filePath)
     {
         var textCollector = new StringBuilder(64 * 1024);
         if (Extract(filePath, textCollector))
@@ -25,7 +42,7 @@ public static class TextExtractor
         return null;
     }
 
-    public static string Extract(string fileName, Stream content)
+    public string Extract(string fileName, Stream content)
     {
         var textCollector = new StringBuilder(64 * 1024);
         if (Extract(fileName, content, textCollector))
@@ -34,7 +51,7 @@ public static class TextExtractor
         return null;
     }
     
-    public static bool Extract(string filePath, StringBuilder textCollector)
+    public bool Extract(string filePath, StringBuilder textCollector)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (textCollector == null) throw new ArgumentNullException(nameof(textCollector));
@@ -61,7 +78,7 @@ public static class TextExtractor
         return result;
     }
     
-    public static bool Extract(string fileName, Stream content, StringBuilder textCollector)
+    public bool Extract(string fileName, Stream content, StringBuilder textCollector)
     {
         if (content == null) throw new ArgumentNullException(nameof(content));
         if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(fileName));
@@ -88,7 +105,7 @@ public static class TextExtractor
         return result;
     }
     
-    private static bool ExtractText(PdfDocument document, StringBuilder textCollector)
+    private bool ExtractText(PdfDocument document, StringBuilder textCollector)
     {
         var result = false;
 
@@ -102,7 +119,7 @@ public static class TextExtractor
     }
     
     
-    private static bool ExtractText(CObject obj, StringBuilder textCollector)
+    private bool ExtractText(CObject obj, StringBuilder textCollector)
     {
         var result = false;
         
@@ -129,7 +146,7 @@ public static class TextExtractor
         return result;
     }
 
-    private static bool AppendLine(StringBuilder bld, string value)
+    private bool AppendLine(StringBuilder bld, string value)
     {
         var result = Append(bld, value);
         if (result)
@@ -137,7 +154,7 @@ public static class TextExtractor
         return result;
     }
     
-    private static bool Append(StringBuilder bld, string value)
+    private bool Append(StringBuilder bld, string value)
     {
         if (value.IsNullOrEmpty())
             return false;
@@ -146,21 +163,21 @@ public static class TextExtractor
         return true;
     }
 
-    private static bool ExtractFromDocx(string fullPath, StringBuilder textCollector)
+    private bool ExtractFromDocx(string fullPath, StringBuilder textCollector)
     {
         using var document = WordprocessingDocument.Open(fullPath, false);
         
         return ExtractFromDocx(document, textCollector);
     }
 
-    private static bool ExtractFromDocx(Stream content, StringBuilder textCollector)
+    private bool ExtractFromDocx(Stream content, StringBuilder textCollector)
     {
         using var document = WordprocessingDocument.Open(content, false);
         
         return ExtractFromDocx(document, textCollector);
     }
     
-    private static bool ExtractFromDocx(WordprocessingDocument document, StringBuilder textCollector)
+    private bool ExtractFromDocx(WordprocessingDocument document, StringBuilder textCollector)
     {
         var result = false;
         
@@ -204,7 +221,7 @@ public static class TextExtractor
         return result;
     }
 
-    private static bool ExtractText(CSequence obj, StringBuilder textCollector)
+    private bool ExtractText(CSequence obj, StringBuilder textCollector)
     {
         var result = false;
         

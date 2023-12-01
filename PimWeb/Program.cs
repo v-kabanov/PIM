@@ -40,6 +40,7 @@ var appOptions = builder.Configuration.GetSection(nameof(AppOptions)).Get<AppOpt
 
 builder.Services
     .AddSingleton(appOptions)
+    .AddSingleton<ITextExtractor>(new TextExtractor(appOptions.TextFileExtensions?.Select(x => $".{x}").ToArray()))
     .AddControllers();
     //use controllers for now
     //.AddRazorPages();
