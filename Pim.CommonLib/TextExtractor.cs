@@ -23,6 +23,11 @@ public class TextExtractor : ITextExtractor
     private const string DocxFileNameExtension = ".docx";
     private static readonly string[] DefaultTextFileExtensions = {".txt", ".log", ".md", ".xml", ".sql", ".cs", ".htm", ".html", ".text", ".py"};
     
+    private readonly Encoding _utfEncoding = new UTF8Encoding(false, false);
+    // {
+    //     EncoderFallback = new EncoderReplacementFallback(" "),
+    //     DecoderFallback = new DecoderReplacementFallback(" ")
+    // };
     
     private string[] TextFileExtensions { get; }
 
@@ -70,9 +75,7 @@ public class TextExtractor : ITextExtractor
         else if (extension.InIgnoreCase(TextFileExtensions))
         {
             var text = File.ReadAllText(filePath).Trim();
-            result = !text.IsNullOrEmpty();
-            if (result)
-                textCollector.AppendLine(text);
+            result = AppendLine(textCollector, text);
         }
         
         return result;
@@ -97,9 +100,7 @@ public class TextExtractor : ITextExtractor
         else if (extension.InIgnoreCase(TextFileExtensions))
         {
             var text = new StreamReader(content).ReadToEnd().Trim();
-            result = !text.IsNullOrEmpty();
-            if (result)
-                textCollector.AppendLine(text);
+            result = AppendLine(textCollector, text);
         }
         
         return result;
@@ -146,6 +147,22 @@ public class TextExtractor : ITextExtractor
         return result;
     }
 
+    private string Sanitize(string value)
+    {
+        if (value.IsNullOrWhiteSpace())
+            return value;
+        
+        try
+        {
+            return _utfEncoding.GetString(_utfEncoding.GetBytes(value));
+        }
+        catch
+        {
+            // should not occur
+            return null;
+        }
+    }
+    
     private bool AppendLine(StringBuilder bld, string value)
     {
         var result = Append(bld, value);
@@ -156,6 +173,10 @@ public class TextExtractor : ITextExtractor
     
     private bool Append(StringBuilder bld, string value)
     {
+        if (value.IsNullOrEmpty())
+            return false;
+        
+        value = Sanitize(value);
         if (value.IsNullOrEmpty())
             return false;
         
