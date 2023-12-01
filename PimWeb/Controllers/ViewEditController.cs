@@ -80,17 +80,6 @@ public class ViewEditController : Controller
 
         return View(model);
     }
-    
-    [HttpPost("~/ViewEdit/{noteId}/upload-file")]
-    [Authorize(Roles = "Admin,Writer")]
-    public async Task<PartialViewResult> UploadFileForNote(int noteId, IFormFile file)
-    {
-        using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-        var result = await NoteService.UploadFileForNoteAsync(noteId, file.FileName, ms.ToArray());
-
-        return PartialView("FileList", result);
-    }
 
     [HttpPost("~/file/upload")]
     [Authorize(Roles = "Admin,Writer")]
@@ -101,6 +90,36 @@ public class ViewEditController : Controller
         var result = await NoteService.SaveFileAsync(file.FileName, ms.ToArray());
 
         return Json(new {Id = result.File.Id, IfDuplicate = result.Duplicate, Url = Url.Action("File", new {id = result.File.Id})});
+    }
+    
+    [HttpGet]
+    [Authorize(Roles = "Admin,Reader,Writer")]
+    [Route("~/files/{id}/download")]
+    public async Task<ActionResult> DownloadFile(int id, bool viewInBrowser = true)
+    {
+        var model = await NoteService.GetFileAsync(id);
+        if (!model.ExistsOnDisk)
+        {
+            ModelState.AddModelError("", "File does not exist");
+            return View("Error");
+        }
+        
+        var suggestedFileName = !viewInBrowser
+            ? Path.ChangeExtension(model.Title, Path.GetExtension(model.RelativePath))
+            : null;
+        
+        return File(new FileStream(model.FullPath, FileMode.Open), model.MimeType, suggestedFileName);
+    }
+    
+    [HttpPost("~/ViewEdit/{noteId}/upload-file")]
+    [Authorize(Roles = "Admin,Writer")]
+    public async Task<PartialViewResult> UploadFileForNote(int noteId, IFormFile file)
+    {
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var result = await NoteService.UploadFileForNoteAsync(noteId, file.FileName, ms.ToArray());
+
+        return PartialView("FileList", result);
     }
 
     [HttpPost]

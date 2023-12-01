@@ -72,8 +72,8 @@
             <div class="card-body">
                 @await Html.PartialAsync("FileList", Model.Files, new ViewDataDictionary (ViewData)
                 {
-                    {"UploadUrl", Url.Action("UploadFileForNote", new {noteId = Model.Id})}
-                    , {"DeleteUrl", Url.Action("UnlinkFile", new {noteId = Model.Id})}
+                    {"UploadUrl", ViewBag.Edit == true ? Url.Action("UploadFileForNote", new {noteId = Model.Id}) : null}
+                    , {"DeleteUrl", ViewBag.Edit == true ? Url.Action("UnlinkFile", new {noteId = Model.Id}) : null}
                 })
             </div>
         </div>

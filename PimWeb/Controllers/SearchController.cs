@@ -48,23 +48,6 @@ public class SearchController : Controller
 
         return PartialView("SearchPartial", result);
     }
-    
-    [HttpGet]
-    [Authorize(Roles = "Admin,Reader,Writer")]
-    [Route("~/files/{id}/download")]
-    public async Task<ActionResult> DownloadFile(int id)
-    {
-        var model = await NoteService.GetFileAsync(id);
-        if (!model.ExistsOnDisk)
-        {
-            ModelState.AddModelError("", "File does not exist");
-            return View("Error");
-        }
-        
-        var suggestedFileName = Path.ChangeExtension(model.Title, Path.GetExtension(model.RelativePath));
-        
-        return File(new FileStream(model.FullPath, FileMode.Open), model.MimeType, suggestedFileName);
-    }
 
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]

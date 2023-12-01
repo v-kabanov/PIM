@@ -10,37 +10,41 @@
     
     @foreach (var item in Model.Files)
     {
-        <div class="row">
+        <div class="row my-1"> 
             <div note-name class="col-md-11">
                 <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
-                <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})" title="@item.Description">@item.Title</a>
-                <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id" delete-url="@ViewBag.DeleteUrl">delete</a>
+                <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})">@item.Title</a>
+                @if (!(ViewBag.DeleteUrl as string).IsNullOrEmpty())
+                {
+                    <a delete-file-by-id class="ms-3" href="#" fileId="@item.Id" delete-url="@ViewBag.DeleteUrl">delete</a> 
+                }
                 <br/>
                 @if (!item.SearchHeadline.IsNullOrWhiteSpace())
                 {
                     @Html.Raw(item.SearchHeadline) @:(@($"{item.Rank:F2}"))
                 }
-                else
+                else if (!item.Description.IsNullOrWhiteSpace())
                 {
-                    item.Description?.Ellipsify(0, 200);
+                    @: @item.Description?.Ellipsify(0, 1024)
                 }
             </div>
         </div>
     }
 
-    @if (ViewBag.DisableUpload != true)
+    @if (ViewBag.DisableUpload != true && !(ViewBag.UploadUrl as string).IsNullOrEmpty())
     {
         <div genericupload class="my-2" upload-url="@ViewBag.UploadUrl" response-element-selector="#divFiles" response-is-file-details="@ViewBag.UploadResponseIsFileDetails">
             <input type="file" class="form-control" />
         </div>
-        @if (ViewBag.UploadError != null)
-        {
-            <div class="text-danger">@ViewBag.UploadError</div>
-        }
-        
+
         <div upload-error class="text-danger">
             @Html.ValidationSummary(true)
         </div>
+    }
+
+    @if (ViewBag.UploadError != null)
+    {
+        <div class="text-danger mt-1">@ViewBag.UploadError</div>
     }
     
     @if (!Model.StatusMessage.IsNullOrWhiteSpace())

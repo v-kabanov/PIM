@@ -88,7 +88,7 @@
     }
 
     <div class="my-2">
-        @Html.ActionLink("Back to home page", "Index", "Home")
+        @Html.ActionLink("Browse files", "Files", "Search")
     
         @if (Model.Version.HasValue)
         {
@@ -101,7 +101,14 @@
                 var statusClass = Model.ContentHashMismatch ? "text-danger" : "";
                 var title = Model.ContentHashMismatch ? "Hash mismatch - file was modified after upload!" : "";
                 @: |
-                @Html.ActionLink("Download/view", "DownloadFile", "Search", new { id = Model.Id }
+                @Html.ActionLink("Download", "DownloadFile", "ViewEdit", new { id = Model.Id, viewInBrowser = false }
+                    , new
+                    {
+                        @class = statusClass,
+                        title = title
+                    })
+                @: |
+                @Html.ActionLink("View", "DownloadFile", "ViewEdit", new { id = Model.Id, viewInBrowser = true }
                     , new
                     {
                         @class = statusClass,
