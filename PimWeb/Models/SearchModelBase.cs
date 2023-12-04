@@ -11,25 +11,28 @@ public enum SortProperty
     SearchRank
 }
 
-public class SearchModelBase
+public class SearchFormData
 {
-    public SearchModelBase()
+    public SearchFormData()
     {
     }
-
+    
     /// <summary>
-    ///     Copies user input only
+    ///     Copy constructor
     /// </summary>
     /// <param name="other">
     ///     Mandatory
     /// </param>
-    public SearchModelBase(SearchModelBase other)
+    public SearchFormData(SearchFormData other)
     {
         if (other == null) throw new ArgumentNullException(nameof(other));
         Query = other.Query;
         LastUpdatePeriodStart = other.LastUpdatePeriodStart;
         LastUpdatePeriodEnd = other.LastUpdatePeriodEnd;
-        SortOptions = other.SortOptions;
+        PageNumber = other.PageNumber;
+        Fuzzy = other.Fuzzy;
+        SortProperty = other.SortProperty;
+        SortAscending = other.SortAscending;
     }
 
     public string Query { get; set; }
@@ -60,13 +63,6 @@ public class SearchModelBase
     /// </summary>
     public int PageNumber { get; set; } = 1;
 
-    /// <summary>
-    ///     The number or counted notes is limited (e.g. to 10 pages past the selected page) for performance reasons.
-    /// </summary>
-    public int? TotalCountedPageCount { get; set; }
-    
-    public bool HasMore { get; set; }
-
     public bool Fuzzy { get; set; }
     
     [DisplayName("Sort")]
@@ -74,6 +70,35 @@ public class SearchModelBase
 
     [DisplayName("Asc")]
     public bool SortAscending { get; set; }
+}
+
+public class SearchModelBase : SearchFormData
+{
+    public SearchModelBase()
+    {
+    }
+
+    /// <summary>
+    ///     Copy constructor
+    /// </summary>
+    /// <param name="other">
+    ///     Mandatory
+    /// </param>
+    public SearchModelBase(SearchModelBase other)
+        : base(other)
+    {
+        SortOptions = other.SortOptions;
+        TotalCountedPageCount = other.TotalCountedPageCount;
+        HasMore = other.HasMore;
+    }
+
+
+    /// <summary>
+    ///     The number or counted notes is limited (e.g. to 10 pages past the selected page) for performance reasons.
+    /// </summary>
+    public int? TotalCountedPageCount { get; set; }
+    
+    public bool HasMore { get; set; }
     
     public List<SelectListItem> SortOptions { get; set; } = new ();
 }

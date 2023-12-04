@@ -3,93 +3,17 @@
 
 @using (Html.BeginForm("Search", "Search", FormMethod.Get, new {id = "mainForm"}))
 {
-    <div class="row">
-        <div class="offset-md-1 col-md-10">
-            <div class="input-group w-100">
-                @Html.TextBoxFor(m => m.Query, new {id = "tbQuery", @class = "form-control"})
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-search"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-auto my-2">
-            <div class="form-check form-switch form-control border-0">
-                @Html.CheckBoxFor(x => x.Fuzzy, new { @class = "form-check-input" })
-                @Html.LabelFor(x => x.Fuzzy, new { @class = "form-check-label" })
-            </div>
-        </div>
-        <div class="col-sm-auto my-2">
-            <div class="row">
-                @Html.LabelFor(x => x.LastUpdatePeriodStart, new { @class = "col-form-label col-sm-auto" })
-                @Html.TextBoxFor(m => m.LastUpdatePeriodStart, new { @class = "form-control datepicker mr-2", placeholder = "Optional" })
-                @Html.LabelFor(x => x.LastUpdatePeriodEnd, new { @class = "col-form-label col-sm-auto" })
-                @Html.TextBoxFor(m => m.LastUpdatePeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
-                @Html.ValidationMessageFor(m => m.LastUpdatePeriodEnd)
-            </div>
-        </div>
-        <div class="col-sm-auto my-2">
-            <div class="row">
-                @Html.LabelFor(x => x.CreationPeriodStart, new { @class = "col-form-label col-sm-auto" })
-                @Html.TextBoxFor(m => m.CreationPeriodStart, new { @class = "form-control datepicker mr-2", placeholder = "Optional" })
-
-                @Html.LabelFor(x => x.CreationPeriodEnd, new { @class = "col-form-label col-sm-auto" })
-                @Html.TextBoxFor(m => m.CreationPeriodEnd, new { @class = "form-control datepicker", placeholder = "Optional" })
-                @Html.ValidationMessageFor(m => m.CreationPeriodEnd)
-            </div>
-        </div>
-        <div class="col-sm-auto my-2">
-            <div class="row">
-                @Html.LabelFor(x => x.SortProperty, new { @class = "col-form-label col-sm-auto" })
-                @Html.DropDownListFor(m => m.SortProperty, Model.SortOptions, new { @class = "form-control mr-2 w-auto", placeholder = "Optional" })
-
-                @Html.EditorFor(x => x.SortAscending, "RadioGroup", new
-                {
-                    Items = new[] {new ListItem {Value = false, Text = "Desc"}, new ListItem {Value = true, Text = "Asc"}},
-                    Title = "Sort Order"
-                })
-
-                @Html.ValidationMessageFor(x => x.SortProperty)
-                @Html.ValidationMessageFor(x => x.SortAscending)
-            </div>
-        </div>
-    </div>
+    @await Html.PartialAsync("SearchFormContent")
  
     <br/>
 
     if (Model.SearchResultPage?.Count > 0)
     {
         <div id="divNoteList" class="">
-            @Html.Partial("NoteList", Model.SearchResultPage)
+            @await Html.PartialAsync("NoteList", Model.SearchResultPage)
 
-            @if (Model.TotalCountedPageCount > 1)
-            {
-                var startPage = 1;
-                if (Model.PageNumber > 11)
-                    startPage = Model.PageNumber - 10;
-                
-                var endPage = Model.TotalCountedPageCount;
-                if (endPage > Model.PageNumber + 10)
-                    endPage = Model.PageNumber + 10;
-                
-                for (var i = startPage; i <= endPage; ++i)
-                {
-                    if (i == Model.PageNumber)
-                    {
-                        @: @i
-                    }
-                    else
-                    {
-                        @Html.ActionLink(i.ToString(), "Search", new {PageNumber = i, Query = Model.Query})
-                    }
-                    @:&nbsp;
-                }
-            }
+            @await Html.PartialAsync("_Pager", new ViewDataDictionary<NoteSearchViewModel>(ViewData, Model) { {"ActionName", "Search" }})
         </div>
-        <p class="text-muted">
-            Counted @(Model.TotalCountedPageCount) pages
-        </p>
     }
     else
     {
