@@ -31,6 +31,8 @@ public class FileNoteUnlinkResultViewModel : NoteListViewModel
 public class FileListViewModel : StatusViewModel
 {
     public List<FileViewModel> Files { get; set; } = new ();
+    
+    public List<int> SelectedFiles { get; set; } = new ();
 }
 
 public class NoteListViewModel : StatusViewModel

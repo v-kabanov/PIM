@@ -34,7 +34,7 @@ public class ViewEditController : Controller
 
     [HttpPost("~/note")]
     [Authorize(Roles = "Admin,Writer")]
-    public async Task<PartialViewResult> Update([FromBody]NoteViewModel model)
+    public async Task<PartialViewResult> Update(NoteViewModel model)
     {
         ModelState[nameof(model.Version)].RawValue = null;
         ViewBag.Edit = true;
@@ -68,7 +68,25 @@ public class ViewEditController : Controller
         return RedirectToAction("Index", "Home");
     }
     
-    [HttpGet("~/file/{id}")]
+    [HttpGet("~/note/{id:int}/attach-existing-files")]
+    public async Task<ActionResult> AttachExistingFiles(int noteId)
+    {
+        var model = new AttachExistingFilesToNoteViewModel {Note = new NoteViewModel {Id = noteId} };
+        
+        model = await NoteService.ProcessAsync(model, false).ConfigureAwait(false);
+
+        return View("AttachExistingFiles", model);
+    }
+
+    [HttpPost("~/note/attach-existing-files")]
+    public async Task<PartialViewResult> AttachExistingFiles(AttachExistingFilesToNoteViewModel model, bool commit)
+    {
+        //model = await NoteService.ProcessAsync(model, false).ConfigureAwait(false);
+
+        return PartialView("AttachExistingFilesPartial", model);
+    }
+    
+    [HttpPost("~/file/{id}")]
     [Authorize(Roles = "Admin,Reader,Writer")]
     public async Task<ActionResult> File(int id, bool edit = false)
     {

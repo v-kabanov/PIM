@@ -24,4 +24,6 @@ public class SearchableEntityViewModelBase
     public float? Rank { get; set; }
     
     public bool IfDeleted { get; set; }
+    
+    public bool IfSelectDisabled { get; set; }
 }

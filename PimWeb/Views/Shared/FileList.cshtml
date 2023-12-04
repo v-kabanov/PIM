@@ -36,6 +36,13 @@
                     @:| <a delete-file-by-id href="#" fileId="@item.Id">delete</a> 
                 }
                 <br/>
+                @if (ViewBag.AllowSelect)
+                {
+                    <div class="form-check form-switch form-control border-0">
+                        <input type="checkbox" name="@nameof(Model.SelectedFiles)" id="SelectedFiles@(item.Id)" class = "form-check-input"  />
+                        <label for="SelectedFiles@(item.Id)" class = "form-check-label">select</label>
+                    </div>
+                }
                 @if (!item.SearchHeadline.IsNullOrWhiteSpace())
                 {
                     @Html.Raw(item.SearchHeadline) @:(@($"{item.Rank:F2}"))

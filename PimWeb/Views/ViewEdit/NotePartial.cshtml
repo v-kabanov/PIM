@@ -76,6 +76,8 @@
                            , {"DisableDelete", ViewBag.Edit != true}
                            //, {"DeleteUrl", ViewBag.Edit == true ? Url.Action("UnlinkFileFromNote", new {noteId = Model.Id}) : null}
                        })
+                <br />
+                @Html.ActionLink("Attach existing files", "AttachExistingFiles", new {noteId = Model.Id})
             </div>
         </div>
     }

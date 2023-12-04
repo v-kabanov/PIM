@@ -229,6 +229,19 @@ public class NoteService : INoteService
     }
 
     /// <inheritdoc />
+    public async Task<AttachExistingFilesToNoteViewModel> ProcessAsync(AttachExistingFilesToNoteViewModel model, bool commit)
+    {
+        var note = await Session.GetAsync<Note>(model.Note.Id).ConfigureAwait(false);
+        var attachedFileIds = note.Files.Select(x => x.Id).ToHashSet();
+        
+        var searchModel = await SearchAsync(model.FileSearchViewModel, false);
+        foreach (var file in searchModel.SearchResultPage.Files)
+            file.IfSelectDisabled = attachedFileIds.Contains(file.Id);
+        
+        return null;
+    }
+
+    /// <inheritdoc />
     public async Task<FileViewModel> GetFileAsync(int id)
     {
         var file = await Session.GetAsync<File>(id).ConfigureAwait(false);

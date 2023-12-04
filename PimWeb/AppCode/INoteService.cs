@@ -20,6 +20,10 @@ public interface INoteService
     
     Task<NoteViewModel> GetNoteAsync(int id);
     
+    //Task<AttachExistingFilesToNoteViewModel> GetAttachExistingFileToNoteAsync(int noteId);
+
+    Task<AttachExistingFilesToNoteViewModel> ProcessAsync(AttachExistingFilesToNoteViewModel model, bool commit);
+    
     Task<FileViewModel> GetFileAsync(int id);
     
     Task<NoteViewModel> SaveOrUpdateAsync(NoteViewModel model);

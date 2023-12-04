@@ -1,0 +1,30 @@
+﻿@model PimWeb.Models.AttachExistingFilesToNoteViewModel
+@{
+    ViewBag.Title = "Files";
+}
+
+@Html.Partial("AttachExistingFilesPartial", Model, ViewData)
+
+<script>
+@section Init
+{
+    const config = {
+        mainFormSelector: '#mainForm',
+        deleteUrl: '@Url.Action("DeleteFile", "ViewEdit")',
+        deleteSelector: '[delete-file-by-id]',
+        divInProgressSelector: '#progressIndicator',
+        attributeNameFileId: "fileId",
+        //divNoteListSelector: "#divNoteList",
+    };
+
+    (pim.pages.attachExistingFiles)
+    &&
+    (pim.pages.attachExistingFiles.init(config));
+}
+</script>
+
+<hr/>
+
+<div>
+    @Html.ActionLink("Back to home page", "Index", "Home")
+</div>

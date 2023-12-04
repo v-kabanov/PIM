@@ -1,0 +1,28 @@
+﻿@using PimWeb.Models
+@model PimWeb.Models.AttachExistingFilesToNoteViewModel
+
+@using (Html.BeginForm("Files", "Search", FormMethod.Post, new {id = "mainForm"}))
+{
+    @await Html.PartialAsync("SearchFormContent", Model.FileSearchViewModel)
+    
+    <br/>
+
+    <div id="divNoteList" class="">
+        
+        @Html.Partial("FileList", Model.FileSearchViewModel.SearchResultPage, new ViewDataDictionary(ViewData)
+        {
+            { "AllowSelect", true }
+        })
+
+        @await Html.PartialAsync("_Pager", new ViewDataDictionary<NoteSearchViewModel>(ViewData, Model) { {"ActionName", "AttachExistingFiles" }})
+    </div>
+
+    <p class="text-muted">
+        Counted @(Model.FileSearchViewModel.TotalCountedPageCount) pages
+    </p>
+    
+    if (Model.FileSearchViewModel.SearchResultPage.Files.Count == 0)
+    {
+        @: No results to display
+    }
+}
