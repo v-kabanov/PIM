@@ -15,7 +15,7 @@
     const config = {
         mainFormSelector: '#mainForm',
         updateUrl: '@Url.Action("UpdateFile", new {id = Model.Id})',
-        deleteAssociationWithNoteLinkSelector: '#a[delete-note-by-id]',
+        deleteAssociationWithNoteLinkSelector: 'a[delete-note-by-id]',
         deleteAssociationWithNoteUrl: '@Url.Action("UnlinkNoteFromFile", new {fileId = Model.Id})',
         noteListSelector: '#divNotes',
         deleteButtonSelector: '#btnDelete',

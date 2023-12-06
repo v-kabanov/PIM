@@ -26,4 +26,13 @@
             </div>
         </div>
     }
+    
+    @{
+        var statusMessage = ViewBag.StatusMessage as string;
+    }
+    
+    @if (!statusMessage.IsNullOrWhiteSpace())
+    {
+        <div class="text-info">@statusMessage</div>
+    }
 </div>

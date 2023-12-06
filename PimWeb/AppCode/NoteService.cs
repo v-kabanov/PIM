@@ -458,8 +458,10 @@ public class NoteService : INoteService
                     : $"File #{fileId} does not exist.",
             };
         }
-        
-        var unlinked = file.Notes.Remove(noteFuture.Value);
+
+        // relationship is managed by note
+        var unlinked = noteFuture.Value.Files.Remove(file);
+        file.Notes.Remove(noteFuture.Value);
         
         if (unlinked)
             await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);

@@ -201,6 +201,8 @@ public class ViewEditController : Controller
     public async Task<PartialViewResult> UnlinkNoteFromFile(int noteId, int fileId)
     {
         var result = await NoteService.UnlinkNoteFromFile(fileId, noteId);
+        
+        ViewBag.StatusMessage = result.StatusMessage;
 
         return PartialView("NoteList", result.Notes);
     }
