@@ -6,42 +6,35 @@
     page.init = function (configData) {
         $.extend($pim.config, configData);
 
-        $(document).ready(function () {
-            $(document).on("click", conf.deleteButtonSelector, deleteFile);
+        $(document).on("click", conf.deleteButtonSelector, deleteFile);
 
-            pim.features.autoAjax.init([
-                {
-                    url: conf.updateUrl,
-                    triggers: [
-                        {
-                            selector: conf.updateButtonSelector,
-                            eventName: "click"
-                        }],
-                    always: setupComponents
-                }, {
-                    url: conf.deleteAssociationWithNoteUrl,
-                    triggers: [
-                        {
-                            selector: conf.deleteAssociationWithNoteLinkSelector,
-                            eventName: "click"
-                        }],
-                    replacementSourceSelector: conf.noteListSelector,
-                    confirmFunction: confirmDeleteLinkToNote,
-                    always: setupComponents,
-                    getPostData: function (event) {
-                        const target = $(event.target || event.srcElement);
-                        const data = { noteId: target.attr(conf.attributeNameNoteId) };
-                        const postData = $.param(data);
-                        return postData;
-                    }
+        pim.features.autoAjax.init([
+            {
+                url: conf.updateUrl,
+                triggers: [
+                    {
+                        selector: conf.updateButtonSelector,
+                        eventName: "click"
+                    }],
+                always: setupComponents
+            }, {
+                url: conf.deleteAssociationWithNoteUrl,
+                triggers: [
+                    {
+                        selector: conf.deleteAssociationWithNoteLinkSelector,
+                        eventName: "click"
+                    }],
+                replacementSourceSelector: conf.noteListSelector,
+                confirmFunction: confirmDeleteLinkToNote,
+                always: null,
+                getPostData: function (event) {
+                    const target = $(event.target || event.srcElement);
+                    const data = { noteId: target.attr(conf.attributeNameNoteId) };
+                    const postData = $.param(data);
+                    return postData;
                 }
-            ]);
-
-            setupComponents();
-        });
-
-        function setupComponents() {
-        }
+            }
+        ]);
 
         function deleteFile(e) {
             if (!confirm("Delete this file permanently?"))

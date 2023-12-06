@@ -147,7 +147,7 @@ public class ViewEditController : Controller
     {
         var result = await NoteService.DeleteAsync(new FileViewModel {Id = id});
 
-        return Json(new {success = true});
+        return Json(new {success = true, deletedFile = result});
     }
 
     [HttpPost("~/file/{id:int}")]
@@ -170,7 +170,7 @@ public class ViewEditController : Controller
         return PartialView("FilePartial", result);
     }
 
-    [HttpDelete("~/file/delete")]
+    [HttpPost("~/file/delete")]
     [Authorize(Roles = "Admin,Writer")]
     public async Task<ActionResult> DeleteFilePermanently(FileViewModel model)
     {
