@@ -68,7 +68,7 @@ public class ViewEditController : Controller
         return RedirectToAction("Index", "Home");
     }
     
-    [HttpGet("~/note/{id:int}/attach-existing-files")]
+    [HttpGet("~/note/{noteId:int}/attach-existing-files")]
     public async Task<ActionResult> AttachExistingFiles(int noteId)
     {
         var model = new AttachExistingFilesToNoteViewModel {Note = new NoteViewModel {Id = noteId} };
@@ -79,14 +79,18 @@ public class ViewEditController : Controller
     }
 
     [HttpPost("~/note/attach-existing-files")]
-    public async Task<PartialViewResult> AttachExistingFiles(AttachExistingFilesToNoteViewModel model, bool commit)
+    public async Task<PartialViewResult> ProcessAttachExistingFiles(AttachExistingFilesToNoteViewModel model, bool commit)
     {
-        //model = await NoteService.ProcessAsync(model, false).ConfigureAwait(false);
+        model = await NoteService.ProcessAsync(model, commit).ConfigureAwait(false);
 
+        var selectedFilesModelState = ModelState[nameof(model.SelectedFiles)];
+        if (selectedFilesModelState != null)
+            selectedFilesModelState.RawValue = null;
+        
         return PartialView("AttachExistingFilesPartial", model);
     }
     
-    [HttpPost("~/file/{id}")]
+    [HttpGet("~/file/{id}")]
     [Authorize(Roles = "Admin,Reader,Writer")]
     public async Task<ActionResult> File(int id, bool edit = false)
     {
@@ -109,7 +113,7 @@ public class ViewEditController : Controller
     
     [HttpGet]
     [Authorize(Roles = "Admin,Reader,Writer")]
-    [Route("~/files/{id}/download")]
+    [Route("~/file/{id}/download")]
     public async Task<ActionResult> DownloadFile(int id, bool viewInBrowser = true)
     {
         var model = await NoteService.GetFileAsync(id);
@@ -126,7 +130,7 @@ public class ViewEditController : Controller
         return File(new FileStream(model.FullPath, FileMode.Open), model.MimeType, suggestedFileName);
     }
     
-    [HttpPost("~/ViewEdit/{noteId}/upload-file")]
+    [HttpPost("~/note/{noteId}/upload-file")]
     [Authorize(Roles = "Admin,Writer")]
     public async Task<PartialViewResult> UploadFileForNote(int noteId, IFormFile file)
     {

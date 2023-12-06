@@ -7,4 +7,6 @@ public class AttachExistingFilesToNoteViewModel
     public List<int> SelectedFiles { get; set; } = new ();
     
     public FileSearchViewModel FileSearchViewModel { get; set; } = new ();
+    
+    public List<FileViewModel> AttachedFiles = new ();
 }

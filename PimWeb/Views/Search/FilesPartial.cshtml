@@ -7,16 +7,14 @@
  
     <br/>
 
-    <div id="divFileList" class="">
-        @Html.Partial("FileList", Model.SearchResultPage, new ViewDataDictionary (ViewData)
-        {
-            {"UploadUrl", Url.Action("UploadFile", "ViewEdit")}
-            , {"DeleteUrl", Url.Action("DeleteFilePermanently", "ViewEdit")}
-            , {"UploadResponseIsFileDetails", "true"}
-        })
+    @Html.Partial("FileList", Model.SearchResultPage, new ViewDataDictionary (ViewData)
+    {
+        {"UploadUrl", Url.Action("UploadFile", "ViewEdit")}
+        , {"DeleteUrl", Url.Action("DeleteFilePermanently", "ViewEdit")}
+        , {"UploadResponseIsFileDetails", "true"}
+    })
 
-        @await Html.PartialAsync("_Pager", new ViewDataDictionary<NoteSearchViewModel>(ViewData, Model) { {"ActionName", "Files" }})
-    </div>
+    @await Html.PartialAsync("_Pager", new ViewDataDictionary<FileSearchViewModel>(ViewData, Model) { {"ActionName", "Files" }})
 
     if (Model.SearchResultPage.Files.Count == 0)
     {

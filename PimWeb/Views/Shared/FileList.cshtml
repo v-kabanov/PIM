@@ -15,7 +15,19 @@
 
         <div class="row my-1"> 
             <div note-name class="col-md-11">
-                <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
+                @if (ViewBag.AllowSelect == true)
+                {
+                    var disabled = item.IfSelectDisabled ? "disabled" : null;
+                    
+                    <div class="form-check form-check-inline border-0">
+                        <input type="checkbox" name="@nameof(Model.SelectedFiles)" id="SelectedFiles@(item.Id)" value="@item.Id" class="form-check-input" @disabled />
+                        <label class="text-muted small" for="SelectedFiles@(item.Id)" class="form-check-label">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</label>
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
+                }
                 <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})">@item.Title</a>
                 |
                 @Html.ActionLink("download", "DownloadFile", "ViewEdit", new { id = item.Id, viewInBrowser = false }
@@ -36,13 +48,6 @@
                     @:| <a delete-file-by-id href="#" fileId="@item.Id">delete</a> 
                 }
                 <br/>
-                @if (ViewBag.AllowSelect)
-                {
-                    <div class="form-check form-switch form-control border-0">
-                        <input type="checkbox" name="@nameof(Model.SelectedFiles)" id="SelectedFiles@(item.Id)" class = "form-check-input"  />
-                        <label for="SelectedFiles@(item.Id)" class = "form-check-label">select</label>
-                    </div>
-                }
                 @if (!item.SearchHeadline.IsNullOrWhiteSpace())
                 {
                     @Html.Raw(item.SearchHeadline) @:(@($"{item.Rank:F2}"))

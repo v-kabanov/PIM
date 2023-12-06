@@ -326,8 +326,8 @@
                             if (postbackConf.getAdditionalPostData)
                                 $.extend(postData, postbackConf.getAdditionalPostData());
 
-                            const sourceSelector = postbackConf.replacementSourceSelector ? postbackConf.replacementSourceSelector : "form";
-                            const targetSelector = postbackConf.replacementTargetSelector ? postbackConf.replacementTargetSelector : postbackConf.formSelector;
+                            const sourceSelector = postbackConf.replacementSourceSelector || postbackConf.formSelector || "form";
+                            const targetSelector = postbackConf.replacementTargetSelector || sourceSelector;
 
                             return $.post(postbackConf.url, postData, function (result) {
                                 const $result = $(result);

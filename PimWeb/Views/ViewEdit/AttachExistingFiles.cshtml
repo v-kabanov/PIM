@@ -1,6 +1,7 @@
 ﻿@model PimWeb.Models.AttachExistingFilesToNoteViewModel
 @{
     ViewBag.Title = "Files";
+    ViewBag.ShowPageCaption = false;
 }
 
 @Html.Partial("AttachExistingFilesPartial", Model, ViewData)
@@ -10,11 +11,10 @@
 {
     const config = {
         mainFormSelector: '#mainForm',
-        deleteUrl: '@Url.Action("DeleteFile", "ViewEdit")',
-        deleteSelector: '[delete-file-by-id]',
+        attachUrl: '@Url.Action("ProcessAttachExistingFiles", "ViewEdit", new {commit = true})',
         divInProgressSelector: '#progressIndicator',
-        attributeNameFileId: "fileId",
-        //divNoteListSelector: "#divNoteList",
+        divFileListSelector: "#divFiles",
+        btnAttachSelector: '#btnAttach'
     };
 
     (pim.pages.attachExistingFiles)

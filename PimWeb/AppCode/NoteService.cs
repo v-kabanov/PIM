@@ -24,6 +24,14 @@ public class NoteService : INoteService
 {
     private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
     
+    private static readonly Dictionary<string, string> MimeMap = new (StringComparer.OrdinalIgnoreCase)
+    {
+        {"sql", "text/plain"}
+        , {"log", "text/plain"}
+        , {"csv", "text/plain"}
+        , {"ini", "text/plain"}
+    };
+    
     public const int DefaultPageSize = 20;
     
     public ISession Session { get; }
@@ -231,14 +239,45 @@ public class NoteService : INoteService
     /// <inheritdoc />
     public async Task<AttachExistingFilesToNoteViewModel> ProcessAsync(AttachExistingFilesToNoteViewModel model, bool commit)
     {
-        var note = await Session.GetAsync<Note>(model.Note.Id).ConfigureAwait(false);
+        var note = await Session.GetAsync<Note>(model.Note.Id).ConfigureAwait(false) ?? new Note();
         var attachedFileIds = note.Files.Select(x => x.Id).ToHashSet();
         
+        var selectedFilesFuture = model.SelectedFiles.Count > 0
+            ? FileQuery.Where(x => model.SelectedFiles.Contains(x.Id)).ToFuture()
+            : null;
+        
         var searchModel = await SearchAsync(model.FileSearchViewModel, false);
+
+        var attachedFiles = new List<File>();
+        
+        if (selectedFilesFuture != null)
+            foreach (var newFile in selectedFilesFuture)
+                if (!note.Files.Add(newFile))
+                    Log.ErrorFormat("File {0} is already associated with {1} - updated via backend?", newFile, note);
+                else
+                {
+                    attachedFiles.Add(newFile);
+                    attachedFileIds.Add(newFile.Id);
+                }
+        // disable selection of files that are already attached 
         foreach (var file in searchModel.SearchResultPage.Files)
             file.IfSelectDisabled = attachedFileIds.Contains(file.Id);
         
-        return null;
+        var result = new AttachExistingFilesToNoteViewModel
+        {
+            Note = CreateModel(note)
+            , FileSearchViewModel = searchModel
+            , SelectedFiles = model.SelectedFiles
+        };
+
+        if (attachedFiles.Count > 0 && commit)
+        {
+            await Session.GetCurrentTransaction().CommitAsync().ConfigureAwait(false);
+            result.SelectedFiles.Clear();
+            result.AttachedFiles = attachedFiles.Select(x => CreateModel(x, false)).ToList();
+        }
+        
+        return result;
     }
 
     /// <inheritdoc />
@@ -250,8 +289,12 @@ public class NoteService : INoteService
         
         if (result.ExistsOnDisk)
         {
-            var currentContentHash = await CalculateHashAsync(System.IO.File.ReadAllBytes(result.FullPath)).ConfigureAwait(false);
-            result.ContentHashMismatch = currentContentHash.Length != file.ContentHash?.Length || !currentContentHash.SequenceEqual(file.ContentHash);
+            var content = await TryReadAllBytesAsync(result.FullPath).ConfigureAwait(false);
+            if (content != null)
+            {
+                var currentContentHash = await CalculateHashAsync(content).ConfigureAwait(false);
+                result.ContentHashMismatch = currentContentHash.Length != file.ContentHash?.Length || !currentContentHash.SequenceEqual(file.ContentHash);
+            }
         }
         
         return result;
@@ -566,8 +609,8 @@ public class NoteService : INoteService
             }
             else
             {
-                var currentFileContent = await System.IO.File.ReadAllBytesAsync(fullPath).ConfigureAwait(false);
-                if (content.Length == currentFileContent.Length && content.SequenceEqual(currentFileContent))
+                var currentFileContent = await TryReadAllBytesAsync(fullPath).ConfigureAwait(false);
+                if (content.Length == currentFileContent?.Length && content.SequenceEqual(currentFileContent))
                     result.Add(file);
             }
         }
@@ -677,8 +720,29 @@ public class NoteService : INoteService
 
     private string GetMimeTypeFromFileName(string fileName)
     {
-        if (FileExtensionContentTypeProvider.TryGetContentType(fileName, out var result))
+        var extension = Path.GetExtension(fileName);
+        if (extension.Length > 0)
+            extension = extension.Substring(1);
+        
+        if (MimeMap.TryGetValue(extension, out var result))
             return result;
-        return null;
+        
+        if (FileExtensionContentTypeProvider.TryGetContentType(fileName, out result))
+            return result;
+
+        return "application/octet-stream";
+    }
+    
+    private async Task<byte[]> TryReadAllBytesAsync(string fullPath)
+    {
+        try
+        {
+            return await System.IO.File.ReadAllBytesAsync(fullPath).ConfigureAwait(false);
+        }
+        catch (IOException exception)
+        {
+            Log.ErrorFormat("Cannot read file {0}: {1}", fullPath, exception.Message);
+            return null;
+        }
     }
 }
