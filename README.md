@@ -2,9 +2,10 @@
 
 * Quick summary
 
-A very simple Personal Information Manager as text note database with proper fulltext search. Simple web interface made to make note taking as fast as possible.
+A very simple Personal Information Manager as text note and file database with proper fulltext search. Simple web interface made to make note taking as fast as possible.
 There's no explicit structure, just type some text and save. Data is stored in the Postgres database.
 Fulltext search is available from the textbox at the top of the page. It is implemented in Postgres and thus can be tuned.
+Files can be uploaded on their own or linked to notes. Text is extracted from docx and pdf documents and made available for search.
 
 ### How do I get set up? ###
 The PimWeb project is ASP.NET Core 7.0 application. Best hosting is under reverse proxy on linux or under IIS on Windows.
