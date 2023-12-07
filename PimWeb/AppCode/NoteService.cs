@@ -82,7 +82,7 @@ public class NoteService : INoteService
         if (withDelete && model.NoteId > 0)
             await Query.Where(x => x.Id == model.NoteId).DeleteAsync().ConfigureAwait(false);
 
-        var genericResult = await SearchAsync<NoteSearchResult>(model, "note", "search", AdditionalColumnsForNoteSearch);
+        var genericResult = await SearchAsync<NoteSearchResult>(model, "note", "search_notes", AdditionalColumnsForNoteSearch);
         
         var result = new NoteSearchViewModel(genericResult.Model)
         {
