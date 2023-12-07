@@ -1,5 +1,7 @@
-﻿@{
+﻿@using System.Reflection
+@{
     Layout = "_BaseLayout";
+    var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
 }
 
 <header>
@@ -71,7 +73,7 @@
     </div>
 
     <footer class="border-top footer text-muted mx-2">
-        &copy; @DateTime.Now.Year - MegaPatam Inc
+        &copy; @DateTime.Now.Year - MegaPatam Inc. PIM v@(version.FileVersion).
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true" ></script>

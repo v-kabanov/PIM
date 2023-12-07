@@ -16,7 +16,7 @@
                             eventName: "click"
                         }],
                     confirmFunction: confirmDelete,
-                    always: setupComponents,
+                    always: null,
                     predicate: null,
                     success: function () {
                         window.location.reload();
@@ -29,12 +29,7 @@
                     }
                 }
             ]);
-
-            setupComponents();
         });
-
-        function setupComponents() {
-        }
 
         function confirmDelete(e) {
             return confirm("Delete this file permanently?");

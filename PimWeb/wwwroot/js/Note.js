@@ -25,7 +25,7 @@
                     }],
                 replacementSourceSelector: conf.fileListSelector,
                 confirmFunction: confirmDeleteLinkToFile,
-                //always: setupComponents,
+                always: null,
                 getPostData: function (event) {
                     const target = $(event.target || event.srcElement);
                     const data = { fileId: target.attr(conf.attributeNameFileId) };
