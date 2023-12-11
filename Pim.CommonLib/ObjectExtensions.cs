@@ -48,6 +48,11 @@ public static class ObjectExtensions
         return Enumerable.Repeat(value, 1).ToHashSet(comparer);
     }
     
+    public static IEnumerable<T> AsEnumerable<T>(this T value)
+    {
+        yield return value;
+    }
+    
     public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);
     
     public static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);

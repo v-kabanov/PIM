@@ -33,6 +33,7 @@ public class SearchFormData
         Fuzzy = other.Fuzzy;
         SortProperty = other.SortProperty;
         SortAscending = other.SortAscending;
+        EffectiveSortProperty = other.EffectiveSortProperty;
     }
 
     public string Query { get; set; }
@@ -70,6 +71,8 @@ public class SearchFormData
 
     [DisplayName("Asc")]
     public bool SortAscending { get; set; }
+
+    public string EffectiveSortProperty { get; set; }
 }
 
 public class SearchModelBase : SearchFormData

@@ -114,7 +114,7 @@ public class NoteService : INoteService
 
     private async Task<(SearchModelBase Model, List<TBean> Results)> SearchAsync<TBean>(SearchModelBase model, string tableName, string searchFunctionName, params KeyValuePair<string, string>[] additionalColumns)
     {
-        var sortProperty = model.SortProperty ?? SortProperty.LastUpdateTime;
+        var sortProperty = model.SortProperty ?? SortProperty.SearchRank;
         
         var sortAscending = model.SortAscending;
         
@@ -205,11 +205,14 @@ public class NoteService : INoteService
         {
             TotalCountedPageCount = pageCount,
             HasMore = pageCount > (model.PageNumber + 1),
-            SortProperty = sortProperty,
+            //SortProperty = sortProperty,
             SortAscending = sortAscending,
-            SortOptions = AllSortOptions.Select(x => new SelectListItem(x.SelectListItem.Text, x.SelectListItem.Value, x.SortProperty == sortProperty))
+            SortOptions = new SelectListItem("Default", "")
+                .AsEnumerable()
+                .Concat(AllSortOptions.Select(x => new SelectListItem(x.SelectListItem.Text, x.SelectListItem.Value)))
                 .ToList(),
-            PageNumber = model.PageNumber
+            PageNumber = model.PageNumber,
+            EffectiveSortProperty = AllSortOptions.First(x => x.SortProperty == sortProperty).SelectListItem.Text
         };
         
         return (processedSearchModel, results);
@@ -649,7 +652,7 @@ public class NoteService : INoteService
         return await hasher.ComputeHashAsync(new MemoryStream(content, false)).ConfigureAwait(false);
     }
     
-    private string GetFileStorageDirectoryRelativePath(DateTime time) => $"{time:yyyy/MM-MMM}";
+    private string GetFileStorageDirectoryRelativePath(DateTime time) => $"{time:yyyy}{Path.PathSeparator}{time:MM-MMM}";
 
     private NoteViewModel CreateModel(Note note, bool populateFiles = true) => new ()
         {
