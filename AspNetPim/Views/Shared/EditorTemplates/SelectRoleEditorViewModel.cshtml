@@ -1,7 +1,0 @@
-﻿@model AspNetPim.Models.SelectRoleEditorViewModel
-
-<div>
-    @Html.HiddenFor(model => model.RoleName, new { @keyholder = "" })
-    @Html.CheckBoxFor(m => m.Selected, new { @class = "checkbox-inline" })
-    @Html.DisplayFor(model => model.RoleName, new { @class = "control-label" })
-</div>

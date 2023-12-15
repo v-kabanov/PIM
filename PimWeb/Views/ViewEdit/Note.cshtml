@@ -1,0 +1,44 @@
+﻿@model PimWeb.Models.NoteViewModel
+
+@{
+    ViewBag.Title = Model.Caption ?? "Unsaved note";
+    ViewBag.ShowPageCaption = true;
+    
+    var edit = ViewBag.Edit == true;
+    var altModeLinkText = edit ? "View read only" : "Edit";
+}
+
+@Html.Partial("NotePartial", Model)
+
+<div>
+    @Html.ActionLink("Back to home page", "Index", "Home")
+    
+    @if (Model.Version.HasValue)
+    {
+        @: |
+        <a href="@Url.Action("Note", new {id = Model.Id, edit = !edit})">@altModeLinkText</a>
+    }
+</div>
+
+<script>
+@section Init
+{
+    const config = {
+        mainFormSelector: '#mainForm',
+        updateNoteUrl: '@Url.Action("Update")',
+        createNoteButtonSelector: '#btnSubmit',
+        newNoteTextSelector: '#@Html.IdFor(m => m.NoteText)',
+        deleteNoteSelector: '#btnDelete',
+        updateNoteButtonSelector: '#btnUpdate',
+        divInProgressSelector: '#progressIndicator',
+        fileListSelector: '#divFiles',
+        deleteAssociationWithFileLinkSelector: 'a[delete-file-by-id]',
+        deleteAssociationWithFileUrl: '@Url.Action("UnlinkFileFromNote", "ViewEdit", new {noteId = Model.Id})',
+        attributeNameFileId: 'fileId'
+    };
+
+    (pim.pages.note)
+    &&
+    (pim.pages.note.init(config));
+}
+</script>

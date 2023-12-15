@@ -1,0 +1,30 @@
+﻿@model PimWeb.Models.AttachExistingFilesToNoteViewModel
+@{
+    ViewBag.Title = "Files";
+    ViewBag.ShowPageCaption = false;
+}
+
+@Html.Partial("AttachExistingFilesPartial", Model, ViewData)
+
+<script>
+@section Init
+{
+    const config = {
+        mainFormSelector: '#mainForm',
+        attachUrl: '@Url.Action("ProcessAttachExistingFiles", "ViewEdit", new {commit = true})',
+        divInProgressSelector: '#progressIndicator',
+        divFileListSelector: "#divFiles",
+        btnAttachSelector: '#btnAttach'
+    };
+
+    (pim.pages.attachExistingFiles)
+    &&
+    (pim.pages.attachExistingFiles.init(config));
+}
+</script>
+
+<hr/>
+
+<div>
+    @Html.ActionLink("Back to home page", "Index", "Home")
+</div>

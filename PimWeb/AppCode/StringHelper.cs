@@ -30,7 +30,7 @@ public static class StringHelper
     /// <param name="addTrailingEllipsis">
     ///     Append '...' if truncating.
     /// </param>
-    public static string GetTextWithLimit(this string text, int startIndex, int maxLength, bool addTrailingEllipsis = true)
+    public static string Ellipsify(this string text, int startIndex, int maxLength, bool addTrailingEllipsis = true)
     {
         if (text == null) throw new ArgumentNullException(nameof(text));
         if (startIndex < 0) throw new ArgumentOutOfRangeException(nameof(startIndex));

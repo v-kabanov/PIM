@@ -1,0 +1,47 @@
+﻿@using PimWeb.Models
+@model PimWeb.Models.AttachExistingFilesToNoteViewModel
+
+@using (Html.BeginForm("AttachExistingFiles", "ViewEdit", FormMethod.Get, new {id = "mainForm"}))
+{
+    <div class="caption">
+        <h2>Attach files to note</h2> <a href="@Url.Action("Note", new {id = Model.Note.Id})">@Model.Note.Caption (#@Model.Note.Id)</a>
+        <hr/>
+    </div>
+    
+    @Html.HiddenFor(x => x.Note.Id)
+    
+    @await Html.PartialAsync("SearchFormContent", Model.FileSearchViewModel)
+    
+    <br/>
+
+    @Html.Partial("FileList", Model.FileSearchViewModel.SearchResultPage, new ViewDataDictionary(ViewData)
+    {
+        { "AllowSelect", true },
+        { "DisableDelete", true }
+    })
+
+    @await Html.PartialAsync("_Pager", Model.FileSearchViewModel
+               , new ViewDataDictionary<FileSearchViewModel>(ViewData, Model.FileSearchViewModel) { {"ActionName", "AttachExistingFiles" }})
+
+    if (Model.FileSearchViewModel.SearchResultPage.Files.Count == 0)
+    {
+        @: No results to display
+    }
+    
+    <div class="my-2">
+        <button class="btn btn-primary" id="btnAttach">Attach</button>
+    </div>
+    
+    @if (Model.AttachedFiles.Count > 0)
+    {
+        <div class="text-info">
+            <span>Attached files:</span>
+            <ul>
+                @foreach (var newlyAttachedFile in Model.AttachedFiles)
+                {
+                    <li>@Html.ActionLink(newlyAttachedFile.Title, "File", new { id = newlyAttachedFile.Id })</li>
+                }
+            </ul>
+        </div>
+    }
+}

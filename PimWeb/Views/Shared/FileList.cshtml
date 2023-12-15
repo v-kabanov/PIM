@@ -1,0 +1,84 @@
+﻿@using Pim.CommonLib
+@using PimWeb.AppCode
+@using PimWeb.Models
+@model FileListViewModel
+
+@* displays a list of files not caring about where it comes from and can upload file by posting it to specified url *@
+@* and receiving replacement html *@
+
+<div id="divFiles">
+    
+    @foreach (var item in Model.Files)
+    {
+        var statusClass = item.ContentHashMismatch ? "text-danger" : "";
+        var title = item.ContentHashMismatch ? "Hash mismatch - file was modified after upload!" : ""; 
+
+        <div class="row my-1"> 
+            <div note-name class="col-md-11">
+                @if (ViewBag.AllowSelect == true)
+                {
+                    var disabled = item.IfSelectDisabled ? "disabled" : null;
+                    
+                    <div class="form-check form-check-inline border-0">
+                        <input type="checkbox" name="@nameof(Model.SelectedFiles)" id="SelectedFiles@(item.Id)" value="@item.Id" class="form-check-input" @disabled />
+                        <label class="text-muted small" for="SelectedFiles@(item.Id)" class="form-check-label">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</label>
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted small">@($"{item.CreateTime:ddd dd-MMM-yy, HH:mm} ")</span>
+                }
+                <a file-title href="@Url.Action("File", "ViewEdit", new {id = item.Id})">@item.Title</a>
+                |
+                @Html.ActionLink("download", "DownloadFile", "ViewEdit", new { id = item.Id, viewInBrowser = false }
+                    , new
+                    {
+                        @class = statusClass,
+                        title = title
+                    }) 
+                |
+                @Html.ActionLink("view", "DownloadFile", "ViewEdit", new { id = item.Id, viewInBrowser = true }
+                    , new
+                    {
+                        @class = statusClass,
+                        title = title
+                    })
+                @if (ViewBag.DisableDelete != true)
+                {
+                    @:| <a delete-file-by-id href="#" fileId="@item.Id">delete</a> 
+                }
+                <br/>
+                @if (!item.SearchHeadline.IsNullOrWhiteSpace())
+                {
+                    @Html.Raw(item.SearchHeadline) @:(@($"{item.Rank:F2}"))
+                }
+                else if (!item.Description.IsNullOrWhiteSpace())
+                {
+                    @: @item.Description?.Ellipsify(0, 1024)
+                }
+            </div>
+        </div>
+    }
+
+    @if (ViewBag.DisableUpload != true && !(ViewBag.UploadUrl as string).IsNullOrEmpty())
+    {
+        <div genericupload class="my-2" upload-url="@ViewBag.UploadUrl" response-element-selector="#divFiles" response-is-file-details="@ViewBag.UploadResponseIsFileDetails">
+            <input type="file" class="form-control" />
+        </div>
+
+        <div upload-error class="text-danger">
+            @Html.ValidationSummary(true)
+        </div>
+    }
+
+    @if (ViewBag.UploadError != null)
+    {
+        <div class="text-danger mt-1">@ViewBag.UploadError</div>
+    }
+    
+    @if (!Model.StatusMessage.IsNullOrWhiteSpace())
+    {
+        var styleClass = Model.StatusSuccess ? "text-info" : "text-danger";
+        <div class="@styleClass">@Model.StatusMessage</div>
+    }
+</div>

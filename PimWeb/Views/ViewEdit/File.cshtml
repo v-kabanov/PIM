@@ -1,0 +1,29 @@
+﻿@model PimWeb.Models.FileViewModel
+
+@{
+    ViewBag.ShowPageCaption = false;
+    
+    var edit = ViewBag.Edit == true;
+    var altModeLinkText = edit ? "View read only" : "Edit";
+}
+
+@await Html.PartialAsync("FilePartial", Model)
+
+<script>
+@section Init
+{
+    const config = {
+        mainFormSelector: '#mainForm',
+        updateUrl: '@Url.Action("UpdateFile", new {id = Model.Id})',
+        deleteAssociationWithNoteLinkSelector: 'a[delete-note-by-id]',
+        deleteAssociationWithNoteUrl: '@Url.Action("UnlinkNoteFromFile", new {fileId = Model.Id})',
+        noteListSelector: '#divNotes',
+        deleteButtonSelector: '#btnDelete',
+        updateButtonSelector: '#btnUpdate',
+        divInProgressSelector: '#progressIndicator',
+        attributeNameNoteId: 'noteId'
+    };
+
+    (pim.pages.file && pim.pages.file.init(config));
+}
+</script>

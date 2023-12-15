@@ -1,0 +1,19 @@
+﻿@using PimWeb.Models
+@model FileViewModel
+
+@{
+}
+
+<div genericupload class="container">
+    @Html.BeginForm("", "", FormMethod.Post, new { @class="", enctype = "multipart/form-data" })
+    {
+    <div class="mb-3">
+        <label></label>
+    </div>
+    <input type="file" class="form-control" name="file" />
+    
+    
+    
+    <input id="btnSubmit" type="submit" value="Upload" />
+    }
+</div>

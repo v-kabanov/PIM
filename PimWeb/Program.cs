@@ -1,20 +1,12 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using FluentNHibernate.Conventions.Helpers;
 using log4net;
 using log4net.Config;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Pim.CommonLib;
 using PimWeb.AppCode;
 using PimWeb.AppCode.Identity;
@@ -40,6 +32,7 @@ var appOptions = builder.Configuration.GetSection(nameof(AppOptions)).Get<AppOpt
 
 builder.Services
     .AddSingleton(appOptions)
+    .AddSingleton<ITextExtractor>(new TextExtractor(appOptions.TextFileExtensions?.Select(x => $".{x}").ToArray()))
     .AddControllers();
     //use controllers for now
     //.AddRazorPages();
@@ -133,6 +126,18 @@ builder.Services.ConfigureApplicationCookie(o =>
 builder.Services.AddScoped<INoteService, NoteService>();
 
 builder.Logging.ClearProviders().AddLog4Net();
+
+//customise antiforgery/request auth tokens; attempt to prevent unexpected premature login
+builder.Services.AddAntiforgery(o =>
+{
+    o.Cookie.Path = virtualPathBase;
+    // __RequestVerificationToken
+    o.FormFieldName = ".rft";
+    o.HeaderName = "rft";
+    o.Cookie.Expiration = o.Cookie.MaxAge = TimeSpan.FromDays(30);
+    // AspNetCore.Antiforgery...
+    o.Cookie.Name = ".afgry";
+});
 
 var app = builder.Build();
 

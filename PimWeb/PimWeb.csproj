@@ -5,6 +5,8 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>PimWeb-B4252337-DDA2-45EF-A5C5-8B5D791166D7</UserSecretsId>
+    <AssemblyVersion>2.1</AssemblyVersion>
+    <FileVersion>2.1</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -56,8 +58,6 @@
     <AdditionalFiles Include="Views\Shared\NoteList.cshtml" />
     <AdditionalFiles Include="Views\Shared\_Layout.cshtml" />
     <AdditionalFiles Include="Views\Shared\_ValidationScriptsPartial.cshtml" />
-    <AdditionalFiles Include="Views\ViewEdit\ViewEdit.cshtml" />
-    <AdditionalFiles Include="Views\ViewEdit\ViewEditPartial.cshtml" />
   </ItemGroup>
 
   <ItemGroup>

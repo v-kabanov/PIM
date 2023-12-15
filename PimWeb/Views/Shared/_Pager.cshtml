@@ -1,0 +1,30 @@
+﻿@using PimWeb.Models
+@model PimWeb.Models.SearchModelBase
+
+@if (Model.TotalCountedPageCount > 1)
+{
+    var startPage = 1;
+    if (Model.PageNumber > 11)
+        startPage = Model.PageNumber - 10;
+            
+    var endPage = Model.TotalCountedPageCount;
+    if (endPage > Model.PageNumber + 10)
+        endPage = Model.PageNumber + 10;
+            
+    for (var i = startPage; i <= endPage; ++i)
+    {
+        if (i == Model.PageNumber)
+        {
+            @: @i
+        }
+        else
+        {
+            var formData = new SearchFormData(Model) { PageNumber = i };
+            @Html.ActionLink(i.ToString(), (string)ViewBag.ActionName, formData)
+        }
+        @:&nbsp;
+    }
+}
+<p class="text-muted">
+    Counted @(Model.TotalCountedPageCount ?? 0) pages
+</p>

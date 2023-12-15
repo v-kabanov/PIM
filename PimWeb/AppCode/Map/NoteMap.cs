@@ -10,7 +10,17 @@ public class ClassMapBase<T> : ClassMap<T>
     }
 }
 
-public class NoteMap : ClassMapBase<Note>
+public class ClassMapVersionedBase<T> : ClassMapBase<T>
+    where T: EntityBase
+{
+    protected ClassMapVersionedBase()
+    {
+        Version(x => x.IntegrityVersion).UnsavedValue("0");
+        OptimisticLock.Version();
+    }
+}
+
+public class NoteMap : ClassMapVersionedBase<Note>
 {
     public const string ColumnNameLastUpdateTime = "last_update_time";
     public const string ColumnNameCreationTime = "create_time";
@@ -20,12 +30,17 @@ public class NoteMap : ClassMapBase<Note>
     {
         //Table("note");
         Id(x => x.Id).GeneratedBy.Sequence("note_id_seq");
-        Map(x => x.Text);
+        Map(x => x.Text)
+            .Not.Nullable();
         
         Map(x => x.CreateTime);
         Map(x => x.LastUpdateTime);
-
-        Version(x => x.IntegrityVersion).UnsavedValue("0");
-        OptimisticLock.Version();
+        
+        HasManyToMany(x => x.Files)
+            .Table("note_file")
+            .ParentKeyColumn("note_id")
+            .ChildKeyColumn("file_id")
+            .NotFound.Exception()
+            .Cascade.SaveUpdate();
     }
 }

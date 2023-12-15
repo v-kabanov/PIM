@@ -18,6 +18,11 @@ public static class ObjectExtensions
         return values.Contains(value);
     }
 
+    public static bool InIgnoreCase(this string value, params string[] values)
+    {
+        return values.Contains(value, StringComparer.OrdinalIgnoreCase);
+    }
+
     public static bool In<T>(this T value, IEnumerable<T> values)
     {
         return values.Contains(value);
@@ -41,6 +46,11 @@ public static class ObjectExtensions
     public static HashSet<T> WrapInSet<T>(this T value, IEqualityComparer<T> comparer = null)
     {
         return Enumerable.Repeat(value, 1).ToHashSet(comparer);
+    }
+    
+    public static IEnumerable<T> AsEnumerable<T>(this T value)
+    {
+        yield return value;
     }
     
     public static bool IsNullOrEmpty(this string value) => string.IsNullOrEmpty(value);

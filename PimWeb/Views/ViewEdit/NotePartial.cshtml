@@ -1,0 +1,84 @@
+﻿@model PimWeb.Models.NoteViewModel
+
+@using (Html.BeginForm("Delete", "ViewEdit", FormMethod.Post, new { id = "mainForm", @class = "" }))
+{
+    @Html.HiddenFor(x => x.Version)
+    if (Model.IfDeleted)
+    {
+        <h2>
+            Note does not exist
+        </h2>
+    }
+    else
+    {
+        <br />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+   
+        <div class="">
+            @Html.HiddenFor(model => model.Id)
+            <div class="col-md-12">
+                @if (ViewBag.Edit == true)
+                {
+                    @Html.TextAreaFor(model => model.NoteText, new { @class = "form-control", style = "height: 20em" })
+                    @Html.ValidationMessageFor(model => model.NoteText, "", new { @class = "text-danger" })
+                }
+                else
+                {
+                    <div style="white-space: pre-wrap; overflow-x: auto" class="border border-1 border-secondary rounded-1 p-1">
+                        @Model.NoteText
+                    </div>
+                }
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="row">
+            @Html.LabelFor(m => m.CreateTime, new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DisplayFor(m => m.CreateTime)
+            </div>
+        </div>
+
+        <div class="row">
+            @Html.LabelFor(m => m.LastUpdateTime, new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DisplayFor(m => m.LastUpdateTime)
+            </div>
+        </div>
+
+        <div class="row">
+            @Html.LabelFor(m => m.Version, new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DisplayFor(m => m.Version)
+            </div>
+        </div>
+    
+        @if (ViewBag.Edit == true)
+        {
+            <div class="row my-2">
+                <div class="col-md-offset-2 col-md-10">
+                    <input id="btnUpdate" type="submit" value="Update" class="btn btn-outline-primary" />
+                    &nbsp;
+                    <input type="submit" id="btnDelete" class="btn btn-warning" value="Delete" />
+                </div>
+            </div>
+        }
+        
+        <div class="card my-2">
+            <div class="card-header">
+                Files
+            </div>
+            <div class="card-body">
+                @await Html.PartialAsync("FileList", Model.Files, new ViewDataDictionary (ViewData)
+                       {
+                           {"UploadUrl", ViewBag.Edit == true ? Url.Action("UploadFileForNote", new {noteId = Model.Id}) : null}
+                           , {"DisableDelete", ViewBag.Edit != true}
+                           //, {"DeleteUrl", ViewBag.Edit == true ? Url.Action("UnlinkFileFromNote", new {noteId = Model.Id}) : null}
+                       })
+                <br />
+                @Html.ActionLink("Attach existing files", "AttachExistingFiles", new {noteId = Model.Id})
+            </div>
+        </div>
+    }
+}

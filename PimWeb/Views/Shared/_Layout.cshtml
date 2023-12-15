@@ -1,5 +1,7 @@
-﻿@{
+﻿@using System.Reflection
+@{
     Layout = "_BaseLayout";
+    var version = System.Diagnostics.FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location);
 }
 
 <header>
@@ -17,7 +19,10 @@
                             <a class="nav-link text-dark" asp-area="" href="~/Home/About">About</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" href="~/Search" title="Search / browse">Search</a>
+                            <a class="nav-link text-dark" asp-area="" href="~/Search" title="Search / browse notes">Notes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" href="~/files" title="Search / browse files">Files</a>
                         </li>
                     </ul>
                     <div class="d-md-flex flex-grow-1 justify-content-end">
@@ -68,18 +73,21 @@
     </div>
 
     <footer class="border-top footer text-muted mx-2">
-        &copy; @DateTime.Now.Year - MegaPatam Inc
+        &copy; @DateTime.Now.Year - MegaPatam Inc. PIM v@(version.FileVersion).
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-ui/jquery-ui.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true" ></script>
+    <script src="~/lib/jquery-ui/jquery-ui.min.js" asp-append-version="true" ></script>
+    <script src="~/lib/jquery.fileupload/jquery.fileupload.js" asp-append-version="true" ></script>
+    <script src="~/lib/select2/select2.js" asp-append-version="true" ></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true" ></script>
     <script src="~/js/pim.js" asp-append-version="true"></script>
     <script src="~/js/SeeLatestAndCreate.js" asp-append-version="true"></script>
     <script src="~/js/Search.js" asp-append-version="true"></script>
-    <script src="~/js/ViewEdit.js" asp-append-version="true"></script>
-
-    @* @await RenderSectionAsync("Scripts", required: false) *@
+    <script src="~/js/Note.js" asp-append-version="true"></script>
+    <script src="~/js/File.js" asp-append-version="true"></script>
+    <script src="~/js/Files.js" asp-append-version="true"></script>
+    <script src="~/js/AttachExistingFiles.js" asp-append-version="true"></script>
 
     @if (IsSectionDefined("Init"))
     {

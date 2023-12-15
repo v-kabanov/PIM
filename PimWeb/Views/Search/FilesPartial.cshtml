@@ -1,0 +1,23 @@
+﻿@using PimWeb.Models
+@model PimWeb.Models.FileSearchViewModel
+
+@using (Html.BeginForm("Files", "Search", FormMethod.Get, new {id = "mainForm"}))
+{
+    @await Html.PartialAsync("SearchFormContent")
+ 
+    <br/>
+
+    @Html.Partial("FileList", Model.SearchResultPage, new ViewDataDictionary (ViewData)
+    {
+        {"UploadUrl", Url.Action("UploadFile", "ViewEdit")}
+        , {"DeleteUrl", Url.Action("DeleteFilePermanently", "ViewEdit")}
+        , {"UploadResponseIsFileDetails", "true"}
+    })
+
+    @await Html.PartialAsync("_Pager", new ViewDataDictionary<FileSearchViewModel>(ViewData, Model) { {"ActionName", "Files" }})
+
+    if (Model.SearchResultPage.Files.Count == 0)
+    {
+        @: No results to display
+    }
+}

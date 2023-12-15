@@ -1,45 +1,3 @@
-CREATE TEXT SEARCH DICTIONARY public.russian_hunspell (
-    TEMPLATE = ispell,
-    DictFile = ru_ru,
-    AffFile = ru_ru,
-    Stopwords = russian);
-    
-CREATE TEXT SEARCH DICTIONARY public.english_gb_hunspell (
-    TEMPLATE = ispell,
-    DictFile = en_gb,
-    AffFile = en_gb,
-    Stopwords = english);
-
-CREATE TEXT SEARCH DICTIONARY public.english_us_hunspell (
-    TEMPLATE = ispell,
-    DictFile = en_us,
-    AffFile = en_us,
-    Stopwords = english);
----------------------------------------------------------------
--- DROP TEXT SEARCH CONFIGURATION public.mysearch
-
-CREATE TEXT SEARCH CONFIGURATION public.mysearch (
-	PARSER = default
-);
-ALTER TEXT SEARCH CONFIGURATION public.mysearch alter MAPPING FOR asciihword WITH public.english_gb_hunspell, public.english_us_hunspell, english_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch alter MAPPING FOR asciiword WITH public.english_gb_hunspell, public.english_us_hunspell, english_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR email WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR file WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR float WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR host WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR hword WITH public.russian_hunspell, russian_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch alter MAPPING FOR hword_asciipart WITH public.english_gb_hunspell, public.english_us_hunspell, english_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR hword_numpart WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR hword_part WITH public.russian_hunspell, russian_stem;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR int WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR numhword WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR numword WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR sfloat WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR uint WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR url WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR url_path WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR version WITH simple;
-ALTER TEXT SEARCH CONFIGURATION public.mysearch ADD MAPPING FOR word WITH public.russian_hunspell, russian_stem;
 -------------------------------------------------------------
 
 --drop table if exists public.note;
@@ -55,10 +13,10 @@ create table if not exists public.note (
 );
 
 alter table     public.note
-alter column    create_time type timestamp with time zone
+alter column    create_time type timestamp with time zone;
 
 alter table     public.note
-alter column    last_update_time type timestamp with time zone
+alter column    last_update_time type timestamp with time zone;
 
 create index    idx_note_create_time
 on              public.note (create_time);
@@ -72,7 +30,6 @@ generated always	as (to_tsvector('public.mysearch', text)) stored;
 
 --alter table note drop column search_vector;
 
-
 alter table public.note
 add constraint  pk_note
 primary key     (id);
@@ -80,30 +37,100 @@ primary key     (id);
 --create index "Note_SearchVector_idx" on public."Note" using gin (to_tsvector('public.mysearch', "Text"));
 
 --drop index note_search_vector_idx;
-create index note_search_vector_idx on public.note using gin (search_vector);
+create index if not exists note_search_vector_idx on public.note using gin (search_vector);
 
 grant insert, select, update, delete on table public.note to pimweb;
 grant all on sequence public.note_id_seq to pimweb;
---------------------------
 
-select 	*
-		, to_tsvector('public.mysearch', text)
-from 	note
-where	search_vector @@ websearch_to_tsquery('public.mysearch', 'главный тренер')
-		and last_update_time > timestamp'2023-09-29'
+drop table if exists public."AspNetUsers" cascade;
+drop table if exists public."AspNetRoles" cascade;
+drop table if exists public."AspNetUserRoles" cascade;
+drop table if exists public."AspNetUserTokens" cascade;
+drop table if exists public."AspNetRoleClaims" cascade;
+drop table if exists public."AspNetUserClaims" cascade;
+drop table if exists public."AspNetUserLogins" cascade;
+drop table if exists public."__EFMigrationsHistory" cascade;
 
-select * from ts_debug('public.mysearch', 'sacrificial animal')
+create sequence if not exists public.file_id_seq;
 
-select * from note where search_vector @@ websearch_to_tsquery('public.mysearch', 'query');
-select * from note where search_vector @@ websearch_to_tsquery('query');
-select * from note where search_vector @@ websearch_to_tsquery('mysearch', 'query');
+ALTER SEQUENCE public.note_id_seq
+    OWNER TO postgres;
+GRANT ALL ON SEQUENCE public.note_id_seq TO pimweb;
+GRANT ALL ON SEQUENCE public.note_id_seq TO postgres;
 
-select to_tsvector('public.mysearch', 'Sacrificial entry
-to be deleted during test') @@ websearch_to_tsquery('public.mysearch', 'sacrifice');
+create table if not exists public.file (
+	id int not null,
+    relative_path varchar(8000) not null,
+    hash bytea not null,
+	description varchar not null,
+	create_time timestamp with time zone not null,
+	last_update_time timestamp with time zone not null,
+	search_vector tsvector generated always as (to_tsvector('public.mysearch', description)) stored,
+	integrity_version int not null
+);
 
-select *, to_tsvector('public.mysearch', text) as recalced from note where text ilike '%sacrific%'
+do
+$$ begin
 
-update note set search_vector = default
+create index if not exists  idx_file_create_time
+on                          public.file (create_time);
+
+create index if not exists  idx_file_last_update_time
+on                          public.file (last_update_time);
+
+create index if not exists  idx_file_hash
+on                          public.file (hash);
+
+if not exists (
+        select  *
+        from    information_schema.key_column_usage
+                where table_name = 'file'
+                and column_name = 'id'
+) then
+    alter table public.file
+    add constraint  pk_file
+    primary key     (id);
+end if;
+
+if not exists (
+        select  *
+        from    information_schema.columns
+                where table_name = 'file'
+                and column_name = 'id'
+                and column_default is not null
+) then
+    alter table public.file
+    alter column id set default (nextval('public.file_id_seq')::int);
+end if;
+
+create index if not exists file_search_vector_idx on public.file using gin (search_vector);
+
+create table if not exists public.note_file (
+    note_id     int not null,
+    file_id     int not null
+);
+
+if not exists (
+        select  *
+        from    information_schema.key_column_usage c1
+                join information_schema.key_column_usage c2
+                    on c2.table_name = c1.table_name
+                    and c2.constraint_name = c1.constraint_name
+                    and c2.constraint_schema = c1.constraint_schema
+        where   c1.table_name = 'note_file'
+                and c1.ordinal_position = 1
+                and c1.column_name = 'note_id'
+                and c2.ordinal_position = 2
+                and c2.column_name = 'file_id'
+) then
+    alter table public.note_file
+    add constraint  pk_note_file
+    primary key     (note_id, file_id);
+end if;
+
+create index if not exists  idx_note_file__file_id
+on                          public.note_file (file_id);
 
 
-select * from public.search('barcode printers', true)
+
+end $$;

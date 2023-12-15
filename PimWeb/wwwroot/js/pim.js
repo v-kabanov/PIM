@@ -3,7 +3,132 @@
         config: {
             serverUrl: "",
         },
-        features: {},
+        features: {
+            setUpStandardFileUpload: function(divSelector) {
+                const $div = $(divSelector);
+                const $errDiv = $('div[upload-error]');
+                const responseSelector = $div.attr("response-element-selector");
+                // response is a json object with saved file details {int Id, bool IfDuplicate, string Url}
+                const isResponseFileDetails = pim.util.parseBool($div.attr("response-is-file-details"));
+                $div.fileupload({
+                    url: $div.attr("upload-url"),
+                    dataType: 'html',
+                    dropZone: $div,
+                    pasteZone: $div,
+                    paramName: "file",
+                    // suppress additional form data
+                    formData: { },
+                    send: function(e, data) {
+                        pim.features.modalProgress.show("Uploading...");
+                    },
+                    fail: function (e, data) {
+                        if ($errDiv.length)
+                            $errDiv.text(data.textStatus + " " + data.errorThrown + " " + data.jqXHR);
+                        else
+                            alert(data);
+                    },
+                    always: function (e, data) {
+                        pim.features.modalProgress.hide();
+                    },
+                    done: function(e, response) {
+                        if (isResponseFileDetails && response.result) {
+                            let jsonResult = $.parseJSON(response.result);
+                            if (jsonResult.url && !jsonResult.ifDuplicate) {
+                                window.location = jsonResult.url;
+                            }
+                        }
+                        else if (responseSelector) {
+                            const $result = $(response.result);
+                            const replacement = $result.find(responseSelector).add($result.filter(responseSelector));
+                            const $target = $(responseSelector);
+                            $target.html(replacement.html());
+                        }
+                    },
+                    progress: function (e, data) {
+                        const progress = parseInt(data.loaded / data.total * 100, 10);
+                        pim.features.modalProgress.progress(progress);
+                    }
+                });
+            },
+            modalProgress: (function(conf, $) {
+                const modalDiv = $('<div class="modal fade center-screen" id="waitWithProgressDialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                    + '<div class="modal-dialog">'
+                    + '<div class="modal-content">'
+                    + '<div class="modal-header">'
+                    + '<h1 id="progressHeader">Working...</h1>'
+                    + '</div>'
+                    + '<div class="modal-body">'
+                    + '<div class="progress">'
+                    + '<div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 0%">'
+                    + '<span class="sr-only">40% Complete (success)</span>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>'
+                    + '</div>');
+
+                const progressBar = modalDiv.find("div.progress div.progress-bar");
+                const headerElem = modalDiv.find("#progressHeader");
+                let asyncInProgress;
+                // if 'show' is pending, only single 'hide' could be queued
+                const queuedCalls = [];
+
+                const finishEventHandler = function (e) {
+                    asyncInProgress = null;
+                    if (queuedCalls.length) {
+                        queuedCalls.shift()();
+                    }
+                };
+
+                modalDiv.on("shown.bs.modal", finishEventHandler);
+                modalDiv.on("hidden.bs.modal", finishEventHandler);
+
+                const showImpl = function (headerText) {
+                    headerElem.text(headerText || "Working...");
+                    asyncInProgress = "show";
+                    modalDiv.modal("show");
+                };
+                const hideImpl = function () {
+                    asyncInProgress = "hide";
+                    modalDiv.modal("hide");
+                };
+
+                return {
+                    show: function(headerText) {
+                        if (asyncInProgress)
+                            queuedCalls.push(function () { showImpl(headerText); });
+                        else
+                            showImpl(headerText);
+                    },
+                    hide: function() {
+                        if (asyncInProgress)
+                            queuedCalls.push(hideImpl);
+                        else
+                            hideImpl();
+                    },
+                    // progress is 1..100 
+                    progress: function(progress) {
+                        progressBar.css("width", progress + "%");
+                        progressBar.attr("aria-valuenow", progress);
+                    }
+                };
+            })(this.config, $),
+        },
+        util: {
+            parseBool: function (val, treatNullAsTrue) {
+                if (typeof val === "boolean")
+                    return val;
+
+                if (val == null && treatNullAsTrue)
+                    return true;
+
+                if (typeof val === "string")
+                    return (/^true$/i).test(val);
+
+                return Boolean(val);
+            },
+        },
         pages: {},
         init: function (config) {
             $.extend(this.config, config);
@@ -42,21 +167,21 @@
 
                     $.validator.addMethod("generallimit", function (value, element, params) {
 
-                        var currentValue = parseInt(value);
+                        const currentValue = parseInt(value);
                         if (isNaN(currentValue)) {
                             return true;
                         }
 
-                        var limitName = element.name.split(".").splice(0, 2).join(".") + "." + params.limit;
-                        var maxValid = parseInt($("input[name='" + limitName + "." + "MaxValid']").val());
-                        var minValid = parseInt($("input[name='" + limitName + "." + "MinValid']").val());
+                        const limitName = element.name.split(".").splice(0, 2).join(".") + "." + params.limit;
+                        const maxValid = parseInt($("input[name='" + limitName + "." + "MaxValid']").val());
+                        const minValid = parseInt($("input[name='" + limitName + "." + "MinValid']").val());
 
                         if (isNaN(minValid) || isNaN(maxValid)) {
                             return true;
                         }
                         if (isNaN(currentValue) || minValid > currentValue || currentValue > maxValid) {
-                            var message = $(element).attr("data-val-generallimit");
-                            var displayName = $("label[for='" + element.id + "']").html();
+                            const message = $(element).attr("data-val-generallimit");
+                            const displayName = $("label[for='" + element.id + "']").html();
                             $.validator.messages.generallimit = $.validator.format(message, displayName, minValid, maxValid);
                             return false;
                         }
@@ -84,16 +209,16 @@
             // all text inputs with 'barcode' class; also sets up focus preserver if any form submission is configured.
             // If you don't want submitting form but only to update text inputs, pass empty array to init().
             this.features.autoAjax = (function ($) {
-                var defaultPostbackPredicate = function (event) {
-                    var target = $(event.target || event.srcElement);
+                const defaultPostbackPredicate = function (event) {
+                    const target = $(event.target || event.srcElement);
 
                     // previous value will be undefined before first ajax post - after GET
-                    var previousValue = target.attr("previous-value") || "";
-                    var currentValue = pim.features.elementHelper.getInputValue(target);
+                    const previousValue = target.attr("previous-value") || "";
+                    const currentValue = pim.features.elementHelper.getInputValue(target);
 
                     return previousValue !== currentValue;
-                }
-                var defaultConf = {
+                };
+                const defaultConf = {
                     // url that form is posted to
                     url: "",
                     triggers: [{
@@ -122,28 +247,37 @@
                     // element to show messages of postback
                     messageSelector: "#formMessages",
                     // always on ajax call (in addition to default behavior)
-                    always: function () { },
+                    always: function () {
+                    },
                     // fail on ajax call (in addition to default behavior)
-                    fail: function () { },
-                    success: function () { },
+                    fail: function () {
+                    },
+                    success: function () {
+                    },
                     // function to call before posting; accepts event if returns false, cancel posting
-                    confirmFunction: function(e) { return true; },
-                    getPostData: function(event) { return $(this.formSelector).serialize(); },
+                    confirmFunction: function (e) {
+                        return true;
+                    },
+                    getPostData: function (event) {
+                        return $(this.formSelector).serialize();
+                    },
                     // function grabbing additional data to post
-                    getAdditionalPostData: function() { return {}; }
+                    getAdditionalPostData: function () {
+                        return {};
+                    }
                 };
                 return {
                     config: [],
                     init: function (conf) {
-                        var that = this;
+                        const that = this;
                         $.each(conf, function (ind, val) {
-                            var confElem = {};
+                            const confElem = {};
                             $.extend(confElem, defaultConf, val);
                             that.config.push(confElem);
                         });
 
-                        var normalizeInputs = function () {
-                            var updateFunction =
+                        const normalizeInputs = function () {
+                            const updateFunction =
                                 pim.features.elementHelper.createTextInputNormalizationFunction(true, false);
                             $.each($("input:text.form-control:not(.barcode),textarea.form-control"),
                                 function (int, element) {
@@ -151,14 +285,14 @@
                                 });
                         };
 
-                        var postback = function (event) {
+                        const postback = function (event) {
                             event.preventDefault();
-                            var postbackConf = event.data.conf;
+                            const postbackConf = event.data.conf;
 
                             if (postbackConf.confirmFunction && !postbackConf.confirmFunction(event))
                                 return null;
 
-                            var runtimeData = event.data.runtimeData;
+                            const runtimeData = event.data.runtimeData;
 
                             if (!postbackConf.validateBeforePosting || $(postbackConf.formSelector).valid()) {
                                 $(postbackConf.inProgressSelector).show();
@@ -176,34 +310,36 @@
                                     if (runtimeData.triggerHasBeenDisabled)
                                         $(postbackConf.selector).prop("disabled", false);
                                 })
-                                .fail(postbackConf.fail);
+                                    .fail(postbackConf.fail);
                             }
                         };
+
                         function postbackFunction(event) {
                             normalizeInputs();
 
-                            var eventData = event.data;
-                            var postbackConf = eventData.conf;
-                            var runtimeData = eventData.runtimeData;
+                            const eventData = event.data;
+                            const postbackConf = eventData.conf;
+                            const runtimeData = eventData.runtimeData;
 
                             pim.features.waitingDialog.showPleaseWait(postbackConf.modal === true);
-                            var postData = postbackConf.getPostData(event);
+                            const postData = postbackConf.getPostData(event);
                             if (postbackConf.getAdditionalPostData)
                                 $.extend(postData, postbackConf.getAdditionalPostData());
 
-                            return $.post(postbackConf.url, postData, function (result) {
-                                var $result = $(result);
-                                var sourceSelector = postbackConf.replacementSourceSelector ? postbackConf.replacementSourceSelector : "form";
-                                var targetSelector = postbackConf.replacementTargetSelector ? postbackConf.replacementTargetSelector : postbackConf.formSelector;
+                            const sourceSelector = postbackConf.replacementSourceSelector || postbackConf.formSelector || "form";
+                            const targetSelector = postbackConf.replacementTargetSelector || sourceSelector;
 
-                                var source = $result.find(sourceSelector).add($result.filter(sourceSelector));
+                            return $.post(postbackConf.url, postData, function (result) {
+                                const $result = $(result);
+
+                                const source = $result.find(sourceSelector).add($result.filter(sourceSelector));
                                 $(targetSelector).html(source.html());
 
                                 $.each($("[data-cause-postback=True]:not([tt-hint]):not(.select2-hidden)"),
                                     // to manually track changes where change event does not work (in IE with twitter typeahead)
                                     function (ind, element) {
-                                        var $element = $(element);
-                                        var value = pim.features.elementHelper.getInputValue($element);
+                                        const $element = $(element);
+                                        const value = pim.features.elementHelper.getInputValue($element);
                                         // validated value
                                         $element.attr("previous-value", value);
                                     });
@@ -218,15 +354,15 @@
                                     postbackConf.success();
                                 }
                             }).fail(function (data) {
-                                var formMessageElem = $(postbackConf.messageSelector);
+                                const formMessageElem = $(postbackConf.messageSelector);
                                 formMessageElem.append($("<p>").addClass("field-validation-error").text("Error: " + data));
                             }).always(function (data) {
-                                pim.features.elementHelper.loadTooltipWithValidation();
+                                pim.features.elementHelper.applyDefaultExtensions(targetSelector);
                                 $(postbackConf.inProgressSelector).hide();
                             });
                         };
                         $(document).ready(function () {
-                            var $doc = $(document);
+                            const $doc = $(document);
                             // massaging form text inputs
                             // NOTE if change event is handled, focusout does not fire
                             $doc.on("change", ".form-control.auto-trim:not([tt-input]):not(.select2-hidden)"
@@ -259,7 +395,7 @@
             ////////////////////////PleaseWait dialog
             this.features.waitingDialog = (function (conf, $) {
 
-                var pleaseWaitDiv = $('<div class="modal " id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">' +
+                const pleaseWaitDiv = $('<div class="modal " id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">' +
                     '<div class="modal-body"><span>Processing</span><img id="progressIndicator" src="' +
                     conf.serverUrl +
                     '/image/progress.gif" alt="img progress" /> </div></div>');
@@ -290,7 +426,7 @@
 
                 return {
                     trimInput: function (input) {
-                        var elem = $(input);
+                        const elem = $(input);
                         elem.val(elem.val().trim());
                     },
                     createTextNormalizationFunction: function (trim, upper) {
@@ -304,10 +440,10 @@
                         };
                     },
                     createTextInputNormalizationFunction: function (trim, upper) {
-                        var valueFunction = this.createTextNormalizationFunction(trim, upper);
+                        const valueFunction = this.createTextNormalizationFunction(trim, upper);
                         return function (input) {
-                            var $input = $(input);
-                            var value = $input.val();
+                            const $input = $(input);
+                            let value = $input.val();
                             value = valueFunction(value);
                             $input.val(value);
                             $input.attr("value", value);
@@ -315,26 +451,29 @@
                         };
                     },
                     onTextInputChange: function (trim, upper) {
-                        var inputValueFunction = this.createTextInputNormalizationFunction(trim, upper);
+                        const inputValueFunction = this.createTextInputNormalizationFunction(trim, upper);
                         return function (event) {
                             event = event || window.event;
-                            var source = event.target || event.srcElement;
-                            var $source = $(source);
+                            const source = event.target || event.srcElement;
+                            const $source = $(source);
                             inputValueFunction($source);
                         }
                     },
                     //target element (element with tooltip) must have data-toggle="tooltip"
                     // in case of validation, based on data-validation-result-type, which can be Warning or Info, suitable
                     // css class will be assigned to target element.
-                    loadTooltipWithValidation: function () {
-                        $('[data-toggle="tooltip"]').tooltip();
-                        $("[data-validation-result-type=\"Warning\"").addClass("validation-result-type-warning");
-                        $("[data-validation-result-type=\"Info\"").addClass("validation-result-type-info");
-                        $("[data-validation-result-type=\"Error\"").addClass("validation-result-type-error");
+                    loadTooltipWithValidation: function (containerSelector) {
+                        containerSelector = containerSelector || "form";
+                        const $container = $(containerSelector);
+
+                        $container.find('[data-toggle="tooltip"]').tooltip();
+                        $container.find("[data-validation-result-type=\"Warning\"]").addClass("validation-result-type-warning");
+                        $container.find("[data-validation-result-type=\"Info\"]").addClass("validation-result-type-info");
+                        $container.find("[data-validation-result-type=\"Error\"]").addClass("validation-result-type-error");
                     },
                     applyValidationAttributes: function (replaceErrors) {
                         $('[data-toggle="tooltip"]').tooltip();
-                        var allValidatedElements = $("[data-validation-result-type]");
+                        const allValidatedElements = $("[data-validation-result-type]");
                         allValidatedElements.removeClass("validation-result-type-warning validation-result-type-info validation-result-type-success validation-result-type-error");
                         if (replaceErrors) {
                             allValidatedElements.removeClass("validation-result-type-error");
@@ -361,12 +500,108 @@
                     },
                     // get value of an input element, supporting those whose val() method is not working well
                     getInputValue: function (elem) {
-                        var $elem = $(elem);
-                        var inputType = $elem.attr("type");
+                        const $elem = $(elem);
+                        const inputType = $elem.attr("type");
                         if (inputType === "radio" || inputType === "checkbox")
                             return $elem.is(":checked");
 
                         return $elem.val();
+                    },
+                    setUpPreconfiguredFileUploads: function(containerSelector) {
+                        containerSelector = containerSelector || "form";
+                        const container = $(containerSelector);
+                        const targetElements = container.find("div[genericupload]");
+                        targetElements.each(function (ind, val) {
+                            pim.features.setUpStandardFileUpload(val);
+                        });
+                    },
+                    extendInputWithDateTimePicker : function(inputSelector, format) {
+                        const inputElement = $(inputSelector);
+                        if (inputElement.length &&
+                            inputElement.is(":visible") &&
+                            !inputElement.is(":disabled") &&
+                            inputElement.closest(":disabled").length === 0) {
+
+                            inputElement.datetimepicker({
+                                sideBySide: false,
+                                format: format || "D MMM YYYY HH:mm:ss",
+                                showClose: true,
+                                closeOnDateSelection: false,
+                                allowInputToggle: true,
+                                //focusOnShow: true
+                            }).data("DateTimePicker");
+                        }
+                    },
+                    makeMarkedSelectsSearchable : function(containerSelector) {
+                        containerSelector = containerSelector || "form";
+                        const container = $(containerSelector);
+                        let elementsToExtend = container.find("select[searchable]:visible:not(:disabled)");
+                        elementsToExtend.each(function(ind, val) {
+                            pim.features.elementHelper.makeSelectSearchable2(val);
+                        });
+                    },
+                    // selectSelector is either selector string or jQuery object
+                    // not expanding disabled selects because the substitute controls are not disabled
+                    makeSelectSearchable2 : function (selectSelector) {
+                        const $selectElement = $(selectSelector);
+
+                        if ($selectElement.length && $selectElement.is(":visible") && !$selectElement.is(":disabled")
+                            && $selectElement.closest(":disabled").length === 0) {
+
+                            const ifDisabled = pim.util.parseBool($selectElement.attr("data-disabled"));
+
+                            const options = {
+                                minimumResultsForSearch: 3,
+                                theme: $selectElement.attr("data-theme") || "bootstrap",
+                                disabled: ifDisabled
+                            };
+
+                            $selectElement.select2(options);
+
+                            const title = $selectElement.attr("title");
+
+                            const s2Container = $selectElement.next(".select2-container");
+
+                            if (title) {
+                                // apply tooltip as set on original select element
+                                $.each(["toggle", "html", "placement", "placeholder"], function (ind, sfx) {
+                                    let attrName = "data-" + sfx;
+                                    let attrValue = $selectElement.attr(attrName);
+                                    s2Container.attr(attrName, attrValue);
+                                });
+                                s2Container.attr("title", title);
+
+                                const $selectionSpan = s2Container.find("span.select2-selection");
+                                // select2 copies title to the selection span, but we move it to container
+                                $selectionSpan.attr("title", "");
+                                $selectElement.attr("title", "");
+                                $selectElement.attr("data-toggle", "");
+                            }
+
+                            const classesString = $selectElement.attr("class");
+
+                            if (classesString) {
+                                const classes = classesString.split(" ");
+
+                                let validationClasses = "";
+
+                                for (let j = 0; j < classes.length; ++j) {
+                                    if (classes[j].indexOf("validation") >= 0) {
+                                        validationClasses += (classes[j] + " ");
+                                    }
+                                }
+
+                                if (validationClasses)
+                                    s2Container.addClass(validationClasses);
+                            }
+                        }
+                    },
+                    applyDefaultExtensions: function(containerSelector) {
+                        containerSelector = containerSelector || document;
+                        const hlp = pim.features.elementHelper;
+                        hlp.loadTooltipWithValidation();
+                        hlp.makeMarkedSelectsSearchable(containerSelector);
+                        hlp.setUpPreconfiguredFileUploads(containerSelector);
                     },
                     // After whole form ajax call, works as the default browser behavior. 
                     // In case of error: * it focuses on the first element with error otherwise next element (circular) 
@@ -388,7 +623,7 @@
                         eventToCapture: "change typeahead:change",
                         //will not be in any search for inputs
                         //further excluding filtering on the form
-                        //Default: Extra elemets by select2 and typeahead are removed
+                        //Default: Extra elements by select2 and typeahead are removed
                         excludeSelectors: [".tt-hint", "[class*=select2-hidden]"],
                         //focus on element (not using lastFocusedSelector)
                         //common use: when element has an error, that element must be focused
@@ -400,24 +635,24 @@
                             return this.formSelector + " :input:not(" + this.excludeSelectors.toString() + ")";
                         },
                         init: function () {
-                            var that = this;
+                            const that = this;
                             $(document).on(this.eventToCapture, this.getInputSelector(), function (e) {
-                                var id = $(e.target).prop("id");
+                                const id = $(e.target).prop("id");
                                 if (id)
                                     that.lastChangedSelector = "#" + id;
                             });
                             $(document).on("focus", ":input.form-control,textarea.form-control", function (e) {
-                                var id = $(e.target).prop("id");
+                                const id = $(e.target).prop("id");
                                 if (id)
                                     that.lastFocusedSelector = "#" + id;
                             });
                         },
                         preserve: function () {
-                            var inputs = $(this.getInputSelector());
-                            var lastFocused = $(this.lastFocusedSelector);
-                            var lastChanged = $(this.lastChangedSelector);
-                            var lastChangedInd = lastChanged.length && inputs.index(lastChanged);
-                            var stayFocused = inputs.filter(this.stayFocusedSelector);
+                            const inputs = $(this.getInputSelector());
+                            const lastFocused = $(this.lastFocusedSelector);
+                            const lastChanged = $(this.lastChangedSelector);
+                            const lastChangedInd = lastChanged.length && inputs.index(lastChanged);
+                            const stayFocused = inputs.filter(this.stayFocusedSelector);
 
                             if (this.ifClearStayFocused) {
                                 stayFocused.val("");
@@ -439,26 +674,26 @@
                     },
                     // for use with chosen plugin selector replacements and bootstrap validation classes
                     applyValidationClassesToAllChosenControls: function (formSelector) {
-                        var chosenContainers = $(formSelector + " div.chosen-container");
+                        const chosenContainers = $(formSelector + " div.chosen-container");
 
-                        for (var i = 0; i < chosenContainers.length; ++i) {
-                            var chosenContainer = $(chosenContainers[i]);
-                            var chosenControl = chosenContainer.children().first();
+                        for (let i = 0; i < chosenContainers.length; ++i) {
+                            const chosenContainer = $(chosenContainers[i]);
+                            const chosenControl = chosenContainer.children().first();
 
-                            var id = chosenContainer.attr("id");
-                            var pos = id.indexOf("_chosen");
+                            const id = chosenContainer.attr("id");
+                            const pos = id.indexOf("_chosen");
                             if (pos > 0) {
-                                var targetControlId = id.substring(0, pos);
-                                var control = $('#' + targetControlId);
+                                const targetControlId = id.substring(0, pos);
+                                const control = $('#' + targetControlId);
 
-                                var classesString = control.attr("class");
+                                const classesString = control.attr("class");
 
                                 if (classesString) {
-                                    var classes = classesString.split(" ");
+                                    const classes = classesString.split(" ");
 
-                                    var validationClasses = "";
+                                    let validationClasses = "";
 
-                                    for (var j = 0; j < classes.length; ++j) {
+                                    for (let j = 0; j < classes.length; ++j) {
                                         if (classes[j].indexOf('validation') >= 0) {
                                             validationClasses += (classes[j] + " ");
                                         }
@@ -472,6 +707,13 @@
                 };
 
             })(this.config, $);
+
+            // apply extensions after all registered document.ready handlers are executed - allow to e.g. set selected value in DDLs.
+            $(function() {
+                $(function() {
+                    pim.features.elementHelper.applyDefaultExtensions(document);
+                });
+            });
         }
     };
 }(window, jQuery));

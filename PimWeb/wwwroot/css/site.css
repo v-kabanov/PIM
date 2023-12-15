@@ -48,3 +48,9 @@ div.width-center-80pc {
   max-width: 30rem;
   flex: auto;
 }
+
+.center-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

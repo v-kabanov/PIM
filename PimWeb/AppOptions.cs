@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 
 public class AppOptions
 {
@@ -8,7 +7,10 @@ public class AppOptions
     ///     Virtual root path under which the application is running; takes precedence over 'APP_VIRTUAL_PATH' env. variable.
     /// </summary>
     public string WebAppPath { get; set; }
-    //public string DataPath { get; set; }
+    
+    public string FileStoragePath { get; set; }
+    
+    public List<string> TextFileExtensions { get; set; }
 }
 
 public record SeedUser
