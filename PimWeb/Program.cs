@@ -4,6 +4,7 @@ using FluentNHibernate.Cfg.Db;
 using FluentNHibernate.Conventions.Helpers;
 using log4net;
 using log4net.Config;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -94,6 +95,14 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+if (!appOptions.RemoveDataProtection && !appOptions.DataProtectionKeyStoragePath.IsNullOrWhiteSpace())
+{
+    var dirInfo = new DirectoryInfo(appOptions.DataProtectionKeyStoragePath);
+    dirInfo.Create();
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(dirInfo);
+}
+
 var virtualPathBase = appOptions.WebAppPath.IsNullOrWhiteSpace()
     ? Environment.GetEnvironmentVariable("APP_VIRTUAL_PATH")
     : appOptions.WebAppPath;
@@ -121,6 +130,9 @@ builder.Services.ConfigureApplicationCookie(o =>
         o.SlidingExpiration = true;
         o.ExpireTimeSpan = TimeSpan.FromDays(30);
         o.Cookie.Name = ".auth";
+        
+        if (appOptions.RemoveDataProtection)
+            o.DataProtectionProvider = new NoOpDataProtector();
     });
 
 builder.Services.AddScoped<INoteService, NoteService>();

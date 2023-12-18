@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using JetBrains.Annotations;
-
-namespace PimWeb.AppCode;
+﻿namespace PimWeb.AppCode;
 
 public static class Extensions
 {

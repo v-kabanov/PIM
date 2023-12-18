@@ -11,6 +11,10 @@ public class AppOptions
     public string FileStoragePath { get; set; }
     
     public List<string> TextFileExtensions { get; set; }
+    
+    public string DataProtectionKeyStoragePath { get; set; }
+    
+    public bool RemoveDataProtection { get; set; }
 }
 
 public record SeedUser
