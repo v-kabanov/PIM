@@ -652,7 +652,7 @@ public class NoteService : INoteService
         return await hasher.ComputeHashAsync(new MemoryStream(content, false)).ConfigureAwait(false);
     }
     
-    private string GetFileStorageDirectoryRelativePath(DateTime time) => $"{time:yyyy}{Path.PathSeparator}{time:MM-MMM}";
+    private string GetFileStorageDirectoryRelativePath(DateTime time) => $"{time:yyyy}{Path.DirectorySeparatorChar}{time:MM-MMM}";
 
     private NoteViewModel CreateModel(Note note, bool populateFiles = true) => new ()
         {
